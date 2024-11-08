@@ -1,8 +1,8 @@
 
 
 clear 
-foldername = 'D:\桌面\测试数据\八月份数据\0813\';
-filename = 'N128_2024-08-13_10-36-20.log';
+foldername = 'C:\Users\89565\Desktop\自研飞控\TestData\十月份数据\1030\';
+filename = 'N447_2024-10-30_17-45-26.log';
 data = Parse_Data(foldername,filename);
 %%
 % imu_t = double(data.IMU0.t)/1e6;
@@ -80,19 +80,14 @@ plot(imu_t,imu_delta_ang(:,2));
 subplot(313)
 plot(imu_t,imu_delta_ang(:,3));
 %% 四元数检查
-pcmd_t = double(data.ESKF.StartTime)/1e6;
-len2 = length(pcmd_t);
-euler = zeros(len2,3);
-for i = 1:len2
-    euler(i,:) = quattoeuler([data.ESKF.Q0(i,1) data.ESKF.Q1(i,1) data.ESKF.Q2(i,1) data.ESKF.Q3(i,1)]);
+pcmd_t = double(data.PCMD.t)/1e6;
+euler = zeros(length(data.PCMD.t),3);
+for i = 1:len
+    euler(i,:) = quat2eul([data.PCMD.q1(i) data.PCMD.q2(i) data.PCMD.q3(i) data.PCMD.q4(i)]);
 end
 figure
 subplot(311)
-plot(pcmd_t,euler(:,1),pcmd_t,data.ESKF.roll);
-subplot(312)
-plot(pcmd_t,euler(:,2),pcmd_t,data.ESKF.pitch)
-subplot(313)
-plot(pcmd_t,euler(:,3),pcmd_t,data.ESKF.yaw)
+plot(pcmd_t,euler(:,1),pcmd_t,euler(:,2),pcmd_t)
 % for i = 1:len
 %     euler = quat2eul(quat_new(i,:));
 % end
