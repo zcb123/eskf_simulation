@@ -1,6 +1,5 @@
 function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,correct_updated)
-
-    CONSTANTS_ONE_G = single(9.80665); 
+ 
     output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
     global states dt_imu_avg  dt_ekf_avg;
     persistent output_last;
@@ -44,8 +43,8 @@ function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,corr
 % 
 	delta_angle = imu.delta_ang - states.delta_ang_bias * dt_scale_correction + delta_angle_corr;
 
-% % 	time_us = imu.time_us;
-% 	
+	output_new.time_us = imu.time_us;
+
 	dq = Quaternion_from_AxisAngle_3arg(delta_angle);
 
 	output_new.quat_nominal = quatMult(output_last.quat_nominal,dq);
