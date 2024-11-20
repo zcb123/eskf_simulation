@@ -1,4 +1,4 @@
-function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,correct_updated)
+function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,correct_updated,CONSTANTS_ONE_G)
  
     output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
     global states dt_imu_avg  dt_ekf_avg;
@@ -78,9 +78,10 @@ function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,corr
     end
 
 	
-	if (correct_updated) 
-    
-        head_index = mod(head_index + 1,buffer_size);
+	if (correct_updated)
+        
+        head_index = mod(head_index,buffer_size);
+        head_index = head_index + 1;
 		output_buffer(head_index,:) = output_new;
         %这里的环形队列暂时不考虑队满和重写的情况
 		output_delayed = output_buffer(tail_index,:);

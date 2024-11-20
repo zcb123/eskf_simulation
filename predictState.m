@@ -21,7 +21,7 @@ function predictState(imu_sample_delayed,params,CONSTANTS_ONE_G)
 		dq3 = q3 * cos_ang + (delta_ang(1) * q4 + delta_ang(2) * q1 - delta_ang(3) * q2) * gain;
 		dq4 = q4 * cos_ang + (-delta_ang(1) * q3 + delta_ang(2)  * q2 + delta_ang(3) * q1) * gain;
 		%相当于旋转一半的角度
-		 sin_ang_half = sinf(ang_norm * 0.25);
+		 sin_ang_half = sin(ang_norm * 0.25);
 		gain = sin_ang_half / ang_norm;
 		ddq0 = q1 * cos_ang_half + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain;
 		ddq1 = q2 * cos_ang_half + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain;
@@ -90,10 +90,10 @@ function predictState(imu_sample_delayed,params,CONSTANTS_ONE_G)
     states.vel = saturation(states.vel,-1000,1000);
     states.pos = saturation(states.pos,-1e6,1e6);
 
-    %%
-    input = 0.5*(imu_sample_delayed.delta_ang_dt + imu_sample_delayed.delta_vel_dt);
-    filter_update_s = params.filter_update_interval_us*1e-6;
-    input = saturation(input,0.5*filter_update_s,2*filter_update_s);
-    dt_ekf_avg = 0.99*dt_ekf_avg+0.01*input;
+    %%  这个量暂时不用
+%     input = 0.5*(imu_sample_delayed.delta_ang_dt + imu_sample_delayed.delta_vel_dt);
+%     filter_update_s = params.filter_update_interval_us*1e-6;
+%     input = saturation(input,0.5*filter_update_s,2*filter_update_s);
+%     dt_ekf_avg = 0.99*dt_ekf_avg+0.01*input;
 end
 

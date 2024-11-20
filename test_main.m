@@ -17,6 +17,7 @@ for i = 1:len
     imu_sample_delayed = imu;
     if correct_update
         predictState(imu_sample_delayed,params,CONSTANTS_ONE_G);
+        predictCovariance(imu_sample_delayed);
     end
     
     output_new = calculateOutputStates(imu,imu_sample_delayed,params,correct_update,CONSTANTS_ONE_G);
