@@ -1,27 +1,34 @@
-function predictCovariance(imu_sample_delayed)
-    global states dt_ekf_avg;
+function predictCovariance(imu_sample_delayed,params,control_status)
+
+    INHIBIT_ACC_BIAS = uint8(4);
+    BADACC_BIASPNOISE = single(4.9);
+    BADGYROPNOISE = single(0.2);
+    accel_bias_inhibit = logical([false false false]);
+
+    global states dt_ekf_avg P;
     % assign intermediate state variables
-	q0 = states.quat_nominal(0);
 	q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
 	q3 = states.quat_nominal(3);
+	q4 = states.quat_nominal(4);
 
 	%dax = imu_sample_delayed.delta_ang(0);
 	%day = imu_sample_delayed.delta_ang(1);
 	%daz = imu_sample_delayed.delta_ang(2);
 
-	dvx = imu_sample_delayed.delta_vel(0);
-	dvy = imu_sample_delayed.delta_vel(1);
-	dvz = imu_sample_delayed.delta_vel(2);
+	dvx = imu_sample_delayed.delta_vel(1);
+	dvy = imu_sample_delayed.delta_vel(2);
+	dvz = imu_sample_delayed.delta_vel(3);
 
 	%dax_b = states.delta_ang_bias(0);
 	%day_b = states.delta_ang_bias(1);
 	%daz_b = states.delta_ang_bias(2);
 
-	dvx_b = states.delta_vel_bias(0);
-	dvy_b = states.delta_vel_bias(1);
-	dvz_b = states.delta_vel_bias(2);
-
+	dvx_b = states.delta_vel_bias(1);
+	dvy_b = states.delta_vel_bias(2);
+	dvz_b = states.delta_vel_bias(3);
+    
+    R_to_earth = Quat2Tbn([q1 q2 q3 q4]);
 	% Use average update interval to reduce accumulated covariance prediction errors due to small single frame dt values
 	dt = dt_ekf_avg;
 	dt_inv = 1 / dt;
@@ -59,8 +66,10 @@ function predictCovariance(imu_sample_delayed)
 					 || is_manoeuvre_level_high...
 					 || fault_status.flags.bad_acc_vertical);
 
+    prev_dvel_bias_var = zeros(3,3);
+
 	for stateIndex = 12 : 14 
-		index = stateIndex - 12;
+		index = stateIndex - 11;
 
 		do_inhibit_axis = do_inhibit_all_axes || imu_sample_delayed.delta_vel_clipping(index);
 
@@ -82,7 +91,7 @@ function predictCovariance(imu_sample_delayed)
 
 	% Don't continue to grow the earth field variances if they are becoming too large or we are not doing 3-axis fusion as this can make the covariance matrix badly conditioned
 	%mag_I_sig;
-
+    k_mag_i_id = uint8(16);
 	if (control_status.flags.mag_3D && (P(k_mag_i_id, k_mag_i_id) + P(k_mag_i_id+1, k_mag_i_id+1) + P(k_mag_i_id+2, k_mag_i_id+2)) < 0.1) 
 		mag_I_sig = dt * saturation(params.mage_p_noise, 0, 1);
 
@@ -92,8 +101,8 @@ function predictCovariance(imu_sample_delayed)
 
 	% Don't continue to grow the body field variances if they is becoming too large or we are not doing 3-axis fusion as this can make the covariance matrix badly conditioned
 	%mag_B_sig;
-
-	if (control_status.flags.mag_3D  (P(k_mag_bias_id, k_mag_bias_id) + P(k_mag_bias_id+1, k_mag_bias_id+1) + P(k_mag_bias_id+2, k_mag_bias_id+2)) < 0.1) 
+    k_mag_bias_id = uint8(19);
+	if (control_status.flags.mag_3D && (P(k_mag_bias_id, k_mag_bias_id) + P(k_mag_bias_id+1, k_mag_bias_id+1) + P(k_mag_bias_id+2, k_mag_bias_id+2)) < 0.1) 
 		mag_B_sig = dt * saturation(params.magb_p_noise, 0, 1);
 
     else 
@@ -103,12 +112,17 @@ function predictCovariance(imu_sample_delayed)
 	%wind_vel_sig;
 
 	% Calculate low pass filtered height rate
+    persistent height_rate_lpf
+    if isempty(height_rate_lpf)
+        height_rate_lpf = single(0);
+    end
 	alpha_height_rate_lpf = 0.1 * dt; % 10 seconds time constant
-	k_mag_bias_id = k_mag_bias_id * (1 - alpha_height_rate_lpf) + states.vel(2) * alpha_height_rate_lpf;
+	height_rate_lpf = height_rate_lpf * (1 - alpha_height_rate_lpf) + states.vel(2) * alpha_height_rate_lpf;
 
 	% Don't continue to grow wind velocity state variances if they are becoming too large or we are not using wind velocity states as this can make the covariance matrix badly conditioned
-	if (control_status.flags.wind  (P(k_wind_vel_id,k_wind_vel_id) + P(k_wind_vel_id+1,k_wind_vel_id+1)) < sq(params.initial_wind_uncertainty)) 
-		wind_vel_sig = dt * saturation(params.wind_vel_p_noise, 0, 1) * (1 + params.wind_vel_p_noise_scaler * fabsf(k_mag_bias_id));
+	k_wind_vel_id = uint8(22);
+    if (control_status.flags.wind && (P(k_wind_vel_id,k_wind_vel_id) + P(k_wind_vel_id+1,k_wind_vel_id+1)) < (params.initial_wind_uncertainty^2)) 
+		wind_vel_sig = dt * saturation(params.wind_vel_p_noise, 0, 1) * (1 + params.wind_vel_p_noise_scaler * abs(height_rate_lpf));
 
     else 
 		wind_vel_sig = 0;
@@ -134,51 +148,52 @@ function predictCovariance(imu_sample_delayed)
 	% assign IMU noise variances
 	% inputs to the system are 3 delta angles and 3 delta velocities
 	gyro_noise = saturation(params.gyro_noise, 0, 1);
-	daxVar = sq(dt * gyro_noise);			%
+	daxVar = (dt * gyro_noise)^2;			%
 	dayVar = daxVar;
 	dazVar = daxVar;
 	% Accelerometer Clipping
 	% delta velocity X: increase process noise if sample contained any X axis clipping
-	if imu_sample_delayed.delta_ang_clipping(0) 
+	if imu_sample_delayed.delta_ang_clipping(1) 
 		daxVar = sq(dt * BADGYROPNOISE);		% (0.008*0.2)^2 = 2.56e-6
 	end
 
 	% delta velocity Y: increase process noise if sample contained any Y axis clipping
-	if (imu_sample_delayed.delta_ang_clipping[1]) 
+	if imu_sample_delayed.delta_ang_clipping(2) 
 		dayVar = sq(dt * BADGYROPNOISE);
 	end
 
 	% delta velocity Z: increase process noise if sample contained any Z axis clipping
-	if (imu_sample_delayed.delta_ang_clipping[2]) 
+	if imu_sample_delayed.delta_ang_clipping(3) 
 		dazVar = sq(dt * BADGYROPNOISE);
 	end
 
 	accel_noise = saturation(params.accel_noise, 0, 1);
 
-	if (fault_status.flags.bad_acc_vertical) 
-		% Increase accelerometer process noise if bad accel data is detected. Measurement errors due to
-		% vibration induced clipping commonly reach an equivalent 0.5g offset.
-		accel_noise = BADACC_BIASPNOISE;
-	end
+    %%这里暂时不用
+% 	if (fault_status.flags.bad_acc_vertical) 
+% 		% Increase accelerometer process noise if bad accel data is detected. Measurement errors due to
+% 		% vibration induced clipping commonly reach an equivalent 0.5g offset.
+% 		accel_noise = BADACC_BIASPNOISE;
+% 	end
 
 	
-	dvxVar = sq(dt * accel_noise) ;
-    dvyVar = sq(dt * accel_noise);
-    dvzVar = sq(dt * accel_noise);
+	dvxVar = (dt * accel_noise)^2 ;
+    dvyVar = (dt * accel_noise)^2;
+    dvzVar = (dt * accel_noise)^2;
 
 	% Accelerometer Clipping
 	% delta velocity X: increase process noise if sample contained any X axis clipping
-	if imu_sample_delayed.delta_vel_clipping(0) 
+	if imu_sample_delayed.delta_vel_clipping(1) 
 		dvxVar = sq(dt * BADACC_BIASPNOISE);		
 	end
 
 	% delta velocity Y: increase process noise if sample contained any Y axis clipping
-	if imu_sample_delayed.delta_vel_clipping(1) 
+	if imu_sample_delayed.delta_vel_clipping(2) 
 		dvyVar = sq(dt * BADACC_BIASPNOISE);
 	end
 
 	% delta velocity Z: increase process noise if sample contained any Z axis clipping
-	if imu_sample_delayed.delta_vel_clipping(2) 
+	if imu_sample_delayed.delta_vel_clipping(3) 
 		dvzVar = sq(dt * BADACC_BIASPNOISE);
 	end
 
@@ -186,25 +201,25 @@ function predictCovariance(imu_sample_delayed)
 	% equations generated using EKF/python/ekf_derivation/main.py
     
 	% Equations for covariance matrix prediction, without process noise~
-	PS0 = 2*q2*q2;
-	PS1 = 2*q3*q3 - 1;
+	PS0 = 2*q3*q3;
+	PS1 = 2*q4*q4 - 1;
 	PS2 = PS0 + PS1;
-	PS3 = q0*q2;
-	PS4 = q1*q3;
+	PS3 = q1*q3;
+	PS4 = q2*q4;
 	PS5 = 2*PS3 + 2*PS4;
-	PS6 = q0*q3;
-	PS7 = q1*q2;
+	PS6 = q1*q4;
+	PS7 = q2*q3;
 	PS8 = 2*PS6 - 2*PS7;
 	PS9 = PS2*P(10,10) - PS5*P(10,12) + PS8*P(10,11) + P(1,10);
 	PS10 = PS2*P(10,12) - PS5*P(12,12) + PS8*P(11,12) + P(1,12);
 	PS11 = PS2*P(10,11) - PS5*P(11,12) + PS8*P(11,11) + P(1,11);
 	PS12 = PS2*P(1,10) - PS5*P(1,12) + PS8*P(1,11) + P(1,1);
-	PS13 = 2*q1*q1;
+	PS13 = 2*q2*q2;
 	PS14 = PS1 + PS13;
 	PS15 = PS6 + PS7;
 	PS16 = 2*PS9;
-	PS17 = q0*q1;
-	PS18 = q2*q3;
+	PS17 = q1*q2;
+	PS18 = q3*q4;
 	PS19 = 2*PS17 - 2*PS18;
 	PS20 = PS2*P(2,10) - PS5*P(2,12) + PS8*P(2,11) + P(1,2);
 	PS21 = PS0 + PS13 - 1;
@@ -396,7 +411,10 @@ function predictCovariance(imu_sample_delayed)
         r00_sx_r10_plus_r01_sy_r11_plus_r02_sz_r12 = r00_sx * mR10 + r01_sy * mR11 + r02_sz * mR12;
         r00_sx_r20_plus_r01_sy_r21_plus_r02_sz_r22 = r00_sx * mR20 + r01_sy * mR21 + r02_sz * mR22;
         r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz = r10_sx * mR20 + r11_sy * mR21 + r12_sz * mR22;
-
+    persistent delta_angle_var_accum;
+    if isempty(delta_angle_var_accum)
+        delta_angle_var_accum = single([0 0 0]);
+    end
 	[nextP(1,1),delta_angle_var_accum(1)] = kahanSummation(nextP(1,1), mR00 * r00_sx + mR01 * r01_sy + mR02 * r02_sz, delta_angle_var_accum(1));
 	nextP(1,2) = nextP(1,2) + r00_sx_r10_plus_r01_sy_r11_plus_r02_sz_r12;
 	nextP(1,3) = nextP(1,3) + r00_sx_r20_plus_r01_sy_r21_plus_r02_sz_r22;
@@ -420,23 +438,38 @@ function predictCovariance(imu_sample_delayed)
         r00_sx_r10_plus_r01_sy_r11_plus_r02_sz_r12 = r00_sx * mR10 + r01_sy * mR11 + r02_sz * mR12;
         r00_sx_r20_plus_r01_sy_r21_plus_r02_sz_r22 = r00_sx * mR20 + r01_sy * mR21 + r02_sz * mR22;
         r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz = r10_sx * mR20 + r11_sy * mR21 + r12_sz * mR22;
+    
+    persistent delta_vel_var_accum;
+    if isempty(delta_vel_var_accum)
+        delta_vel_var_accum = single([0 0 0]);
+    end
 
-	nextP(4,4) = kahanSummation(nextP(4,4), mR00 * r00_sx + mR01 * r01_sy + mR02 * r02_sz, delta_vel_var_accum(1));
+	[nextP(4,4),delta_vel_var_accum(1)] = kahanSummation(nextP(4,4), mR00 * r00_sx + mR01 * r01_sy + mR02 * r02_sz, delta_vel_var_accum(1));
 	nextP(4,5) = nextP(4,5) + r00_sx_r10_plus_r01_sy_r11_plus_r02_sz_r12;
 	nextP(4,6) = nextP(4,6) + r00_sx_r20_plus_r01_sy_r21_plus_r02_sz_r22;
-	nextP(5,5) = kahanSummation(nextP(5,5), mR10 * r10_sx + mR11 * r11_sy + mR12 * r12_sz, delta_vel_var_accum(2));
+	[nextP(5,5),delta_vel_var_accum(2)] = kahanSummation(nextP(5,5), mR10 * r10_sx + mR11 * r11_sy + mR12 * r12_sz, delta_vel_var_accum(2));
 	nextP(5,6) = nextP(5,6) + r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz;
-	nextP(6,6) = kahanSummation(nextP(6,6), mR20 * r20_sx + mR21 * r21_sy + mR22 * r22_sz, delta_vel_var_accum(3));
+	[nextP(6,6),delta_vel_var_accum(3)] = kahanSummation(nextP(6,6), mR20 * r20_sx + mR21 * r21_sy + mR22 * r22_sz, delta_vel_var_accum(3));
 
 	% process noise contribution for delta angle states can be very small compared to
 	% the variances, therefore use algorithm to minimise numerical error
-	noise_delta_ang_bias = sq(d_ang_bias_sig);
+
+	noise_delta_ang_bias = (d_ang_bias_sig)^2;
+    persistent delta_angle_bias_var_accum;
+    if isempty(delta_angle_bias_var_accum)
+        delta_angle_bias_var_accum = single([0 0 0]);
+    end
+
 	for i = 10:12 
-		index = i - 10;
+		index = i - 9;
 		[nextP(i, i),delta_angle_bias_var_accum(index)] = kahanSummation(nextP(i, i), noise_delta_ang_bias, delta_angle_bias_var_accum(index));
 	end
+    persistent delta_vel_bias_var_accum;
+    if isempty(delta_vel_bias_var_accum)
+        delta_vel_bias_var_accum = single([0 0 0]);
+    end
 
-	noise_delta_vel_bias = sq(d_vel_bias_sig);
+	noise_delta_vel_bias = (d_vel_bias_sig)^2;
 	if ~accel_bias_inhibit(1) 
 		% calculate variances and upper diagonal covariances for IMU X axis delta velocity bias state
 		nextP(1,13) = PS26;
@@ -456,6 +489,8 @@ function predictCovariance(imu_sample_delayed)
 		% add process noise that is not from the IMU
 		% process noise contribution for delta velocity states can be very small compared to
 		% the variances, therefore use algorithm to minimise numerical error
+   
+
 		[nextP(13, 13),delta_vel_bias_var_accum(1)] = kahanSummation(nextP(13, 13), noise_delta_vel_bias, delta_vel_bias_var_accum(1));
 
 	else 
@@ -635,8 +670,8 @@ function predictCovariance(imu_sample_delayed)
 		nextP(20,21) = P(20,21);
 		nextP(21,21) = P(21,21);
 
-		mag_noise = sq(mag_I_sig);
-		mag_bias_noise = sq(mag_B_sig);
+		mag_noise = (mag_I_sig)^2;
+		mag_bias_noise = (mag_B_sig)^2;
 		% add process noise that is not from the IMU
 		for i = 16: 18 
 			nextP(i, i) = nextP(i, i) + mag_noise;
@@ -697,26 +732,28 @@ function predictCovariance(imu_sample_delayed)
 		nextP(22,23) = P(22,23);
 		nextP(23,23) = P(23,23);
 
-		noise_wind = sq(wind_vel_sig);
+		noise_wind = (wind_vel_sig)^2;
 		% add process noise that is not from the IMU
 		for i = 22:23 
 			nextP(i, i) = nextP(i, i) + noise_wind;
 		end
 
     end
+    k_num_states = uint8(23);
     % stop position covariance growth if our total position variance reaches 100m
 	% this can happen if we lose gps for some time
 	if ((P(7, 7) + P(8, 8)) > 1e4) 
 		for  i = 7: 8 
-			for j = 1: k_num_states + 1  
+			for j = 1: k_num_states   
 				nextP(i, j) = P(i, j);
 				nextP(j, i) = P(j, i);
 			end
 		end
 	end
-
+    
+    
 	% covariance matrix is symmetrical, so copy upper half to lower half
-	for row = 2: k_num_states+1
+	for row = 2: k_num_states
 		for  column = 1 :row
 			P(row, column) = nextP(column, row);
             P(column, row) = nextP(column, row);
@@ -724,17 +761,12 @@ function predictCovariance(imu_sample_delayed)
 	end
 
 	% copy variances (diagonals)
-	for i = 1 : k_num_states+1 
+	for i = 1 : k_num_states
 		P(i, i) = nextP(i, i);
 	end
 
 	% fix gross errors in the covariance matrix and ensure rows and
 	% columns for un-used states are zero
-	fixCovarianceErrors(false);
-
-
-
-	
-    
+	%fixCovarianceErrors(false);
 
 end

@@ -1,12 +1,20 @@
 
 
-clear 
-foldername = 'C:\Users\89565\Desktop\自研飞控\TestData\十一月数据\1119\静态试验\';
-filename = 'N41_2024-11-19_11-19-29.log';
-data = Parse_Data(foldername,filename);
+
 %%
 
 run("init.m");
+clear calculateOutputStates predictState predictCovariance;
+
+figure;
+h = plot3(nan, nan, nan, 'b-', 'LineWidth', 1.5); % 初始化轨迹线条
+hold on;
+p = plot3(nan, nan, nan, 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r'); % 初始化移动点
+grid on;
+xlabel('X');
+ylabel('Y');
+zlabel('Z');
+title('Dynamic 3D Trajectory');
 
 for i = 1:len
     imu.time_us = data.IMU1.t(i,1);
@@ -14,32 +22,30 @@ for i = 1:len
     imu.delta_vel = imu_delta_vel(i,:)';
     imu.delta_ang_dt = imu_dt(i,1);
     imu.delta_vel_dt = imu_dt(i,1);
+    setIMUData(imu);
     imu_sample_delayed = imu;
     if correct_update
         predictState(imu_sample_delayed,params,CONSTANTS_ONE_G);
+        predictCovariance(imu_sample_delayed,params,control_status);
     end
     
     output_new = calculateOutputStates(imu,imu_sample_delayed,params,correct_update,CONSTANTS_ONE_G);
     quat_new(i,:) = output_new.quat_nominal;
     vel_new(i,:) = output_new.vel;
     pos_new(i,:) = output_new.pos;
+    
 
+    set(h, 'XData', pos_new(i,1), 'YData', pos_new(i,2), 'ZData', pos_new(i,3)); % 更新轨迹
+   % set(p, 'XData', pos_new(i,1), 'YData', pos_new(i,2), 'ZData', pos_new(i,3));       % 更新点的位置
+    drawnow;
+%     pause(0.05); % 模拟延迟
 end
-clear calculateOutputStates;
 
 
 
 
-%%  传感器数据检查
-figure
-subplot(311)
-plot(imu_t,imu_delta_ang(:,1));
-subplot(312)
-plot(imu_t,imu_delta_ang(:,2));
-subplot(313)
-plot(imu_t,imu_delta_ang(:,3));
-figure
-plot(imu_dt)
+
+
 %% 四元数检查
 pcmd_t = double(data.PCMD.t)/1e6;
 

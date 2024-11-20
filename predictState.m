@@ -59,7 +59,6 @@ function predictState(imu_sample_delayed,params,CONSTANTS_ONE_G)
 % 	alpha = 1.0 - imu_sample_delayed.delta_vel_dt;
 % 	accel_lpf_NE = accel_lpf_NE * alpha + corrected_delta_vel_ef.xy();
 
-
 	% RK4
 	dR_dt_t = Quat2Tbn(dq_dt);
 	dR_dt2_t = Quat2Tbn(dq_dt2);
@@ -91,9 +90,14 @@ function predictState(imu_sample_delayed,params,CONSTANTS_ONE_G)
     states.pos = saturation(states.pos,-1e6,1e6);
 
     %%  这个量暂时不用
-%     input = 0.5*(imu_sample_delayed.delta_ang_dt + imu_sample_delayed.delta_vel_dt);
-%     filter_update_s = params.filter_update_interval_us*1e-6;
-%     input = saturation(input,0.5*filter_update_s,2*filter_update_s);
-%     dt_ekf_avg = 0.99*dt_ekf_avg+0.01*input;
+    input = 0.5*(imu_sample_delayed.delta_ang_dt + imu_sample_delayed.delta_vel_dt);
+    filter_update_s = params.filter_update_interval_us*1e-6;
+    input = saturation(input,0.5*filter_update_s,2*filter_update_s);
+    dt_ekf_avg = 0.99*dt_ekf_avg+0.01*input;
+
+    %%
+    
+    plot(states.vel(2))
+    hold on
 end
 

@@ -41,7 +41,7 @@ function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,corr
     end
 	dt_scale_correction = dt_imu_avg / dt_ekf_avg;
 % 
-	delta_angle = imu.delta_ang - states.delta_ang_bias * dt_scale_correction + delta_angle_corr;
+	delta_angle = imu.delta_ang - states.delta_ang_bias*dt_scale_correction + delta_angle_corr;
 
 	output_new.time_us = imu.time_us;
 
@@ -79,14 +79,15 @@ function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,corr
 
 	
 	if (correct_updated)
-        
+
         head_index = mod(head_index,buffer_size);
         head_index = head_index + 1;
 		output_buffer(head_index,:) = output_new;
         %这里的环形队列暂时不考虑队满和重写的情况
 		output_delayed = output_buffer(tail_index,:);
-        tail_index = mod(tail_index + 1,buffer_size);
-
+        tail_index = mod(tail_index,buffer_size);
+        tail_index = tail_index + 1;
+        
         quat_nominal_inverse = quat_inverse(states.quat_nominal);
         quat_delta_delay = quatMult(quat_nominal_inverse,output_delayed.quat_nominal);
 		q_error = quat_normalize(quat_delta_delay);
