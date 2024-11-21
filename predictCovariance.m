@@ -1,11 +1,11 @@
-function predictCovariance(imu_sample_delayed,params,control_status)
+function predictCovariance(params,control_status)
 
     INHIBIT_ACC_BIAS = uint8(4);
     BADACC_BIASPNOISE = single(4.9);
     BADGYROPNOISE = single(0.2);
     accel_bias_inhibit = logical([false false false]);
 
-    global states dt_ekf_avg P;
+    global states imu_sample_delayed dt_ekf_avg P;
     % assign intermediate state variables
 	q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);

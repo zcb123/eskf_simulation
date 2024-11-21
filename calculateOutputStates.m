@@ -1,7 +1,7 @@
-function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,correct_updated,CONSTANTS_ONE_G)
+function [output_new,dq_out,delta_angle_corr_out,vel_correction,pos_correction] = calculateOutputStates(imu,params,correct_updated,CONSTANTS_ONE_G)
  
     output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
-    global states dt_imu_avg  dt_ekf_avg;
+    global states imu_sample_delayed dt_imu_avg  dt_ekf_avg;
     persistent output_last;
     if isempty(output_last)
         output_last.time_us = uint64(0);
@@ -42,11 +42,11 @@ function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,corr
 	dt_scale_correction = dt_imu_avg / dt_ekf_avg;
 % 
 	delta_angle = imu.delta_ang - states.delta_ang_bias*dt_scale_correction + delta_angle_corr;
-
+    
 	output_new.time_us = imu.time_us;
 
 	dq = Quaternion_from_AxisAngle_3arg(delta_angle);
-
+    
 	output_new.quat_nominal = quatMult(output_last.quat_nominal,dq);
 % 
 	output_new.quat_nominal = quat_normalize(output_new.quat_nominal);
@@ -77,13 +77,15 @@ function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,corr
 		vel_imu_rel_body_ned = R_to_earth_now * vel_imu_rel_body;			
     end
 
-	
+	vel_correction = single([0 0 0]');
+    pos_correction = single([0 0 0]');
 	if (correct_updated)
 
         head_index = mod(head_index,buffer_size);
         head_index = head_index + 1;
 		output_buffer(head_index,:) = output_new;
         %这里的环形队列暂时不考虑队满和重写的情况
+        
 		output_delayed = output_buffer(tail_index,:);
         tail_index = mod(tail_index,buffer_size);
         tail_index = tail_index + 1;
@@ -92,14 +94,14 @@ function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,corr
         quat_delta_delay = quatMult(quat_nominal_inverse,output_delayed.quat_nominal);
 		q_error = quat_normalize(quat_delta_delay);
         
-        if q_error(1)>=single(1)
+        if q_error(1)>=single(0)
             scalar = -2;
         else
             scalar = 2;
         end
 		
 
-		delta_ang_error = [scalar*q_error(2)  scalar*q_error(3)  scalar*q_error(4)];
+		delta_ang_error = [scalar*q_error(2)  scalar*q_error(3)  scalar*q_error(4)]';
 
 		time_delay = max(single((imu.time_us - imu_sample_delayed.time_us)) * single(1e-6), dt_imu_avg);
 		att_gain = single(0.5) * dt_imu_avg / time_delay;
@@ -131,4 +133,9 @@ function [output_new] = calculateOutputStates(imu,imu_sample_delayed,params,corr
     
 
     output_last = output_new;
+
+    % output plot
+    dq_out = dq';
+    delta_angle_corr_out = delta_angle_corr;
+
 end

@@ -1,30 +1,11 @@
-function updated = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s)
-
-global imu_sample_delayed dt_imu_avg;
-persistent time_us_last;
-if isempty(time_us_last)
-    time_us_last = uint64(0);
-end
-
-dt = double(imu_sample_new.time_us - time_us_last)/1e6;
-dt = saturation(dt,1e-4,0.02);
-
-time_us_last = imu_sample_new.time_us;
-
-if(time_us_last>0)
-    dt_imu_avg = 0.8*dt_imu_avg+0.2*dt;
-end
-
-%%  下采样
-    persistent imu_down_sampled;
-    if isempty(imu_down_sampled)
-        imu_down_sampled = struct('time_us',uint64(0),...
-                            'delta_ang',single([0 0 0]'),...
-                            'delta_vel',single([0 0 0]'),...)
-                            'delta_ang_dt',single(0),...
-                            'delta_vel_dt',single(0),...
-                            'delta_vel_clipping',logical([0 0 0]'));
+function updated = ImuDownSampler(imu_sample_new,required_samples,target_dt_s,min_dt_s)
+    persistent delta_ang_dt_avg;
+    if isempty(delta_ang_dt_avg)
+        delta_ang_dt_avg = single([ 0 0 0]');
     end
+    % 这个值接近于imu_sample_new.delta_ang_dt
+	delta_ang_dt_avg = 0.9 * delta_ang_dt_avg + 0.1 * imu_sample_new.delta_ang_dt;	%截止频率fc = 0.1*fs / 2*pi	fs=250时,fc = 3.9789Hz	
+
 	% accumulate time deltas
 	imu_down_sampled.time_us = imu_sample_new.time_us;
 	imu_down_sampled.delta_ang_dt = imu_down_sampled.delta_ang_dt + imu_sample_new.delta_ang_dt;
@@ -33,11 +14,15 @@ end
 	imu_down_sampled.delta_vel_clipping(2) = imu_down_sampled.delta_vel_clipping(2) | imu_sample_new.delta_vel_clipping(2);
 	imu_down_sampled.delta_vel_clipping(3) = imu_down_sampled.delta_vel_clipping(3) | imu_sample_new.delta_vel_clipping(3);
 
+	% use a quaternion to accumulate delta angle data
+	% 用四元数积累角度误差
+	% this quaternion represents the rotation from the start to end of the accumulation period
+	% 这个四元数表示从累积的开始到结束的旋转
     persistent delta_angle_accumulated
     if isempty(delta_angle_accumulated)
         delta_angle_accumulated = single([1 0 0 0]');   %这是一个四元数
     end
-	delta_q = Quaternion_from_AxisAngle_3arg(imu_sample_new.delta_ang);     %delta_ang通过四元数积累误差      
+	delta_q = Quaternion_from_AxisAngle_3arg(imu.delta_ang);
 	delta_angle_accumulated = quatMult(delta_angle_accumulated,delta_q);
     delta_angle_accumulated = quat_normalize(delta_angle_accumulated);
 
@@ -50,7 +35,7 @@ end
 	% 在更新的旋转坐标系中积分最新的速度增量数据
 	% assume effective sample time is halfway between the previous and current rotation frame
 	% 假设有效采样时间位于前一个旋转帧和当前旋转帧的中间
-	imu_down_sampled.delta_vel = imu_down_sampled.delta_vel + (imu_sample_new.delta_vel + delta_R * imu_sample_new.delta_vel) * 0.5;
+	imu_down_sampled.delta_vel = imu_down_sampled.delta_vel + (imu.delta_vel + delta_R * imu.delta_vel) * 0.5;
     persistent accumulated_samples
     if isempty(accumulated_samples)
         accumulated_samples = single(0);
@@ -63,26 +48,9 @@ end
 	if ((accumulated_samples >= required_samples && imu_down_sampled.delta_ang_dt > min_dt_s)...
 	    || (imu_down_sampled.delta_ang_dt > target_dt_s)) 
 
-		imu_down_sampled.delta_ang = Quaternion_to_AxisAngle(delta_angle_accumulated,single(1e-7));
+		imu_down_sampled.delta_ang = Quaternion_to_AxisAngle(delta_angle_accumulated,1e-7);
 		updated = logical(true);
     end
 
-%%    
-if updated
-    accumulated_samples = single(0);
-    delta_angle_accumulated = single([1 0 0 0]');
 
-    imu_sample_delayed = imu_down_sampled;
-    
-    imu_down_sampled.delta_ang = single([0 0 0]');
-    imu_down_sampled.delta_vel = single([0 0 0]');
-    imu_down_sampled.delta_ang_dt = single(0);
-    imu_down_sampled.delta_vel_dt = single(0);
-    imu_down_sampled.delta_vel_clipping = logical([ 0 0 0]');
-	
 end
-
-    
-	
-
-
