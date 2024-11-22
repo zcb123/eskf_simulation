@@ -58,40 +58,40 @@ vel_new = single(zeros(len,3));
 pos_new = single(zeros(len,3));
 
 %%  传感器数据检查
-figure('Name','imu_gyro')
-subplot(311)
-plot(imu_t,imu_gyro(:,1));
-subplot(312)
-plot(imu_t,imu_gyro(:,2));
-subplot(313)
-plot(imu_t,imu_gyro(:,3));
+% figure('Name','imu_gyro')
+% subplot(311)
+% plot(imu_t,imu_gyro(:,1));
+% subplot(312)
+% plot(imu_t,imu_gyro(:,2));
+% subplot(313)
+% plot(imu_t,imu_gyro(:,3));
 %%
-figure('Name','delta_ang')
-subplot(311)
-plot(imu_t,imu_delta_ang(:,1));
-subplot(312)
-plot(imu_t,imu_delta_ang(:,2));
-subplot(313)
-plot(imu_t,imu_delta_ang(:,3));
+% figure('Name','delta_ang')
+% subplot(311)
+% plot(imu_t,imu_delta_ang(:,1));
+% subplot(312)
+% plot(imu_t,imu_delta_ang(:,2));
+% subplot(313)
+% plot(imu_t,imu_delta_ang(:,3));
 %%
-figure('Name','imu_acc')
-subplot(311)
-plot(imu_t,imu_acc(:,1));
-subplot(312)
-plot(imu_t,imu_acc(:,2));
-subplot(313)
-plot(imu_t,imu_acc(:,3));
-
-figure('Name','delta_vel')
-subplot(311)
-plot(imu_t,imu_delta_vel(:,1));
-subplot(312)
-plot(imu_t,imu_delta_vel(:,2));
-subplot(313)
-plot(imu_t,imu_delta_vel(:,3));
+% figure('Name','imu_acc')
+% subplot(311)
+% plot(imu_t,imu_acc(:,1));
+% subplot(312)
+% plot(imu_t,imu_acc(:,2));
+% subplot(313)
+% plot(imu_t,imu_acc(:,3));
+% 
+% figure('Name','delta_vel')
+% subplot(311)
+% plot(imu_t,imu_delta_vel(:,1));
+% subplot(312)
+% plot(imu_t,imu_delta_vel(:,2));
+% subplot(313)
+% plot(imu_t,imu_delta_vel(:,3));
 %%
-figure
-plot(imu_dt)
+% figure
+% plot(imu_dt)
 %%
 params.imu_pos_body = single([1 0 0]');
 params.gps_pos_body = single([0 0 0]');
@@ -114,6 +114,7 @@ params.initial_wind_uncertainty = single(1);
 params.pos_noaid_noise = single(10);
 params.gps_pos_innov_gate = single(5);
 params.gps_vel_innov_gate = single(5);
+params.gps_pos_noise = single(0.5);
 
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);

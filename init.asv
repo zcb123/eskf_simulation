@@ -94,7 +94,7 @@ figure
 plot(imu_dt)
 %%
 params.imu_pos_body = single([1 0 0]');
-params.gps_pos_body
+params.gps_pos_body = single([0 0 0]');
 params.vel_Tau = single(0.25);
 params.pos_Tau = single(0.25);
 params.filter_update_interval_us = single(8000);
@@ -114,6 +114,8 @@ params.initial_wind_uncertainty = single(1);
 params.pos_noaid_noise = single(10);
 params.gps_pos_innov_gate = single(5);
 params.gps_vel_innov_gate = single(5);
-
+params.gps_pos_noise = single()
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);
+
+fault_status.flags.bad_vel_N = logical(true);

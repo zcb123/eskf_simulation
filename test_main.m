@@ -24,9 +24,22 @@ pos_correction_display = zeros(len,3);
 states_quat_nominal = single(zeros(len,4));
 states_vel = single(zeros(len,3));
 states_pos = single(zeros(len,3));
+states_vel_predict = single(zeros(len,3));
+states_pos_predict = single(zeros(len,3));
 dq_dt_display = single(zeros(len,4));
 states_quat_nominal(1,:) = single([1 0 0 0]);
 KF_P = single(zeros(23,23,len));
+KF_P_predict = single(zeros(23,23,len));
+figure('Name','P predict')
+h_pre = surf(P);
+shading interp; % 平滑着色
+colormap(jet);
+colorbar;
+xlabel('X 轴');
+ylabel('Y 轴');
+zlabel('Z 轴');
+title('P pre 动态演示');
+
 figure('Name','P')
 h = surf(P);
 shading interp; % 平滑着色
@@ -36,7 +49,7 @@ xlabel('X 轴');
 ylabel('Y 轴');
 zlabel('Z 轴');
 title('P 动态演示');
-
+% gps_index_display = zeros(len,1);
 for i = 1:len
     imu.time_us = data.IMU1.t(i,1);
     imu.delta_ang = imu_delta_ang(i,:)';
@@ -45,19 +58,28 @@ for i = 1:len
     imu.delta_vel_dt = imu_dt(i,1);
 
 %     setBaroData(data.BAR0)
-    baro_dt = data.BAR0.t-imu.time_us;
-    baro_index = find(baro_dt<1e3,1,"last");
-    baro.time_us = data.BAR0.t(baro_index,:);
-    baro.hgt = data.BAR0.Hight(baro_index,:);
+%     baro_dt = data.BAR0.t-imu.time_us;
+%     baro_index = find(baro_dt<1e3,1,"last");
+%     baro.time_us = data.BAR0.t(baro_index,:);
+%     baro.hgt = data.BAR0.Hight(baro_index,:);
     [correct_update,quat_angle_out(i,:),ang_out(i,:),vel_out(i,:)] = setIMUData(imu,required_samples,target_dt_s,min_dt_s);
     dq_dt = single([1 0 0 0]);
     if correct_update
+
         predictState(params,CONSTANTS_ONE_G);
+        states_vel_predict(i,:) = states.vel';
+        states_pos_predict(i,:) = states.pos';
+
         predictCovariance(params,control_status);
         
+        
+        set(h_pre,'ZData',P)
+        pause(0.01);
+        controlGpsFusion(data.RTK,imu.time_us,params);
 %         baro_fuse(baro);
-
+%         gps_index_display(i,1) = gps_index;
     end
+    
     dq_dt_display(i,:) = dq_dt;
     states_quat_nominal(1,:) = states.quat_nominal';
     states_vel(i,:) = states.vel';
@@ -95,7 +117,7 @@ end
 
 t =  double(data.IMU1.t)/1e6;
 %%  setIMUData check
-figure
+figure('Name','imu data')
 subplot(311)
 plot(t,quat_angle_out(:,1),t,quat_angle_out(:,2),t,quat_angle_out(:,3),t,quat_angle_out(:,4))
 subplot(312)
@@ -110,12 +132,12 @@ plot(t,dq_dt_display(:,1),'*')
 subplot(212)
 plot(t,dq_dt_display(:,2),'*',t,dq_dt_display(:,3),t,dq_dt_display(:,4))
 %%
-figure
+figure('Name','state vel pos')
 plot(t,states_vel(:,1),t,states_vel(:,2),t,states_vel(:,3));
 figure
 plot(t,states_pos(:,1),t,states_pos(:,2),t,states_pos(:,3))
 %% calculateOutputStates check
-figure
+figure('Name','delta_angle_display')
 plot(t,delta_angle_display(:,1),t,delta_angle_display(:,2),t,delta_angle_display(:,3));
 %%
 figure('Name','dq')

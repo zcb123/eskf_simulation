@@ -1,5 +1,5 @@
 function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,innov_gate,obs_var)
-    global states P;
+    global states P imu_sample_delayed;
     % assign intermediate variables
 	q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
@@ -19,20 +19,17 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 
 	innov_check_fail = logical(false);
 	% Observation jacobian and Kalman gain vectors
-	
-
-	
 	Kfusion = zeros(23,1);
 % 	deltastates = zeros(23,1);
 	ret = logical(true);
 
     k_vel_id = uint8(3);
+    
+    innov_var = single(zeros(3,1));
 
-	for(index = 1: 3) 
-
+	for(index = 1: 3)       %这里是观测更新的delta_v
 		switch (index)
 			case 1
-			
 				% Axis X
 				HKX0 = q1*q2;
 				HKX1 = q3*q4;
@@ -343,27 +340,23 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 
 					% we need to re-initialise covariances and abort this fusion step
 					% velocity
-					P(k_vel_id,k_vel_id) = sq(fmaxf(_params.gps_vel_noise, 1.01));
+					P(k_vel_id,k_vel_id) = sq(fmaxf(params.gps_vel_noise, 1.01));
 					P(k_vel_id+1,k_vel_id+1) = P(k_vel_id,k_vel_id);
 					P(k_vel_id+2,k_vel_id+2) = sq(1.6) * P(k_vel_id,k_vel_id);
 					%ECL_ERR("Velocity Z %s", numerical_error_covariance_reset_string);
 					ret = false;
                     return 
 				end
-				float HKZ54_inv = 1 / HKZ54;
+				HKZ54_inv = 1 / HKZ54;
 				fault_status.flags.bad_vel_D = false;
 
-				test_ratio(3) = sq(innov3) / (sq(max(innov_gate, 1)) * innov_var(3));
+				test_ratio(3) = sq(innov(3)) / (sq(max(innov_gate, 1)) * innov_var(3));
 				innov_check_fail = (test_ratio(3) > 1.1);
 				%_innov_check_fail_status.flags.reject_ver_vel = innov_check_fail;
 				if(innov_check_fail) 
 					ret =  false;
                     return
 				end
-
-
-  
-
 
 				% Kalman gains
 				Kfusion(1) = -HKZ48*HKZ54_inv;

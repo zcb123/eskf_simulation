@@ -1,5 +1,5 @@
-function [gps_vel_innov_var,vel_test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,innov_gate,obs_var)
-    global states P;
+function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,innov_gate,obs_var)
+    global states P imu_sample_delayed;
     % assign intermediate variables
 	q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
@@ -19,19 +19,17 @@ function [gps_vel_innov_var,vel_test_ratio,ret] = fuseVelocityWithLevelArm(pos_o
 
 	innov_check_fail = logical(false);
 	% Observation jacobian and Kalman gain vectors
-	
-	Hfusion = zeros(23,1);
-	
 	Kfusion = zeros(23,1);
-	deltastates = zeros(23,1);
+% 	deltastates = zeros(23,1);
 	ret = logical(true);
 
     k_vel_id = uint8(3);
+    
+    innov_var = single(zeros(3,1));
 
-	for(index = 1: 3) 
+	for(index = 1: 3)       %这里是观测更新的delta_v
 		switch (index)
 			case 1
-			
 				% Axis X
 				HKX0 = q1*q2;
 				HKX1 = q3*q4;
@@ -125,16 +123,6 @@ function [gps_vel_innov_var,vel_test_ratio,ret] = fuseVelocityWithLevelArm(pos_o
 					ret = false;
                     return;
 				end
-
-				% Observation Jacobians
-				Hfusion = zeros(23,1);
-
-				Hfusion(2) = HKX8*(HKX3 - HKX7) + gyro_unbias(1)*(-HKX10 + HKX16) - gyro_unbias(2)*(HKX9*(-HKX4 + HKX5) - x_offset_body*(HKX13 + HKX17));
-				Hfusion(3) = -HKX25;
-				Hfusion(4) = 1;
-				Hfusion(10) = -HKX30*(HKX27 + HKX28*z_offset_body);
-				Hfusion(11) = HKX33;
-				Hfusion(12) = -HKX29*(-HKX28*HKX31 + HKX32*y_offset_body);
 
 				% Kalman gains
 				Kfusion(1) = HKX64_inv*(HKX25*P(1,3) - HKX33*P(1,11) + HKX35*P(1,10) + HKX36*P(1,12) + HKX37*P(1,2) - P(1,4));
@@ -258,15 +246,7 @@ function [gps_vel_innov_var,vel_test_ratio,ret] = fuseVelocityWithLevelArm(pos_o
 					ret =  false;
                     return;
 				end
-				% Observation Jacobians
-				Hfusion = zeros(23,1);
 
-                Hfusion(1) = HKY11;
-				Hfusion(3) = HKY18*(HKY13 - HKY17) - gyro_unbias(2)*(HKY20 + z_offset_body*(HKY10 + HKY21)) + gyro_unbias(3)*(HKY22 - HKY25);
-				Hfusion(5) = 1;
-				Hfusion(10) = -HKY26*(-HKY27*HKY28 + HKY29*z_offset_body);
-				Hfusion(11) = -HKY31;
-				Hfusion(12) = HKY26*(HKY29*x_offset_body + HKY32);
 
                 Kfusion(1) = HKY63_inv*(HKY33 + HKY36 + HKY38 + HKY40 - HKY41 - P(1,5));
 				Kfusion(2) = HKY63_inv*(-HKY11*P(1,2) + HKY31*P(2,11) + HKY35*P(2,12) + HKY37*P(2,10) + HKY39*P(2,3) - P(2,5));
@@ -344,7 +324,7 @@ function [gps_vel_innov_var,vel_test_ratio,ret] = fuseVelocityWithLevelArm(pos_o
 				HKZ45 = HKZ31*(-HKZ34 + y_offset_body*(HKZ10 + HKZ28 + 1));
 				HKZ46 = HKZ31*(HKZ38 - HKZ39);
 				HKZ47 = HKZ6*(HKZ15*x_offset_body - HKZ3) + gyro_unbias(1)*(-HKZ16 + HKZ17) + gyro_unbias(3)*(-HKZ14 + HKZ8);
-				HKZ48 = -HKZ30*P(1,1) + HKZ44*P(1,12) + HKZ45*P(1,10) - HKZ46*P(1,11) + HKZ47*P(1,1) - P(1,6);
+				HKZ48 = -HKZ30*P(1,2) + HKZ44*P(1,12) + HKZ45*P(1,10) - HKZ46*P(1,11) + HKZ47*P(1,1) - P(1,6);
 				HKZ49 = HKZ23 - HKZ27 + HKZ29;
 				HKZ50 = -HKZ30*P(2,12) + HKZ44*P(12,12) + HKZ45*P(10,12) - HKZ46*P(11,12) + HKZ47*P(1,12) - P(6,12);
 				HKZ51 = -HKZ30*P(2,11) + HKZ44*P(11,12) + HKZ45*P(10,11) - HKZ46*P(11,11) + HKZ47*P(1,11) - P(6,11);
@@ -360,36 +340,23 @@ function [gps_vel_innov_var,vel_test_ratio,ret] = fuseVelocityWithLevelArm(pos_o
 
 					% we need to re-initialise covariances and abort this fusion step
 					% velocity
-					P(k_vel_id,k_vel_id) = sq(fmaxf(_params.gps_vel_noise, 1.01));
+					P(k_vel_id,k_vel_id) = sq(fmaxf(params.gps_vel_noise, 1.01));
 					P(k_vel_id+1,k_vel_id+1) = P(k_vel_id,k_vel_id);
 					P(k_vel_id+2,k_vel_id+2) = sq(1.6) * P(k_vel_id,k_vel_id);
 					%ECL_ERR("Velocity Z %s", numerical_error_covariance_reset_string);
 					ret = false;
                     return 
 				end
-				float HKZ54_inv = 1 / HKZ54;
+				HKZ54_inv = 1 / HKZ54;
 				fault_status.flags.bad_vel_D = false;
 
-				test_ratio(3) = sq(innov3) / (sq(max(innov_gate, 1)) * innov_var(3));
+				test_ratio(3) = sq(innov(3)) / (sq(max(innov_gate, 1)) * innov_var(3));
 				innov_check_fail = (test_ratio(3) > 1.1);
 				%_innov_check_fail_status.flags.reject_ver_vel = innov_check_fail;
 				if(innov_check_fail) 
 					ret =  false;
                     return
 				end
-
-
-                Hfusion = zeros(23,1);
-
-
-
-				Hfusion(1) = HKZ18;
-				Hfusion(2) = HKZ30;
-				Hfusion(6) = 2;
-				Hfusion(10) = HKZ36;
-				Hfusion(11) = -HKZ40;
-				Hfusion(12) = -HKZ43;
-
 
 				% Kalman gains
 				Kfusion(1) = -HKZ48*HKZ54_inv;
@@ -418,41 +385,39 @@ function [gps_vel_innov_var,vel_test_ratio,ret] = fuseVelocityWithLevelArm(pos_o
 
         end
 			
-    
-
-
-	    deltastates = zeros(23,1);
-	    is_fused = measurementUpdate(Kfusion, innov_var(index), innov(index), deltastates);
+% 	    deltastates = zeros(23,1);
+	    is_fused = measurementUpdate(Kfusion, innov_var(index), innov(index));
     
     
-	    switch (index) 
-	    case 1
-		    fault_status.flags.bad_vel_N = !is_fused;
-		    _velx_deltastates = deltastates;
-		    
+% 	    switch (index) 
+% 	    case 1
+% 		    fault_status.flags.bad_vel_N = !is_fused;
+% 		    _velx_deltastates = deltastates;
+% 		    
+%     
+% 	    case 2
+% 		    fault_status.flags.bad_vel_E = !is_fused;
+% 		    _vely_deltastates = deltastates;
+% 		    
+% 	    case 3
+% 		    fault_status.flags.bad_vel_D = !is_fused;
+% 		    _velz_deltastates = deltastates;
+% 		    
+% 	    end
     
-	    case 2
-		    fault_status.flags.bad_vel_E = !is_fused;
-		    _vely_deltastates = deltastates;
-		    
-	    case 3
-		    fault_status.flags.bad_vel_D = !is_fused;
-		    _velz_deltastates = deltastates;
-		    
-	    end
-    
-	    if(is_fused) 
-		    if(index == 3) 
-			    _time_last_ver_vel_fuse = _time_last_imu;
-		    end else if(index == 1 || index == 2) 
-			    _time_last_hor_vel_fuse = _time_last_imu;
-		    end
-	    end
+% 	    if(is_fused) 
+% 		    if(index == 3) 
+% 			    time_last_ver_vel_fuse = time_last_imu;
+%             elseif(index == 1 || index == 2) 
+% 			    time_last_hor_vel_fuse = time_last_imu;
+% 		    end
+% 	    end
 	    ret = ret && is_fused;
     end
     
-    return ret;
+    
 
 
 
-end
+    end
+    

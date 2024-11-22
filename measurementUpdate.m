@@ -1,6 +1,7 @@
-function measurementUpdate(K,variance,innovation)
+function is_healthy = measurementUpdate(K,variance,innovation)
 
-        global P;
+        global P accel_bias_inhibit;
+        k_vel_bias_id = 12;
         for i = 1: 3 
 			if (accel_bias_inhibit(i)) 
 				K(k_vel_bias_id + i) = 0;

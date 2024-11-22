@@ -68,7 +68,7 @@ end
 	if ((accumulated_samples >= required_samples && imu_down_sampled.delta_ang_dt > min_dt_s)...
 	    || (imu_down_sampled.delta_ang_dt > target_dt_s)) 
 
-		imu_down_sampled.delta_ang = Quaternion_to_AxisAngle(delta_angle_accumulated,single(1e-7));
+		imu_down_sampled.delta_ang = Quaternion_to_AxisAngle(delta_angle_accumulated,single(1e-7))';
 		updated = logical(true);
     end
     ang_out = imu_down_sampled.delta_ang';
