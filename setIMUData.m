@@ -1,4 +1,4 @@
-function updated = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s)
+function [updated,quat_angle_out,ang_out,vel_out] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s)
 
 global imu_sample_delayed dt_imu_avg;
 persistent time_us_last;
@@ -23,12 +23,17 @@ end
                             'delta_vel',single([0 0 0]'),...)
                             'delta_ang_dt',single(0),...
                             'delta_vel_dt',single(0),...
+                            'delta_ang_clipping',logical([0 0 0]'),...
                             'delta_vel_clipping',logical([0 0 0]'));
     end
 	% accumulate time deltas
 	imu_down_sampled.time_us = imu_sample_new.time_us;
 	imu_down_sampled.delta_ang_dt = imu_down_sampled.delta_ang_dt + imu_sample_new.delta_ang_dt;
 	imu_down_sampled.delta_vel_dt = imu_down_sampled.delta_vel_dt + imu_sample_new.delta_vel_dt;
+    % 这里怎么只有vel_cliping，没有ang_clipping
+%     imu_down_sampled.delta_ang_clipping(1) = imu_down_sampled.delta_ang_clipping(1) | imu_sample_new.delta_ang_clipping(1);
+%     imu_down_sampled.delta_ang_clipping(2) = imu_down_sampled.delta_ang_clipping(2) | imu_sample_new.delta_ang_clipping(2);
+%     imu_down_sampled.delta_ang_clipping(3) = imu_down_sampled.delta_ang_clipping(3) | imu_sample_new.delta_ang_clipping(3);
 	imu_down_sampled.delta_vel_clipping(1) = imu_down_sampled.delta_vel_clipping(1) | imu_sample_new.delta_vel_clipping(1);
 	imu_down_sampled.delta_vel_clipping(2) = imu_down_sampled.delta_vel_clipping(2) | imu_sample_new.delta_vel_clipping(2);
 	imu_down_sampled.delta_vel_clipping(3) = imu_down_sampled.delta_vel_clipping(3) | imu_sample_new.delta_vel_clipping(3);
@@ -66,14 +71,15 @@ end
 		imu_down_sampled.delta_ang = Quaternion_to_AxisAngle(delta_angle_accumulated,single(1e-7));
 		updated = logical(true);
     end
-
+    ang_out = imu_down_sampled.delta_ang';
+    vel_out = imu_down_sampled.delta_vel';
+    quat_angle_out = delta_angle_accumulated';
 %%    
 if updated
+    imu_sample_delayed = imu_down_sampled;
+
     accumulated_samples = single(0);
     delta_angle_accumulated = single([1 0 0 0]');
-
-    imu_sample_delayed = imu_down_sampled;
-    
     imu_down_sampled.delta_ang = single([0 0 0]');
     imu_down_sampled.delta_vel = single([0 0 0]');
     imu_down_sampled.delta_ang_dt = single(0);

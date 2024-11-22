@@ -3,6 +3,8 @@ foldername = 'C:\Users\89565\Desktop\自研飞控\TestData\十一月数据\1119\
 filename = 'N41_2024-11-19_11-19-29.log';
 data = Parse_Data(foldername,filename);
 %%
+clear states imu_sample_delayed dt_imu_avg  dt_ekf_avg P;   %清理旧的变量
+
 global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P;
 states = struct('quat_nominal',single([1 0 0 0]'),...
                         'vel',single([0 0 0]'),...
@@ -12,31 +14,29 @@ states = struct('quat_nominal',single([1 0 0 0]'),...
                         'mag_I',single([0 0 0]'),...
                         'mag_B',single([0 0 0]'),...
                         'wind_vel',single([0 0]'));
-imu_sample_delayed = struct('time_us',uint64(0),...
-    'delta_ang_dt',single(0),...
-    'delta_vel_dt',single(0),...
-    );
 
-imu_down_sampled.time_us = imu_sample_new.time_us;
-	imu_down_sampled.delta_ang_dt = imu_down_sampled.delta_ang_dt + imu_sample_new.delta_ang_dt;
-	imu_down_sampled.delta_vel_dt = imu_down_sampled.delta_vel_dt + imu_sample_new.delta_vel_dt;
-	imu_down_sampled.delta_vel_clipping(1) = imu_down_sampled.delta_vel_clipping(1) | imu_sample_new.delta_vel_clipping(1);
-	imu_down_sampled.delta_vel_clipping(2) = imu_down_sampled.delta_vel_clipping(2) | imu_sample_new.delta_vel_clipping(2);
-	imu_down_sampled.delta_vel_clipping(3)
+imu_sample_delayed = struct('time_us',uint64(0),...
+                            'delta_ang',single([0 0 0]'),...
+                            'delta_vel',single([0 0 0]'),...)
+                            'delta_ang_dt',single(0),...
+                            'delta_vel_dt',single(0),...
+                            'delta_ang_clipping',logical([0 0 0]'),...
+                            'delta_vel_clipping',logical([0 0 0]'));
+
 P = zeros(23,23);
 dt_imu_avg = single(0.002);
 dt_ekf_avg = single(0.008);
 
 CONSTANTS_ONE_G = single(9.80665);
 
+
 imu.time_us = uint64(0);
 imu.delta_ang = single([0 0 0]');
 imu.delta_vel = single([1 0 0]');
 imu.delta_ang_dt = single(0);
 imu.delta_vel_dt = single(0);
-imu.delta_ang_clipping = logical([0 0 0]);
-imu.delta_vel_clipping = logical([0 0 0]);
-% imu_sample_delayed = imu;
+imu.delta_ang_clipping = logical([0 0 0]');
+imu.delta_vel_clipping = logical([0 0 0]');
 
 
 len = length(data.IMU1.t);
@@ -65,7 +65,7 @@ subplot(312)
 plot(imu_t,imu_gyro(:,2));
 subplot(313)
 plot(imu_t,imu_gyro(:,3));
-
+%%
 figure('Name','delta_ang')
 subplot(311)
 plot(imu_t,imu_delta_ang(:,1));
@@ -94,6 +94,7 @@ figure
 plot(imu_dt)
 %%
 params.imu_pos_body = single([1 0 0]');
+params.gps_pos_body
 params.vel_Tau = single(0.25);
 params.pos_Tau = single(0.25);
 params.filter_update_interval_us = single(8000);
@@ -110,6 +111,9 @@ params.fusion_mode = uint8(1);
 params.mage_p_noise = single(1e-3);
 params.magb_p_noise = single(1e-4);
 params.initial_wind_uncertainty = single(1);
+params.pos_noaid_noise = single(10);
+params.gps_pos_innov_gate = single(5);
+params.gps_vel_innov_gate = single(5);
 
 control_status.flags.mag_3D = logical(true);
-control_status.flags.wind = logical(true);
+control_status.flags.wind = logical(false);

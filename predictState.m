@@ -12,46 +12,46 @@ function predictState(params,CONSTANTS_ONE_G)
 
     cos_ang = cos(ang_norm*0.5);
     cos_ang_half = cos(ang_norm*0.25);
-
+     
     if(ang_norm>1e-7)
+        % 等价于quatMult(Q,[delta_ang])
         sin_ang = sin(ang_norm*0.5);
         gain = sin_ang/ang_norm;
-        dq0 = q1 * cos_ang + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain;
-		dq1 = q2 * cos_ang + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain;
+        dq1 = q1 * cos_ang + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain;
+		dq2 = q2 * cos_ang + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain;
 		dq3 = q3 * cos_ang + (delta_ang(1) * q4 + delta_ang(2) * q1 - delta_ang(3) * q2) * gain;
 		dq4 = q4 * cos_ang + (-delta_ang(1) * q3 + delta_ang(2)  * q2 + delta_ang(3) * q1) * gain;
 		%相当于旋转一半的角度
 		 sin_ang_half = sin(ang_norm * 0.25);
 		gain = sin_ang_half / ang_norm;
-		ddq0 = q1 * cos_ang_half + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain;
-		ddq1 = q2 * cos_ang_half + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain;
+		ddq1 = q1 * cos_ang_half + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain;
+		ddq2 = q2 * cos_ang_half + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain;
 		ddq3 = q3 * cos_ang_half + (delta_ang(1) * q4 + delta_ang(2) * q1 - delta_ang(3) * q2) * gain;
 		ddq4 = q4 * cos_ang_half + (-delta_ang(1) * q3 + delta_ang(2) * q2 + delta_ang(3) * q1) * gain;
-        dq_dt = quat_normalize([dq0 dq1 dq3 dq4]);
-        dq_dt2 = quat_normalize([ddq0 ddq1 ddq3 ddq4]);
-    else
-         
+        dq_dt = quat_normalize([dq1 dq2 dq3 dq4]);
+        dq_dt2 = quat_normalize([ddq1 ddq2 ddq3 ddq4]);
+    else 
 		gain = cos_ang;
-		dq0 = q1 * cos_ang + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain * 0.5;
-		dq1 = q2 * cos_ang + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain * 0.5;
+		dq1 = q1 * cos_ang + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain * 0.5;
+		dq2 = q2 * cos_ang + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain * 0.5;
 		dq3 = q3 * cos_ang + (delta_ang(1) * q4 + delta_ang(2) * q1 - delta_ang(3) * q2) * gain * 0.5;
 		dq4 = q4 * cos_ang + (-delta_ang(1) * q3 + delta_ang(2) * q2 + delta_ang(3) * q1) * gain * 0.5;
 
 		gain = cos_ang_half * 0.25;
-		ddq0 = q1 * cos_ang_half + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain;
-		ddq1 = q2 * cos_ang_half + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain;
+		ddq1 = q1 * cos_ang_half + (-delta_ang(1) * q2 - delta_ang(2) * q3 - delta_ang(3) * q4) * gain;
+		ddq2 = q2 * cos_ang_half + (delta_ang(1) * q1 - delta_ang(2) * q4 + delta_ang(3) * q3) * gain;
 		ddq3 = q3 * cos_ang_half + (delta_ang(1) * q4 + delta_ang(2) * q1 - delta_ang(3) * q2) * gain ;
 		ddq4 = q4 * cos_ang_half + (-delta_ang(1) * q3 + delta_ang(2) * q2 + delta_ang(3) * q1) * gain;
 
-		dq_dt = quat_normalize([dq0 dq1 dq3 dq4]);
-        dq_dt2 = quat_normalize([ddq0 ddq1 ddq3 ddq4]);
+		dq_dt = quat_normalize([dq1 dq2 dq3 dq4]);
+        dq_dt2 = quat_normalize([ddq1 ddq2 ddq3 ddq4]);
     end
 
-	states.quat_nominal = dq_dt;
+    assignin("base","dq_dt",dq_dt);
+	states.quat_nominal = dq_dt;        %四元数的更新预测
 
 	R_to_earth = Quat2Tbn(states.quat_nominal);
 
-	
 	corrected_delta_vel = imu_sample_delayed.delta_vel  - states.delta_vel_bias;
 	corrected_delta_vel_ef = R_to_earth * corrected_delta_vel;
 
@@ -95,9 +95,5 @@ function predictState(params,CONSTANTS_ONE_G)
     input = saturation(input,0.5*filter_update_s,2*filter_update_s);
     dt_ekf_avg = 0.99*dt_ekf_avg+0.01*input;
 
-    %%
-    
-    plot(states.vel(2))
-    hold on
 end
 

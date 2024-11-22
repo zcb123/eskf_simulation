@@ -6,6 +6,7 @@ function predictCovariance(params,control_status)
     accel_bias_inhibit = logical([false false false]);
 
     global states imu_sample_delayed dt_ekf_avg P;
+    
     % assign intermediate state variables
 	q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
@@ -742,6 +743,7 @@ function predictCovariance(params,control_status)
     k_num_states = uint8(23);
     % stop position covariance growth if our total position variance reaches 100m
 	% this can happen if we lose gps for some time
+    % 这里的单位是厘米
 	if ((P(7, 7) + P(8, 8)) > 1e4) 
 		for  i = 7: 8 
 			for j = 1: k_num_states   

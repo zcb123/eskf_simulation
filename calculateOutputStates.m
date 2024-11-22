@@ -1,4 +1,4 @@
-function [output_new,dq_out,delta_angle_corr_out,vel_correction,pos_correction] = calculateOutputStates(imu,params,correct_updated,CONSTANTS_ONE_G)
+function [output_new] = calculateOutputStates(imu,params,correct_updated,CONSTANTS_ONE_G)
  
     output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
     global states imu_sample_delayed dt_imu_avg  dt_ekf_avg;
@@ -40,15 +40,16 @@ function [output_new,dq_out,delta_angle_corr_out,vel_correction,pos_correction] 
         pos_err_integ = single([0 0 0]');
     end
 	dt_scale_correction = dt_imu_avg / dt_ekf_avg;
-% 
 	delta_angle = imu.delta_ang - states.delta_ang_bias*dt_scale_correction + delta_angle_corr;
-    
+    assignin("base","delta_angle",delta_angle);
+    assignin("base","delta_angle_corr",delta_angle_corr);
+
 	output_new.time_us = imu.time_us;
 
 	dq = Quaternion_from_AxisAngle_3arg(delta_angle);
-    
+    assignin("base","dq",dq);
+
 	output_new.quat_nominal = quatMult(output_last.quat_nominal,dq);
-% 
 	output_new.quat_nominal = quat_normalize(output_new.quat_nominal);
 % 
 	R_to_earth_now = Quat2Tbn(output_new.quat_nominal);
@@ -77,8 +78,6 @@ function [output_new,dq_out,delta_angle_corr_out,vel_correction,pos_correction] 
 		vel_imu_rel_body_ned = R_to_earth_now * vel_imu_rel_body;			
     end
 
-	vel_correction = single([0 0 0]');
-    pos_correction = single([0 0 0]');
 	if (correct_updated)
 
         head_index = mod(head_index,buffer_size);
@@ -91,8 +90,13 @@ function [output_new,dq_out,delta_angle_corr_out,vel_correction,pos_correction] 
         tail_index = tail_index + 1;
         
         quat_nominal_inverse = quat_inverse(states.quat_nominal);
+        assignin('base',"quat_nominal_inverse",quat_nominal_inverse);
+
         quat_delta_delay = quatMult(quat_nominal_inverse,output_delayed.quat_nominal);
 		q_error = quat_normalize(quat_delta_delay);
+        assignin("base",'quat_delta_delay',quat_delta_delay);
+%         save('quat_delayed.mat',"quat_delta_delay",'-append');
+%         quat_delta_delay_out(cnt,:) = quat_delta_delay;
         
         if q_error(1)>=single(0)
             scalar = -2;
@@ -101,8 +105,8 @@ function [output_new,dq_out,delta_angle_corr_out,vel_correction,pos_correction] 
         end
 		
 
-		delta_ang_error = [scalar*q_error(2)  scalar*q_error(3)  scalar*q_error(4)]';
-
+		delta_ang_error = [scalar*q_error(2) scalar*q_error(3) scalar*q_error(4)]';
+        %a = imu.time_us - imu_sample_delayed.time_us
 		time_delay = max(single((imu.time_us - imu_sample_delayed.time_us)) * single(1e-6), dt_imu_avg);
 		att_gain = single(0.5) * dt_imu_avg / time_delay;
 
