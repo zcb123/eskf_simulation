@@ -13,6 +13,10 @@ required_samples = max(round(target_dt_s / delta_ang_dt_avg), 1);					%0.004
 target_dt_s = required_samples * delta_ang_dt_avg;
 min_dt_s = max(delta_ang_dt_avg * (required_samples - 1), delta_ang_dt_avg * 0.5);
 
+ang_out_display = single(zeros(len,3));
+vel_out_display = single(zeros(len,3));
+quat_angle_out_display = single(zeros(len,4));
+
 delta_angle_display = single(zeros(len,3));
 dq_display = single(zeros(len,4));
 delta_angle_corr_out_display = zeros(len,3);
@@ -50,6 +54,22 @@ ylabel('Y 轴');
 zlabel('Z 轴');
 title('P 动态演示');
 % gps_index_display = zeros(len,1);
+
+
+K_Display = zeros(23,23);
+
+K_figure = zeros(23,23);
+figure('Name','K')
+h_k = surf(K_figure);
+shading interp; % 平滑着色
+colormap(jet);
+colorbar;
+xlabel('X 轴');
+ylabel('Y 轴');
+zlabel('Z 轴');
+title('K 动态演示');
+
+
 for i = 1:len
     imu.time_us = data.IMU1.t(i,1);
     imu.delta_ang = imu_delta_ang(i,:)';
@@ -62,20 +82,30 @@ for i = 1:len
 %     baro_index = find(baro_dt<1e3,1,"last");
 %     baro.time_us = data.BAR0.t(baro_index,:);
 %     baro.hgt = data.BAR0.Hight(baro_index,:);
-    [correct_update,quat_angle_out(i,:),ang_out(i,:),vel_out(i,:)] = setIMUData(imu,required_samples,target_dt_s,min_dt_s);
+    [correct_update] = setIMUData(imu,required_samples,target_dt_s,min_dt_s);
+    ang_out_display(i,:) = ang_out;
+    vel_out_display(i,:) = vel_out;
+    quat_angle_out_display(i,:) = quat_angle_out;
+
     dq_dt = single([1 0 0 0]);
     if correct_update
 
         predictState(params,CONSTANTS_ONE_G);
+
         states_vel_predict(i,:) = states.vel';
         states_pos_predict(i,:) = states.pos';
 
         predictCovariance(params,control_status);
+%        predictCovariance_Matrix(params);
         
-        
-        set(h_pre,'ZData',P)
-        pause(0.01);
+%         set(h_pre,'ZData',P)
+%         pause(0.01);
         controlGpsFusion(data.RTK,imu.time_us,params);
+        
+        K_Display(:,4:6) = [Kfusion4 Kfusion5 Kfusion6];
+
+%         set(h_k,'ZData',K_Display)
+%         pause(0.01);
 %         baro_fuse(baro);
 %         gps_index_display(i,1) = gps_index;
     end
@@ -84,10 +114,10 @@ for i = 1:len
     states_quat_nominal(1,:) = states.quat_nominal';
     states_vel(i,:) = states.vel';
     states_pos(i,:) = states.pos';
-    KF_P(:,:,i) = P;
-
-    set(h,'ZData',P)
-    pause(0.01);
+%     KF_P(:,:,i) = P;
+% 
+%     set(h,'ZData',P)
+%     pause(0.01);
 %     correct_update = logical(false);
 %     %一直运行更新的变量
 %     dq = single([1 0 0 0]);

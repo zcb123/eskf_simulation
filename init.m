@@ -1,11 +1,12 @@
 clear 
-foldername = 'C:\Users\89565\Desktop\自研飞控\TestData\十一月数据\1119\静态试验\';
-filename = 'N41_2024-11-19_11-19-29.log';
-data = Parse_Data(foldername,filename);
+% foldername = 'C:\Users\89565\Desktop\自研飞控\TestData\十一月数据\1119\静态试验\';
+% filename = 'N41_2024-11-19_11-19-29.log';
+% data = Parse_Data(foldername,filename);
+load("data/N41_2024-11-19_11-19-29.mat");
 %%
 clear states imu_sample_delayed dt_imu_avg  dt_ekf_avg P;   %清理旧的变量
 
-global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P;
+global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M;
 states = struct('quat_nominal',single([1 0 0 0]'),...
                         'vel',single([0 0 0]'),...
                         'pos',single([0 0 0]'),...
@@ -24,6 +25,8 @@ imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_vel_clipping',logical([0 0 0]'));
 
 P = zeros(23,23);
+P_M = zeros(23,23);
+
 dt_imu_avg = single(0.002);
 dt_ekf_avg = single(0.008);
 

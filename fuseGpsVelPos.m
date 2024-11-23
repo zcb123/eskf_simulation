@@ -39,6 +39,7 @@ function fuseGpsVelPos(gps_sample_delayed,params)
 	pos_offset_body = params.gps_pos_body - params.imu_pos_body;
 	
 	[gps_vel_innov_var,vel_test_ratio] = fuseVelocityWithLevelArm(pos_offset_body, gps_vel_innov, vel_innov_gate, gps_vel_obs_var);
+    fuseVelocityWithLevelArm_Matrix(pos_offset_body, gps_vel_innov, vel_innov_gate, gps_vel_obs_var);
 % 	gps_vel_test_ratio(1) = max(vel_test_ratio(1), vel_test_ratio(2));
 % 	gps_vel_test_ratio(2) = vel_test_ratio(3);
 

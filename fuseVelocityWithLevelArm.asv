@@ -1,4 +1,5 @@
 function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,innov_gate,obs_var)
+    %innov实际上是速度差
     global states P imu_sample_delayed;
     % assign intermediate variables
 	q1 = states.quat_nominal(1);
@@ -23,7 +24,7 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 % 	deltastates = zeros(23,1);
 	ret = logical(true);
 
-    k_vel_id = uint8(3);
+    k_vel_id = uint8(4);
     
     innov_var = single(zeros(3,1));
 
@@ -106,9 +107,9 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 					% we need to re-initialise covariances and abort this fusion step
 					% velocity
                     
-					P(k_vel_id,k_vel_id) = sq(max(params.gps_vel_noise, 1.01));
-					P(k_vel_id+2,k_vel_id+2) = P(k_vel_id,k_vel_id);
-					P(k_vel_id+3,k_vel_id+3) = sq(2.5) * P(k_vel_id,k_vel_id);
+					P(k_vel_id,k_vel_id) = sq(max(params.gps_vel_noise, 0.01));
+					P(k_vel_id+1,k_vel_id+1) = P(k_vel_id,k_vel_id);
+					P(k_vel_id+2,k_vel_id+2) = sq(1.5) * P(k_vel_id,k_vel_id);
 					%ECL_ERR("Velocity X %s", numerical_error_covariance_reset_string);
 					ret = logical(false);
                     return 
@@ -116,8 +117,8 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 				HKX64_inv = -1 / HKX64;
 				fault_status.flags.bad_vel_N = false;
 
-				test_ratio(1) = sq(innov(1)) / (sq(max(innov_gate, 2.0)) * innov_var(1));
-				innov_check_fail = (test_ratio(1) > 2.0);
+				test_ratio(1) = sq(innov(1)) / (sq(max(innov_gate, 1.0)) * innov_var(1));
+				innov_check_fail = (test_ratio(1) > 1.0);
 % 				_innov_check_fail_status.flags.reject_hor_vel = innov_check_fail;
 				if(innov_check_fail) 
 					ret = false;
@@ -229,9 +230,9 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 
 					% we need to re-initialise covariances and abort this fusion step
 					% velocity
-					P(k_vel_id,k_vel_id) = sq(max(params.gps_vel_noise, 1.01));
-					P(k_vel_id+2,k_vel_id+2) = P(k_vel_id,k_vel_id);
-					P(k_vel_id+3,k_vel_id+3) = sq(2.5) * P(k_vel_id,k_vel_id);
+					P(k_vel_id,k_vel_id) = sq(max(params.gps_vel_noise, 0.01));
+					P(k_vel_id+1,k_vel_id+1) = P(k_vel_id,k_vel_id);
+					P(k_vel_id+2,k_vel_id+2) = sq(1.5) * P(k_vel_id,k_vel_id);
 					%ECL_ERR("Velocity Y %s", numerical_error_covariance_reset_string);
 					ret = false;
                     return;
@@ -239,7 +240,7 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 				HKY63_inv = -1.0 / HKY63;
 				fault_status.flags.bad_vel_E = false;
 
-				test_ratio(2) = sq(innov(2)) / (sq(max(innov_gate, 2)) * innov_var(2));
+				test_ratio(2) = sq(innov(2)) / (sq(max(innov_gate, 1)) * innov_var(2));
 				innov_check_fail = (test_ratio(2) > 2);
 				%_innov_check_fail_status.flags.reject_hor_vel = innov_check_fail;
 				if(innov_check_fail) 
@@ -340,9 +341,9 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 
 					% we need to re-initialise covariances and abort this fusion step
 					% velocity
-					P(k_vel_id,k_vel_id) = sq(fmaxf(params.gps_vel_noise, 1.01));
+					P(k_vel_id,k_vel_id) = sq(fmaxf(params.gps_vel_noise, 0.01));
 					P(k_vel_id+1,k_vel_id+1) = P(k_vel_id,k_vel_id);
-					P(k_vel_id+2,k_vel_id+2) = sq(1.6) * P(k_vel_id,k_vel_id);
+					P(k_vel_id+2,k_vel_id+2) = sq(1.5) * P(k_vel_id,k_vel_id);
 					%ECL_ERR("Velocity Z %s", numerical_error_covariance_reset_string);
 					ret = false;
                     return 
@@ -351,7 +352,7 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 				fault_status.flags.bad_vel_D = false;
 
 				test_ratio(3) = sq(innov(3)) / (sq(max(innov_gate, 1)) * innov_var(3));
-				innov_check_fail = (test_ratio(3) > 1.1);
+				innov_check_fail = (test_ratio(3) > 1.0);
 				%_innov_check_fail_status.flags.reject_ver_vel = innov_check_fail;
 				if(innov_check_fail) 
 					ret =  false;
@@ -386,6 +387,7 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
         end
 			
 % 	    deltastates = zeros(23,1);
+        assignin("base","Kfusion"+num2str(3+index),Kfusion);
 	    is_fused = measurementUpdate(Kfusion, innov_var(index), innov(index));
     
     

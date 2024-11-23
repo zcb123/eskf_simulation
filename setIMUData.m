@@ -1,4 +1,4 @@
-function [updated,quat_angle_out,ang_out,vel_out] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s)
+function [updated] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s)
 
 global imu_sample_delayed dt_imu_avg;
 persistent time_us_last;
@@ -74,6 +74,9 @@ end
     ang_out = imu_down_sampled.delta_ang';
     vel_out = imu_down_sampled.delta_vel';
     quat_angle_out = delta_angle_accumulated';
+    assignin("base","ang_out",ang_out);
+    assignin("base","vel_out",vel_out);
+    assignin("base","quat_angle_out",quat_angle_out);
 %%    
 if updated
     imu_sample_delayed = imu_down_sampled;

@@ -36,10 +36,10 @@ function predictCovariance(params,control_status)
 	dt_inv = 1 / dt;
 
 	% convert rate of change of rate gyro bias (rad/s**2) as specified by the parameter to an expected change in delta angle (rad) since the last update
-	d_ang_bias_sig = dt * dt * saturation(params.gyro_bias_p_noise, 0, 1);
+	d_ang_bias_sig = dt * dt * saturation(params.gyro_bias_p_noise, 0, 1);      %gyro_bias_p_noise = 1e-3   d_ang_bias_sig = 0.008*0.008*1e-3
 
 	% convert rate of change of accelerometer bias (m/s**3) as specified by the parameter to an expected change in delta velocity (m/s) since the last update
-	d_vel_bias_sig = dt * dt * saturation(params.accel_bias_p_noise, 0, 1);
+	d_vel_bias_sig = dt * dt * saturation(params.accel_bias_p_noise, 0, 1);     %accel_bias_p_noise = 3e-3  d_vel_bias_sig = 0.008*0.008*3e-3
 
 	% inhibit learning of imu accel bias if the manoeuvre levels are too high to protect against the effect of sensor nonlinearities or bad accel data is detected
 	% xy accel bias learning is also disabled on ground as those states are poorly observable when perpendicular to the gravity vector
@@ -55,7 +55,7 @@ function predictCovariance(params,control_status)
     if isempty(accel_vec_filt)
         accel_vec_filt = 0;
     end
-    alpha = saturation((dt / params.acc_bias_learn_tc), 0, 1);
+    alpha = saturation((dt / params.acc_bias_learn_tc), 0, 1);      %acc_bias_learn_tc = 0.5
 	beta = 1 - alpha;
 	ang_rate_magnitude_filt = max(dt_inv * norm(imu_sample_delayed.delta_ang), beta * ang_rate_magnitude_filt);
 	accel_magnitude_filt = max(dt_inv * norm(imu_sample_delayed.delta_vel), beta * accel_magnitude_filt);
