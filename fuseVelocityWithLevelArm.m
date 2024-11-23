@@ -1,4 +1,4 @@
-function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,innov_gate,obs_var)
+function [innov_var,test_ratio_out,ret] = fuseVelocityWithLevelArm(params,pos_offset,innov,innov_gate,obs_var)
     %innov实际上是速度差
     global states P imu_sample_delayed;
     % assign intermediate variables
@@ -27,7 +27,11 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
     k_vel_id = uint8(4);
     
     innov_var = single(zeros(3,1));
-
+    persistent test_ratio;
+    if isempty(test_ratio)
+        test_ratio = single(zeros(3,1));
+    end
+    test_ratio_out = test_ratio;
 	for(index = 1: 3)       %这里是观测更新的delta_v
 		switch (index)
 			case 1
@@ -241,7 +245,7 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 				fault_status.flags.bad_vel_E = false;
 
 				test_ratio(2) = sq(innov(2)) / (sq(max(innov_gate, 1)) * innov_var(2));
-				innov_check_fail = (test_ratio(2) > 2);
+				innov_check_fail = (test_ratio(2) > 1);
 				%_innov_check_fail_status.flags.reject_hor_vel = innov_check_fail;
 				if(innov_check_fail) 
 					ret =  false;
@@ -341,7 +345,7 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
 
 					% we need to re-initialise covariances and abort this fusion step
 					% velocity
-					P(k_vel_id,k_vel_id) = sq(fmaxf(params.gps_vel_noise, 0.01));
+					P(k_vel_id,k_vel_id) = sq(max(params.gps_vel_noise, 0.01));
 					P(k_vel_id+1,k_vel_id+1) = P(k_vel_id,k_vel_id);
 					P(k_vel_id+2,k_vel_id+2) = sq(1.5) * P(k_vel_id,k_vel_id);
 					%ECL_ERR("Velocity Z %s", numerical_error_covariance_reset_string);
@@ -418,8 +422,5 @@ function [innov_var,test_ratio,ret] = fuseVelocityWithLevelArm(pos_offset,innov,
     end
     
     
-
-
-
-    end
+end
     

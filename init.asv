@@ -1,11 +1,12 @@
 clear 
-foldername = 'C:\Users\89565\Desktop\自研飞控\TestData\十一月数据\1119\静态试验\';
-filename = 'N41_2024-11-19_11-19-29.log';
-data = Parse_Data(foldername,filename);
+% foldername = 'C:\Users\89565\Desktop\自研飞控\TestData\十一月数据\1119\静态试验\';
+% filename = 'N41_2024-11-19_11-19-29.log';
+% data = Parse_Data(foldername,filename);
+load("data/N41_2024-11-19_11-19-29.mat");
 %%
 clear states imu_sample_delayed dt_imu_avg  dt_ekf_avg P;   %清理旧的变量
 
-global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P;
+global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M;
 states = struct('quat_nominal',single([1 0 0 0]'),...
                         'vel',single([0 0 0]'),...
                         'pos',single([0 0 0]'),...
@@ -24,6 +25,8 @@ imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_vel_clipping',logical([0 0 0]'));
 
 P = zeros(23,23);
+P_M = zeros(23,23);
+
 dt_imu_avg = single(0.002);
 dt_ekf_avg = single(0.008);
 
@@ -58,41 +61,41 @@ vel_new = single(zeros(len,3));
 pos_new = single(zeros(len,3));
 
 %%  传感器数据检查
-figure('Name','imu_gyro')
-subplot(311)
-plot(imu_t,imu_gyro(:,1));
-subplot(312)
-plot(imu_t,imu_gyro(:,2));
-subplot(313)
-plot(imu_t,imu_gyro(:,3));
+% figure('Name','imu_gyro')
+% subplot(311)
+% plot(imu_t,imu_gyro(:,1));
+% subplot(312)
+% plot(imu_t,imu_gyro(:,2));
+% subplot(313)
+% plot(imu_t,imu_gyro(:,3));
 %%
-figure('Name','delta_ang')
-subplot(311)
-plot(imu_t,imu_delta_ang(:,1));
-subplot(312)
-plot(imu_t,imu_delta_ang(:,2));
-subplot(313)
-plot(imu_t,imu_delta_ang(:,3));
+% figure('Name','delta_ang')
+% subplot(311)
+% plot(imu_t,imu_delta_ang(:,1));
+% subplot(312)
+% plot(imu_t,imu_delta_ang(:,2));
+% subplot(313)
+% plot(imu_t,imu_delta_ang(:,3));
 %%
-figure('Name','imu_acc')
-subplot(311)
-plot(imu_t,imu_acc(:,1));
-subplot(312)
-plot(imu_t,imu_acc(:,2));
-subplot(313)
-plot(imu_t,imu_acc(:,3));
-
-figure('Name','delta_vel')
-subplot(311)
-plot(imu_t,imu_delta_vel(:,1));
-subplot(312)
-plot(imu_t,imu_delta_vel(:,2));
-subplot(313)
-plot(imu_t,imu_delta_vel(:,3));
+% figure('Name','imu_acc')
+% subplot(311)
+% plot(imu_t,imu_acc(:,1));
+% subplot(312)
+% plot(imu_t,imu_acc(:,2));
+% subplot(313)
+% plot(imu_t,imu_acc(:,3));
+% 
+% figure('Name','delta_vel')
+% subplot(311)
+% plot(imu_t,imu_delta_vel(:,1));
+% subplot(312)
+% plot(imu_t,imu_delta_vel(:,2));
+% subplot(313)
+% plot(imu_t,imu_delta_vel(:,3));
 %%
-figure
-plot(imu_dt)
-%%
+% figure
+% plot(imu_dt)
+%%  参数初始化
 params.imu_pos_body = single([1 0 0]');
 params.gps_pos_body = single([0 0 0]');
 params.vel_Tau = single(0.25);
@@ -114,8 +117,19 @@ params.initial_wind_uncertainty = single(1);
 params.pos_noaid_noise = single(10);
 params.gps_pos_innov_gate = single(5);
 params.gps_vel_innov_gate = single(5);
-params.gps_pos_noise = single()
+params.gps_pos_noise = single(0.5);
+params.gps_vel_noise = single(0.3);
+
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);
 
 fault_status.flags.bad_vel_N = logical(true);
+%% 变量初始化
+P(4,4) = params.gps_vel_noise;
+P(5,5) = P(4,4);
+P(6,6) = P(4,4);
+P(7,7) = params.gps_pos_noise;
+P(8,8) = P(7,7);
+P(9,9) = P(7,7);                %等于gps垂直精度的
+
+

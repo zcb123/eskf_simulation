@@ -34,15 +34,15 @@ dq_dt_display = single(zeros(len,4));
 states_quat_nominal(1,:) = single([1 0 0 0]);
 KF_P = single(zeros(23,23,len));
 KF_P_predict = single(zeros(23,23,len));
-figure('Name','P_M')
-h_m = surf(P_M);
-shading interp; % 平滑着色
-colormap(jet);
-colorbar;
-xlabel('X 轴');
-ylabel('Y 轴');
-zlabel('Z 轴');
-title('P_M 动态演示');
+% figure('Name','P predict')
+% h_pre = surf(P);
+% shading interp; % 平滑着色
+% colormap(jet);
+% colorbar;
+% xlabel('X 轴');
+% ylabel('Y 轴');
+% zlabel('Z 轴');
+% title('P pre 动态演示');
 
 figure('Name','P')
 h = surf(P);
@@ -96,9 +96,10 @@ for i = 1:len
         states_pos_predict(i,:) = states.pos';
 
         predictCovariance(params,control_status);
-        predictCovariance_Matrix(params);
+%        predictCovariance_Matrix(params);
         
-      
+%        set(h_pre,'ZData',P)
+%         pause(0.01);
         controlGpsFusion(data.RTK,imu.time_us,params);
         
         K_Display(:,4:6) = [Kfusion4 Kfusion5 Kfusion6];
@@ -114,8 +115,7 @@ for i = 1:len
     states_vel(i,:) = states.vel';
     states_pos(i,:) = states.pos';
 %     KF_P(:,:,i) = P;
-    set(h_m,'ZData',P_M)
-    pause(0.01);
+% 
     set(h,'ZData',P)
     pause(0.1);
 %     correct_update = logical(false);
@@ -123,28 +123,28 @@ for i = 1:len
 %     dq = single([1 0 0 0]);
 
     % updated 后变量
-    quat_delta_delay = single([1 0 0 0]);
-    quat_nominal_inverse = single([1 0 0 0]);
-    vel_correction = single([0 0 0]');
-    pos_correction = single([0 0 0]');
-    delta_angle_corr = single([0 0 0]');
-
-    [output_new] = calculateOutputStates(imu,params,correct_update,CONSTANTS_ONE_G);
-    
-    delta_angle_display(i,:) = delta_angle;
-    dq_display(i,:) = dq;
-    quat_delta_delay_display(i,:) = quat_delta_delay;
-    quat_nominal_inverse_display(i,:) = quat_nominal_inverse; 
-    delta_angle_corr_out_display(i,:) = delta_angle_corr;
-    vel_correction_display(i,:) = vel_correction;
-    pos_correction_display(i,:) = pos_correction;
-
-    quat_new(i,:) = output_new.quat_nominal;
-    vel_new(i,:) = output_new.vel;
-    pos_new(i,:) = output_new.pos;
+%     quat_delta_delay = single([1 0 0 0]);
+%     quat_nominal_inverse = single([1 0 0 0]);
+%     vel_correction = single([0 0 0]');
+%     pos_correction = single([0 0 0]');
+%     delta_angle_corr = single([0 0 0]');
+% 
+%     [output_new] = calculateOutputStates(imu,params,correct_update,CONSTANTS_ONE_G);
+%     
+%     delta_angle_display(i,:) = delta_angle;
+%     dq_display(i,:) = dq;
+%     quat_delta_delay_display(i,:) = quat_delta_delay;
+%     quat_nominal_inverse_display(i,:) = quat_nominal_inverse; 
+%     delta_angle_corr_out_display(i,:) = delta_angle_corr;
+%     vel_correction_display(i,:) = vel_correction;
+%     pos_correction_display(i,:) = pos_correction;
+% 
+%     quat_new(i,:) = output_new.quat_nominal;
+%     vel_new(i,:) = output_new.vel;
+%     pos_new(i,:) = output_new.pos;
  
 end
-%%
+
 t =  double(data.IMU1.t)/1e6;
 %%  setIMUData check
 figure('Name','imu data')
