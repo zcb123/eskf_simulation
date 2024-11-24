@@ -1,0 +1,24 @@
+function obj = initialiseEKFGSF(obj)
+    obj.gsf_yaw = 0.0;
+	obj.ekf_gsf_vel_fuse_started = logical(false);
+	obj.gsf_yaw_variance = (pi/2) * pi/2;
+	obj.model_weights = ones(5,1)*(1/5);  % All filter models start with the same weight
+
+% 	memset(&obj.ekf_gsf, 0, sizeof(obj.ekf_gsf));
+	yaw_increment = 2.0 * pi / 5;
+
+	for model_index = 1 model_index < 5; model_index++) {
+		% evenly space initial yaw estimates in the region between +-Pi
+		obj.ekf_gsf(model_index,1).X(2) = -_m_pi + (0.5f * yaw_increment) + ((float)model_index * yaw_increment);
+
+		% take velocity states and corresponding variance from last measurement
+		obj.ekf_gsf(model_index,1).X(0) = obj.vel_NE(0);
+		obj.ekf_gsf(model_index,1).X(1) = obj.vel_NE(1);
+		obj.ekf_gsf(model_index,1).P(0, 0) = sq(obj.vel_accuracy);
+		obj.ekf_gsf(model_index,1).P(1, 1) = obj.ekf_gsf(model_index,1).P(0, 0);
+
+		% use half yaw interval for yaw uncertainty
+		obj.ekf_gsf(model_index,1).P(2, 2) = sq(0.5f * yaw_increment);
+	}
+    
+end

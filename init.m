@@ -69,13 +69,13 @@ pos_new = single(zeros(len,3));
 % subplot(313)
 % plot(imu_t,imu_gyro(:,3));
 %%
-% figure('Name','delta_ang')
-% subplot(311)
-% plot(imu_t,imu_delta_ang(:,1));
-% subplot(312)
-% plot(imu_t,imu_delta_ang(:,2));
-% subplot(313)
-% plot(imu_t,imu_delta_ang(:,3));
+figure('Name','delta_ang')
+subplot(311)
+plot(imu_t,imu_delta_ang(:,1));
+subplot(312)
+plot(imu_t,imu_delta_ang(:,2));
+subplot(313)
+plot(imu_t,imu_delta_ang(:,3));
 %%
 % figure('Name','imu_acc')
 % subplot(311)
@@ -123,13 +123,16 @@ params.switch_on_gyro_bias = single(0.1);
 params.switch_on_accel_bias = single(0.2);
 params.mag_noise = single(5e-2);
 params.initial_wind_uncertainty = single(1);
-
+params.initial_tilt_err = single(0.1);
 
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);
 
 fault_status.flags.bad_vel_N = logical(true);
 %% 变量初始化
+P(1,1) = params.initial_tilt_err^2;
+P(2,2) = P(1,1);
+P(3,3) = P(1,1);
 P(4,4) = params.gps_vel_noise;
 P(5,5) = P(4,4);
 P(6,6) = P(4,4);
@@ -153,3 +156,9 @@ P(22,22) = params.initial_wind_uncertainty;
 P(23,23) = P(22,22);
 
 P_M = P;
+
+
+%%
+clear yawEstimator;
+yawEstimator = EKFGSF_YAW();
+

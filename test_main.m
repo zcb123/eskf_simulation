@@ -97,8 +97,12 @@ for i = 1:len
 
         predictCovariance(params,control_status);
         predictCovariance_Matrix(params);
-        
-      
+
+        yawEstimator.Update(CONSTANTS_ONE_G);
+
+        Kfusion4 = zeros(23,1);
+        Kfusion5 = zeros(23,1);
+        Kfusion6 = zeros(23,1);
         controlGpsFusion(data.RTK,imu.time_us,params);
         
         K_Display(:,4:6) = [Kfusion4 Kfusion5 Kfusion6];
