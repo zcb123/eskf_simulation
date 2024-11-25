@@ -14,10 +14,12 @@ function obj = ahrsAlignTilt(obj)
 	% corresponding earth frame unit vector rotated into the body frame, eg 'north_in_bf' would be the first column.
 	% We need the rotation matrix from body frame to earth frame so the earth frame unit vectors rotated into body
 	% frame are copied into corresponding rows instead.
-	
-	R.setRow(1, north_in_bf);
-	R.setRow(2, east_in_bf);
-	R.setRow(3, down_in_bf);
+	R(1,:) = north_in_bf;
+    R(2,:) = east_in_bf;
+    R(3,:) = down_in_bf;
+% 	R.setRow(1, north_in_bf);
+% 	R.setRow(2, east_in_bf);
+% 	R.setRow(3, down_in_bf);
 
 	for model_index = 1:5
 		obj.ahrs_ekf_gsf(model_index,1).R = R;
