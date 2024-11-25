@@ -21,7 +21,7 @@ function [int_acc,int_dt,int_flag] = acc_integral(val,dt)
     end
     persistent last_int_dt
     if isempty(last_int_dt)
-        last_int_dt = 0.004;
+        last_int_dt = 0.004*1e6;
     end
     persistent last_int_acc
     if isempty(last_int_acc)

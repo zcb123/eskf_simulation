@@ -27,19 +27,13 @@ for i = 1:len
     imu_gyro_integral_output(i,:) = imu_gyro_integral(i,:)*gyro_dt_inv;
 
 end
-imu_acc_integral_output_x = imu_acc_integral_output(:,1);
-imu_acc_update_x = imu_acc_integral_output_x(imu_acc_integral_output_x~=0);
-% imu_acc_update_dt = imu_acc_integral_dt(imu_acc_integral_dt~=0);
+imu_acc_upda
+
 %%
 % [fAz,pAz]=eust_fft(data.IMU1.t,data.IMU1.AZ);
 % [fAzInt,pAzInt]=eust_fft(data.IMU1.t,imu_acc_integral_output);
 % figure
 % plot(fAz,pAz,fAzInt,pAzInt)
-
-%%
-
-figure
-plot(imu_acc_update_dt,imu_acc_update()
 %%
 % figure
 % subplot(311)

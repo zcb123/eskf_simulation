@@ -17,23 +17,19 @@ function [gyro_int,int_dt,int_flag]=gyro_coningIntegral(val,dt)
     if isempty(last_val)
         last_val = 0;
     end
-    persistent alpha_first
-    if isempty(alpha_first)
-        alpha_first = 0;
-    end
     persistent last_int_dt
     if isempty(last_int_dt)
-        last_int_dt = 0.004;
+        last_int_dt = 0.004*1e6;
     end
 
     
     persistent last_alpha;
     if isempty(last_alpha)
-        last_alpha = 0;
+        last_alpha = [ 0 0 0];
     end
     persistent last_delta_alpha;
     if isempty(last_delta_alpha)
-        last_delta_alpha = 0;
+        last_delta_alpha = [ 0 0 0];
     end 
     persistent beta;
     if isempty(beta)
@@ -53,13 +49,13 @@ function [gyro_int,int_dt,int_flag]=gyro_coningIntegral(val,dt)
         %先梯形积分
         integrated_samples = integrated_samples + 1;
         integral_dt = integral_dt + dt;
-        alpha_first = alpha_first + (val+last_val)*dt*0.5;      %alpha_first用于梯形积分的alpha
+        delta_alpha = (val+last_val)*dt*0.5;
         last_val = val;
     
         %锥运动补偿
-        delta_alpha = alpha_first;
+%         delta_alpha = alpha_first;
 
-        tmp = (last_alpha+last_delta_alpha/6);
+        tmp = (last_alpha + last_delta_alpha/6);
         beta = beta + cross(tmp,delta_alpha)*0.5;
     
         last_delta_alpha = delta_alpha;
@@ -69,20 +65,22 @@ function [gyro_int,int_dt,int_flag]=gyro_coningIntegral(val,dt)
  
     else
 
-        alpha_first = 0;
+       
         integrated_samples = 0;
         integral_dt = 0; 
+
         beta = 0;
         last_alpha = 0;
 
         last_val = val;
     end
 
-    
+
     %integral reset 
-    int_flag = logical(false);
     int_dt = last_int_dt;
+    int_flag = logical(false);
     gyro_int = last_gyro_int;
+        
 
     if integrated_samples>reset_samples_min || integral_dt > reset_interval_min
 
@@ -92,13 +90,22 @@ function [gyro_int,int_dt,int_flag]=gyro_coningIntegral(val,dt)
 
         int_dt = round(integral_dt*1e6); %转化成为微秒;
         last_int_dt = int_dt;
+
+        alpha = 0;
         %reset
-        alpha_first = 0;
+      
         integrated_samples = 0;
         integral_dt = 0; 
+
         beta = 0;
         last_alpha = 0;
 
         int_flag = logical(true);
+   
+   
+       
     end
+
+    
+
 end
