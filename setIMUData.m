@@ -1,4 +1,4 @@
-function [updated] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s)
+function [delta_ang_dt_avg,updated] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s)
 
 global imu_sample_delayed dt_imu_avg;
 persistent time_us_last;
@@ -26,6 +26,13 @@ end
                             'delta_ang_clipping',logical([0 0 0]'),...
                             'delta_vel_clipping',logical([0 0 0]'));
     end
+    persistent delta_ang_dt_avg_last;
+    if isempty(delta_ang_dt_avg_last)
+        delta_ang_dt_avg_last = 0.0025;
+    end
+    delta_ang_dt_avg = 0.9*delta_ang_dt_avg_last + 0.1*imu_sample_new.delta_ang_dt;
+    delta_ang_dt_avg_last = delta_ang_dt_avg;
+
 	% accumulate time deltas
 	imu_down_sampled.time_us = imu_sample_new.time_us;
 	imu_down_sampled.delta_ang_dt = imu_down_sampled.delta_ang_dt + imu_sample_new.delta_ang_dt;
@@ -49,13 +56,13 @@ end
 	% rotate the accumulated delta velocity data forward each time so it is always in the updated rotation frame
 	% 将速度增量向前旋转，使其能始终处于更新的机体坐标系中
 	delta_R = Quat2Tbn(quat_inverse(delta_q));
-	imu_down_sampled.delta_vel = delta_R * imu_down_sampled.delta_vel;
+	imu_down_sampled.delta_vel = delta_R*imu_down_sampled.delta_vel;
 
 	% accumulate the most recent delta velocity data at the updated rotation frame
 	% 在更新的旋转坐标系中积分最新的速度增量数据
 	% assume effective sample time is halfway between the previous and current rotation frame
 	% 假设有效采样时间位于前一个旋转帧和当前旋转帧的中间
-	imu_down_sampled.delta_vel = imu_down_sampled.delta_vel + (imu_sample_new.delta_vel + delta_R * imu_sample_new.delta_vel) * 0.5;
+	imu_down_sampled.delta_vel = imu_down_sampled.delta_vel + (imu_sample_new.delta_vel + delta_R*imu_sample_new.delta_vel)*0.5;
     persistent accumulated_samples
     if isempty(accumulated_samples)
         accumulated_samples = single(0);
@@ -82,6 +89,7 @@ if updated
     imu_sample_delayed = imu_down_sampled;
 
     accumulated_samples = single(0);
+
     delta_angle_accumulated = single([1 0 0 0]');
     imu_down_sampled.delta_ang = single([0 0 0]');
     imu_down_sampled.delta_vel = single([0 0 0]');

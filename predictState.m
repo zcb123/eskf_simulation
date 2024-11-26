@@ -2,6 +2,7 @@ function predictState(params,CONSTANTS_ONE_G)
     global states imu_sample_delayed dt_ekf_avg;
     % to do :imu 数据下采样
     delta_ang = imu_sample_delayed.delta_ang - states.delta_ang_bias;
+    assignin("base","delta_ang",delta_ang);
 
     q1 = states.quat_nominal(1);
     q2 = states.quat_nominal(2);
@@ -54,7 +55,7 @@ function predictState(params,CONSTANTS_ONE_G)
 
 	corrected_delta_vel = imu_sample_delayed.delta_vel  - states.delta_vel_bias;
 	corrected_delta_vel_ef = R_to_earth * corrected_delta_vel;
-
+    assignin("base","corrected_delta_vel",corrected_delta_vel);
 	
 % 	alpha = 1.0 - imu_sample_delayed.delta_vel_dt;
 % 	accel_lpf_NE = accel_lpf_NE * alpha + corrected_delta_vel_ef.xy();

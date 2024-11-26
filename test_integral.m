@@ -66,8 +66,8 @@ plot(imu_t,imu_acc_filted(:,1));
 % plot(imu_t,imu_acc_integral_output(:,3),'*-');
 
 %%
-figure
-plot(imu_t,imu_gyro(:,1),'*-',imu_t,imu_gyro_integral_output(:,1),'*-');
+% figure
+% plot(imu_t,imu_gyro(:,1),'*-',imu_t,imu_gyro_integral_output(:,1),'*-');
 % figure
 % subplot(311)
 % plot(imu_t,imu_gyro(:,1),'*-',imu_t,imu_gyro_integral_output(:,1),'*-');

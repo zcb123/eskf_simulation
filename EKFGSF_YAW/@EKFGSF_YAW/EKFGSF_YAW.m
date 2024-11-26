@@ -39,7 +39,7 @@ classdef EKFGSF_YAW < handle
 	    model_weights;
 	    gsf_yaw; 		% yaw estimate (rad)
 	    gsf_yaw_variance; 	% variance of yaw estimate (rad^2)
-        ahrs_accel_fusion_gain;
+       
 	    % return the probability of the state estimate for the specified EKF assuming a gaussian error distribution
     end
     methods(Access=public)

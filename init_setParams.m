@@ -1,10 +1,7 @@
 clear 
-% foldername = 'C:\Users\89565\Desktop\自研飞控\TestData\十一月数据\1119\静态试验\';
-% filename = 'N41_2024-11-19_11-19-29.log';
-% data = Parse_Data(foldername,filename);
 close all
 load("data/N41_2024-11-19_11-19-29.mat");
-%%
+
 clear states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M;   %清理旧的变量
 
 global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M;
@@ -24,24 +21,10 @@ imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_vel_dt',single(0),...
                             'delta_ang_clipping',logical([0 0 0]'),...
                             'delta_vel_clipping',logical([0 0 0]'));
-
-P = zeros(23,23);
-P_M = zeros(23,23);
-
-dt_imu_avg = single(0.002);
-dt_ekf_avg = single(0.008);
+dt_imu_avg = 0.004;
+dt_ekf_avg = 0.008;
 
 CONSTANTS_ONE_G = single(9.80665);
-
-
-imu.time_us = uint64(0);
-imu.delta_ang = single([0 0 0]');
-imu.delta_vel = single([1 0 0]');
-imu.delta_ang_dt = single(0);
-imu.delta_vel_dt = single(0);
-imu.delta_ang_clipping = logical([0 0 0]');
-imu.delta_vel_clipping = logical([0 0 0]');
-
 
 len = length(data.IMU1.t);
 imu_t = double(data.IMU1.t)/1e6;
@@ -49,17 +32,7 @@ imu_dt = 0.002*ones(len,1);
 imu_dt(2:end,1) = diff(imu_t);
 imu_gyro = [data.IMU1.GY data.IMU1.GX -data.IMU1.GZ];
 imu_acc = [data.IMU1.AY data.IMU1.AX -data.IMU1.AZ];
-% imu_delta_ang = imu_gyro.*imu_dt;
-% %imu_dt太不均匀以至于delta_ang的变化被imu_dt的变化淹没了
-% %imu_gyro表现出imu_dt的变化趋势;
-% %imu_acc也是同理
-% imu_delta_vel = imu_acc.*imu_dt;
-imu_delta_ang = imu_gyro*0.002;
-imu_delta_vel = imu_acc*0.002;
-correct_update = logical(true);
-quat_new = single(zeros(len,4));
-vel_new = single(zeros(len,3));
-pos_new = single(zeros(len,3));
+
 
 %%  传感器数据检查
 % figure('Name','imu_gyro')

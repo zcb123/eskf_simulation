@@ -139,7 +139,7 @@ function [output_new] = calculateOutputStates(imu,params,correct_updated,CONSTAN
     output_last = output_new;
 
     % output plot
-    dq_out = dq';
-    delta_angle_corr_out = delta_angle_corr;
+%     dq_out = dq';
+%     delta_angle_corr_out = delta_angle_corr;
 
 end
