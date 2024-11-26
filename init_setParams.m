@@ -35,13 +35,13 @@ imu_acc = [data.IMU1.AY data.IMU1.AX -data.IMU1.AZ];
 
 
 %%  传感器数据检查
-% figure('Name','imu_gyro')
-% subplot(311)
-% plot(imu_t,imu_gyro(:,1));
-% subplot(312)
-% plot(imu_t,imu_gyro(:,2));
-% subplot(313)
-% plot(imu_t,imu_gyro(:,3));
+figure('Name','imu_gyro')
+subplot(311)
+plot(imu_t,imu_gyro(:,1));
+subplot(312)
+plot(imu_t,imu_gyro(:,2));
+subplot(313)
+plot(imu_t,imu_gyro(:,3));
 %%
 % figure('Name','delta_ang')
 % subplot(311)
@@ -51,13 +51,13 @@ imu_acc = [data.IMU1.AY data.IMU1.AX -data.IMU1.AZ];
 % subplot(313)
 % plot(imu_t,imu_delta_ang(:,3));
 %%
-% figure('Name','imu_acc')
-% subplot(311)
-% plot(imu_t,imu_acc(:,1));
-% subplot(312)
-% plot(imu_t,imu_acc(:,2));
-% subplot(313)
-% plot(imu_t,imu_acc(:,3));
+figure('Name','imu_acc')
+subplot(311)
+plot(imu_t,imu_acc(:,1));
+subplot(312)
+plot(imu_t,imu_acc(:,2));
+subplot(313)
+plot(imu_t,imu_acc(:,3));
 % 
 % figure('Name','delta_vel')
 % subplot(311)

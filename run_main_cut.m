@@ -132,6 +132,10 @@ imu_sample_delta_vel = NaN(len_t,3);
 imu_sample_delayed_ang = NaN(len_t,3);
 imu_sample_delayed_vel = NaN(len_t,3);
 imu_sample_delayed_t = NaN(len_t,1);
+imu_sample_ang_dt = NaN(len_t,1);
+imu_sample_vel_dt = NaN(len_t,1);
+
+dt_imu_avg_record = zeros(len_t,1);
 index = 1;
 for i = 1:len_t
 
@@ -146,7 +150,8 @@ for i = 1:len_t
     imu_sample_delta_vel(i,:) = imu_sample_new.delta_vel';
 
     [delta_ang_dt_avg,updated] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s);
-
+    
+    dt_imu_avg_record(i,1) = dt_imu_avg;
     ang_out_display(i,:) = ang_out';
     vel_out_display(i,:) = vel_out';
     quat_angle_out_display(i,:) = quat_angle_out;
@@ -162,6 +167,8 @@ for i = 1:len_t
        imu_sample_delayed_ang(index,:) = imu_sample_delayed.delta_ang';
        imu_sample_delayed_vel(index,:) = imu_sample_delayed.delta_vel';
        imu_sample_delayed_t(index,1) = vehicle_t(i,1);
+       imu_sample_ang_dt(index,1) = imu_sample_delayed.delta_ang_dt;
+       imu_sample_vel_dt(index,1) = imu_sample_delayed.delta_vel_dt;
        index = index + 1;
 
     end
@@ -172,19 +179,22 @@ end
 imu_delta_ang = getNonNaN(imu_sample_delayed_ang,3);
 imu_delta_vel = getNonNaN(imu_sample_delayed_vel,3);
 imu_delta_t = getNonNaN(imu_sample_delayed_t,1);
-
-
+imu_ang_dt = getNonNaN(imu_sample_ang_dt,1);
+imu_vel_dt = getNonNaN(imu_sample_vel_dt,1);
 %%
-% figure('Name','delta_ang')
-% subplot(311)
-% plot(vehicle_t,ang_out_display(:,1),imu_delta_t,imu_delta_ang(:,1))
-% grid on
-% subplot(312)
-% plot(vehicle_t,ang_out_display(:,2),imu_delta_t,imu_delta_ang(:,2))
-% grid on
-% subplot(313)
-% plot(vehicle_t,ang_out_display(:,3),imu_delta_t,imu_delta_ang(:,3))
-% grid on
+figure
+plot(vehicle_t,dt_imu_avg_record(:,1));
+%%
+figure('Name','delta_ang')
+subplot(311)
+plot(vehicle_t,ang_out_display(:,1),imu_delta_t,imu_delta_ang(:,1))
+grid on
+subplot(312)
+plot(vehicle_t,ang_out_display(:,2),imu_delta_t,imu_delta_ang(:,2))
+grid on
+subplot(313)
+plot(vehicle_t,ang_out_display(:,3),imu_delta_t,imu_delta_ang(:,3))
+grid on
 %%
 % figure('Name','delta_vel')
 % subplot(311)
@@ -203,38 +213,177 @@ imu_delta_t = getNonNaN(imu_sample_delayed_t,1);
 % subplot(212)
 % plot(vehicle_t,quat_angle_out_display(:,2),vehicle_t,quat_angle_out_display(:,3),vehicle_t,quat_angle_out_display(:,4))
 %%
-% figure
-% subplot(311)
-% plot(vehicle_t,imu_sample_delta_ang(:,1),'*-',imu_delta_t,imu_delta_ang(:,1),'*-')
-% grid on
-% legend('deltaAng','deltaAngDownSample')
+figure
+subplot(311)
+plot(vehicle_t,imu_sample_delta_ang(:,1),'*-',imu_delta_t,imu_delta_ang(:,1),'*-')
+grid on
+legend('deltaAng','deltaAngDownSample')
+subplot(312)
+plot(vehicle_t,imu_sample_delta_ang(:,2),'*-',imu_delta_t,imu_delta_ang(:,2),'*-')
+grid on
+legend('deltaAng','deltaAngDownSample')
+subplot(313)
+plot(vehicle_t,imu_sample_delta_ang(:,3),'*-',imu_delta_t,imu_delta_ang(:,3),'*-')
+grid on
+legend('deltaAng','deltaAngDownSample')
 
+figure
+subplot(311)
+plot(vehicle_t,imu_sample_delta_vel(:,1),'*-',imu_delta_t,imu_delta_vel(:,1),'*-')
+grid on
+legend('deltaVel','deltaVelDownSample')
+subplot(312)
+plot(vehicle_t,imu_sample_delta_vel(:,2),'*-',imu_delta_t,imu_delta_vel(:,2),'*-')
+grid on
+legend('deltaVel','deltaVelDownSample')
+subplot(313)
+plot(vehicle_t,imu_sample_delta_vel(:,3),'*-',imu_delta_t,imu_delta_vel(:,3),'*-')
+grid on
+legend('deltaVel','deltaVelDownSample')
 
+figure
+subplot(211)
+plot(imu_ang_dt)
+legend('imuAngDt')
+subplot(212)
+plot(imu_vel_dt)
+legend('imuVelDt')
+%% 在进入预测之前的数据变化
+
+figure('Name','imu_gyro setIMUData')
+subplot(311)
+plot(imu_t,imu_gyro(:,1),imu_delta_t,imu_delta_ang(:,1));
+subplot(312)
+plot(imu_t,imu_gyro(:,2),imu_delta_t,imu_delta_ang(:,2));
+subplot(313)
+plot(imu_t,imu_gyro(:,3),imu_delta_t,imu_delta_ang(:,3));
+
+figure('Name','imu_acc setIMUData')
+subplot(311)
+plot(imu_t,imu_acc(:,1),imu_delta_t,imu_delta_vel(:,1));
+subplot(312)
+plot(imu_t,imu_acc(:,2),imu_delta_t,imu_delta_vel(:,2));
+subplot(313)
+plot(imu_t,imu_acc(:,3),imu_delta_t,imu_delta_vel(:,3));
+%%
 clear delta_ang_dt_avg target_dt_s required_samples target_dt_s min_dt_s...
     imu_sample_delta_ang  imu_sample_delta_vel quat_angle_out ...
     ang_out_display vel_out_display quat_angle_out_display ...
-    imu_sample_delayed_t imu_sample_delayed_ang imu_sample_delayed_vel;
+    imu_sample_delayed_t imu_sample_delayed_ang imu_sample_delayed_vel ...
+    imu_sample_ang_dt imu_sample_vel_dt;
+
+
 %% 预测
 len_delta_t = length(imu_delta_t);
 
-
-states_vel_predict = single(zeros(len,3));
-states_pos_predict = single(zeros(len,3));
+states_quat_nominal = zeros(len_delta_t,4);
+states_vel_predict = zeros(len_delta_t,3);
+states_pos_predict = zeros(len_delta_t,3);
 
 delta_ang_display = zeros(len_delta_t,3);
-for i = 1:imu_delta_t
 
+states.quat_nominal = [1 0 0 0]';
+states.vel = [0 0 0]';
+states.pos = [0 0 0]';
 
-    predictState(params,CONSTANTS_ONE_G);
+euler = zeros(len_delta_t,3);
+
+for i = 1:len_delta_t
+
+    imu_sample_updated.delta_ang = imu_delta_ang(i,:)';
+    imu_sample_updated.delta_vel = imu_delta_vel(i,:)';
+    imu_sample_updated.delta_vel_dt = imu_vel_dt(i,1);
+    imu_sample_updated.delta_ang_dt = imu_ang_dt(i,1);
+
+    predictState(imu_sample_updated,params,CONSTANTS_ONE_G);
+
+    euler(i,:) = quattoeuler([states.quat_nominal(1) states.quat_nominal(2) states.quat_nominal(3) states.quat_nominal(4)]);
+
     delta_ang_display(i,:) = delta_ang';
+    states_quat_nominal(i,:) = states.quat_nominal';
     states_vel_predict(i,:) = states.vel';
     states_pos_predict(i,:) = states.pos';
 end
 
 
+%%
+% figure
+% plot(imu_delta_t,imu_delta_ang(:,1),imu_delta_t,delta_ang_display(:,1));
+% 
+% figure
+% subplot(211)
+% plot(imu_delta_t,states_quat_nominal(:,1))
+% subplot(212)
+% plot(imu_delta_t,states_quat_nominal(:,2),imu_delta_t,states_quat_nominal(:,3),imu_delta_t,states_quat_nominal(:,4))
+% 
+% figure
+% plot(imu_delta_t,euler(:,1),imu_delta_t,euler(:,2),imu_delta_t,euler(:,3))
+% figure
+% plot(imu_delta_t,states_vel_predict(:,1))
+% 
+% figure
+% plot(imu_delta_t,states_pos_predict(:,1))
 
+clear imu_sample_updated dq_dt delta_ang delta_ang_display states_quat_nominal states_vel_predict states_pos_predict euler;
 %% 预测的协方差
+len_delta_t = length(imu_delta_t);
 
+states.quat_nominal = [1 0 0 0]';
+states.vel = [0 0 0]';
+states.pos = [0 0 0]';
+
+% figure('Name','P_M')
+% h_m = surf(P_M);
+% shading interp; % 平滑着色
+% colormap(jet);
+% colorbar;
+% xlabel('X 轴');
+% ylabel('Y 轴');
+% zlabel('Z 轴');
+% title('P_M 动态演示');
+
+
+
+% run("P_init.m");
+% figure('Name','P')
+% h = surf(P);
+% shading interp; % 平滑着色
+% colormap(jet);
+% colorbar;
+% xlabel('X 轴');
+% ylabel('Y 轴');
+% zlabel('Z 轴');
+% title('P 动态演示');
+
+delta_ang_var_accum_display = zeros(len_delta_t,3);
+delta_vel_var_accum_display = zeros(len_delta_t,3);
+
+for i = 1:len_delta_t
+
+    imu_sample_updated.delta_ang = imu_delta_ang(i,:)';
+    imu_sample_updated.delta_vel = imu_delta_vel(i,:)';
+    imu_sample_updated.delta_vel_dt = imu_vel_dt(i,1);
+    imu_sample_updated.delta_ang_dt = imu_ang_dt(i,1);
+    imu_sample_updated.delta_ang_clipping = logical([0 0 0]);
+    imu_sample_updated.delta_vel_clipping = logical([0 0 0]);
+    
+    predictState(imu_sample_updated,params,CONSTANTS_ONE_G);
+    predictCovariance(imu_sample_updated,params,control_status);
+    
+
+    delta_ang_var_accum_display(i,:) = delta_angle_var_accum;
+    delta_vel_var_accum_display(i,:) = delta_vel_var_accum;
+%     set(h,'ZData',P)
+%     pause(0.01);
+ 
+
+end
+%%
+figure
+plot(imu_delta_t,delta_ang_var_accum_display(:,1),imu_delta_t,delta_ang_var_accum_display(:,2),imu_delta_t,delta_ang_var_accum_display(:,3));
+%%
+figure
+plot(imu_delta_t,delta_vel_var_accum_display(:,1),imu_delta_t,delta_vel_var_accum_display(:,2),imu_delta_t,delta_vel_var_accum_display(:,3))
 %% 误差状态更新
 
 %% 状态校正

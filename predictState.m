@@ -1,5 +1,5 @@
-function predictState(params,CONSTANTS_ONE_G)
-    global states imu_sample_delayed dt_ekf_avg;
+function predictState(imu_sample_delayed,params,CONSTANTS_ONE_G)
+    global states  dt_ekf_avg;
     % to do :imu 数据下采样
     delta_ang = imu_sample_delayed.delta_ang - states.delta_ang_bias;
     assignin("base","delta_ang",delta_ang);
@@ -95,6 +95,5 @@ function predictState(params,CONSTANTS_ONE_G)
     filter_update_s = params.filter_update_interval_us*1e-6;
     input = saturation(input,0.5*filter_update_s,2*filter_update_s);
     dt_ekf_avg = 0.99*dt_ekf_avg+0.01*input;
-
 end
 

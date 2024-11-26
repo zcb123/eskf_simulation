@@ -1,11 +1,11 @@
-function predictCovariance(params,control_status)
+function predictCovariance(imu_sample_delayed,params,control_status)
 
     INHIBIT_ACC_BIAS = uint8(4);
     BADACC_BIASPNOISE = single(4.9);
     BADGYROPNOISE = single(0.2);
     
 
-    global states imu_sample_delayed dt_ekf_avg P accel_bias_inhibit;
+    global states dt_ekf_avg P accel_bias_inhibit;
     
     accel_bias_inhibit = logical([false false false]);
     % assign intermediate state variables
@@ -423,7 +423,8 @@ function predictCovariance(params,control_status)
 	[nextP(2,2),delta_angle_var_accum(2)] = kahanSummation(nextP(2,2), mR10 * r10_sx + mR11 * r11_sy + mR12 * r12_sz, delta_angle_var_accum(2));
 	nextP(2,3) = nextP(2,3) + r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz;
 	[nextP(3,3),delta_angle_var_accum(3)] = kahanSummation(nextP(3,3), mR20 * r20_sx + mR21 * r21_sy + mR22 * r22_sz, delta_angle_var_accum(3));
-
+    
+    assignin("base","delta_angle_var_accum",delta_angle_var_accum);
 	
 	 % delta velocity noise
 	 % R * diag(nVel_x, nVel_y, nVel_z) * R'
@@ -453,6 +454,7 @@ function predictCovariance(params,control_status)
 	nextP(5,6) = nextP(5,6) + r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz;
 	[nextP(6,6),delta_vel_var_accum(3)] = kahanSummation(nextP(6,6), mR20 * r20_sx + mR21 * r21_sy + mR22 * r22_sz, delta_vel_var_accum(3));
 
+    assignin("base","delta_vel_var_accum",delta_vel_var_accum);
 	% process noise contribution for delta angle states can be very small compared to
 	% the variances, therefore use algorithm to minimise numerical error
 
