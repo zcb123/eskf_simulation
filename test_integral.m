@@ -14,6 +14,10 @@ imu_gyro_integral = zeros(len,3);
 imu_gyro_integral_dt = zeros(len,1);
 imu_gyro_integral_output = zeros(len,3);
 
+
+
+imu_acc_filted = zeros(len,3);
+index = 1;
 clear acc_integral gyro_coningIntegral
 for i = 1:len
     
@@ -25,6 +29,11 @@ for i = 1:len
     [imu_gyro_integral(i,:),imu_gyro_integral_dt(i,1),gyro_flag] = gyro_coningIntegral(imu_gyro(i,:),imu_dt(i,1));
     gyro_dt_inv = 1e6/imu_gyro_integral_dt(i,1);
     imu_gyro_integral_output(i,:) = imu_gyro_integral(i,:)*gyro_dt_inv;
+    
+    if acc_flag && gyro_flag
+        [acc_lpf,imu_acc_filted(index,:)] = acc_lpf.apply(imu_acc_integral_output(i,:));
+        index = index + 1;
+    end
 
 end
 imu_acc_integral_output_x = imu_acc_integral_output(:,1);
@@ -37,9 +46,10 @@ imu_acc_update_x = imu_acc_integral_output_x(imu_acc_integral_output_x~=0);
 % plot(fAz,pAz,fAzInt,pAzInt)
 
 %%
-
 figure
-plot(imu_acc_update_dt,imu_acc_update()
+plot(imu_t,imu_acc_filted(:,1));
+% figure
+% plot(imu_acc_update_dt,imu_acc_update()
 %%
 % figure
 % subplot(311)

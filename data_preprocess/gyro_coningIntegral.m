@@ -102,8 +102,6 @@ function [gyro_int,int_dt,int_flag]=gyro_coningIntegral(val,dt)
 
         int_flag = logical(true);
    
-   
-       
     end
 
     

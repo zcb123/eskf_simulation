@@ -161,4 +161,12 @@ P_M = P;
 %%
 clear yawEstimator;
 yawEstimator = EKFGSF_YAW();
+%%
+fs = 500;
+fc = 30;
+order = 2;
+Wn = fc/(fs/2);
+[b,a] = butter(order,Wn,'low');
 
+acc_lpf = LPF_2p(250,30);
+gyro_lpf = LPF_2p(250,20);
