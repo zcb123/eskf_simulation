@@ -64,11 +64,14 @@ function predictCovariance(imu_sample_delayed,params,control_status)
 	is_manoeuvre_level_high = logical(ang_rate_magnitude_filt > params.acc_bias_learn_gyr_lim...
 					     || accel_magnitude_filt > params.acc_bias_learn_acc_lim);
 
-	do_inhibit_all_axes = logical((params.fusion_mode && INHIBIT_ACC_BIAS)...
+	do_inhibit_all_axes = logical((params.fusion_mode && INHIBIT_ACC_BIAS)...    %   params.fusion_mode = 1
 					 || is_manoeuvre_level_high...
 					 || fault_status.flags.bad_acc_vertical);
-
-    prev_dvel_bias_var = zeros(3,3);
+    
+    persistent prev_dvel_bias_var
+    if isempty(prev_dvel_bias_var)
+        prev_dvel_bias_var = zeros(3,3);
+    end
 
 	for stateIndex = 12 : 14 
 		index = stateIndex - 11;
@@ -496,11 +499,12 @@ function predictCovariance(imu_sample_delayed,params,control_status)
    
 
 		[nextP(13, 13),delta_vel_bias_var_accum(1)] = kahanSummation(nextP(13, 13), noise_delta_vel_bias, delta_vel_bias_var_accum(1));
-
+        disp('nexp(13,13)')
 	else 
-		%nextP.uncorrelateCovarianceSetVariance<2>(13, prev_dvel_bias_var(1));
-		%delta_vel_bias_var_accum(1) = 1;
-
+		%nextP.uncorrelateCovarianceSetVariance<1>(13, prev_dvel_bias_var(1));
+        nextP(13,13) = prev_dvel_bias_var(1);
+		delta_vel_bias_var_accum(1) = 0;
+        
 	end
 
 	if ~accel_bias_inhibit(2) 
@@ -524,10 +528,11 @@ function predictCovariance(imu_sample_delayed,params,control_status)
 		% process noise contribution for delta velocity states can be very small compared to
 		% the variances, therefore use algorithm to minimise numerical error
 		[nextP(14, 14),delta_vel_bias_var_accum(2)] = kahanSummation(nextP(14, 14), noise_delta_vel_bias, delta_vel_bias_var_accum(2));
-
+        disp('nexp(14,14)')
 	else 
-		%nextP.uncorrelateCovarianceSetVariance<2>(14, prev_dvel_bias_var(2));
-		%delta_vel_bias_var_accum(2) = 1;
+		%nextP.uncorrelateCovarianceSetVariance<1>(14, prev_dvel_bias_var(2));
+        nextP(14,14) = prev_dvel_bias_var(2);
+		delta_vel_bias_var_accum(2) = 0;
 
 	end
 
@@ -552,10 +557,11 @@ function predictCovariance(imu_sample_delayed,params,control_status)
 		% process noise contribution for delta velocity states can be very small compared to
 		% the variances, therefore use algorithm to minimise numerical error
 		nextP(15, 15) = kahanSummation(nextP(15, 15), noise_delta_vel_bias, delta_vel_bias_var_accum(3));
-
+        disp('nexp(15,15)')
 	else 
 		%nextP.uncorrelateCovarianceSetVariance<2>(15, prev_dvel_bias_var(3));
-		%delta_vel_bias_var_accum(3) = 1;
+        nextP(15,15) = prev_dvel_bias_var(3);
+		delta_vel_bias_var_accum(3) = 0;
 	end
 
 	% Don't do covariance prediction on magnetic field states unless we are using 4-axis fusion
@@ -772,6 +778,6 @@ function predictCovariance(imu_sample_delayed,params,control_status)
 
 	% fix gross errors in the covariance matrix and ensure rows and
 	% columns for un-used states are zero
-	%fixCovarianceErrors(false);
+	P = fixCovarianceErrors(P,control_status,false);
 
 end

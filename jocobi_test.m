@@ -6,3 +6,14 @@ b = [1 2];
 y = subs(x,a,b); %赋值
 %此时结果
 y = eval(y); %转化为double型普通矩阵，
+
+syms dThetaX dThetaY dThetaZ
+dTheta = [dThetaX, dThetaY, dThetaZ];
+dVel = [dVelX, dVelY, dVelZ];
+dPos = [dPosX, dPosY, dPosZ];
+d_ang_db = [dAng_dbx, dAng_dby, dAng_dbz];
+d_vel_db = [dVel_dbx, dVel_dby, dVel_dbz];
+di = [dix,diy,diz];
+dib = [dibx,diby,dibz];
+dw = [dwx,dwy];
+error_state = [dTheta,dVel,dPos,d_ang_db,d_vel_db,di,dib,dw];

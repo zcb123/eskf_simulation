@@ -1,13 +1,13 @@
-function obj = Update(obj,CONSTANTS_ONE_G)
+function obj = Update(obj,imu_sample,CONSTANTS_ONE_G)
     % copy to class variables
-    global states imu_sample_delayed dt_ekf_avg;
+    global states  dt_ekf_avg;
 
     imu_gyro_bias = states.delta_ang_bias/dt_ekf_avg;           %这个参数后面要用
 
 % 	_delta_ang = imu_sample_delayed.delta_ang;
-	obj.delta_vel = imu_sample_delayed.delta_vel;
+	obj.delta_vel = imu_sample.delta_vel;
 % 	_delta_ang_dt = imu_sample_delayed.delta_ang_dt;
-	obj.delta_vel_dt = imu_sample_delayed.delta_vel_dt;
+	obj.delta_vel_dt = imu_sample.delta_vel_dt;
 	obj.run_ekf_gsf = logical(true);
 % 	_true_airspeed = airspeed;
 
@@ -122,7 +122,7 @@ function obj = Update(obj,CONSTANTS_ONE_G)
 	obj.gsf_yaw_variance = 0.0;
 
 	for model_index = 0:5 
-		yaw_delta = wrap_pi(obj.ekf_gsf(model_index,1).X(3) - obj.gsf_yaw);
+		yaw_delta = wrap_pn_pi(obj.ekf_gsf(model_index,1).X(3) - obj.gsf_yaw);
 		obj.gsf_yaw_variance = obj.gsf_yaw_variance + obj.model_weights(model_index) * (obj.ekf_gsf(model_index,1).P(3, 3) + yaw_delta * yaw_delta);
 	end
 

@@ -1,15 +1,17 @@
-function predictCovariance_Matrix(params)
+function predictCovariance_Matrix(imu_sampled,params,control_status)
 
     global states P_M dt_ekf_avg;
     q1 = states.quat_nominal(1);
     q2 = states.quat_nominal(2);
     q3 = states.quat_nominal(3);
     q4 = states.quat_nominal(4);
-    
-    delta_vb = states.delta_vel_bias;
+
+    %delta_v = imu_sample_delayed.delta_vel;
+
+    delta_v = imu_sampled.delta_vel - states.delta_vel_bias;
 
     Rot = Quat2Tbn([q1 q2 q3 q4]);
-    m_R_vb = Vec2AntiSymMatrix(Rot*delta_vb);
+    m_R_vb = -Vec2AntiSymMatrix(Rot*delta_v);
     dt = dt_ekf_avg;
 
     A = [  eye(3)   zeros(3,3) zeros(3,3)   -Rot     zeros(3,3) zeros(3,3) zeros(3,3) zeros(3,2);   %delta_theta
@@ -36,7 +38,8 @@ function predictCovariance_Matrix(params)
     
     mag_I_sig = params.mage_p_noise^2;
     mag_B_sig = params.magb_p_noise^2;
-    wind_vel_sig = params.wind_vel_p_noise^2;
+    %wind_vel_sig = params.wind_vel_p_noise^2;
+    wind_vel_sig = 0;
     mag_noise = diag([mag_I_sig mag_I_sig mag_I_sig]);
     magB_noise = diag([mag_B_sig mag_B_sig mag_B_sig]);     %mag_bias_noise
     wind_noise = diag([wind_vel_sig wind_vel_sig]);
@@ -56,5 +59,10 @@ function predictCovariance_Matrix(params)
     
     %tmp = A*P_M*A'
     P_M = A*P_M*A' + Q;
+    
+    
 
+
+    P_M = fixCovarianceErrors(P_M,control_status,false);
+    
 end

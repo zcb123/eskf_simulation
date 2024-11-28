@@ -1,6 +1,6 @@
-function [output_new] = calculateOutputStates(imu,params,correct_updated,CONSTANTS_ONE_G)
+function  calculateOutputStates(imu,params,correct_updated,CONSTANTS_ONE_G)
  
-    output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
+    
     global states imu_sample_delayed dt_imu_avg  dt_ekf_avg;
     persistent output_last;
     if isempty(output_last)
@@ -9,7 +9,7 @@ function [output_new] = calculateOutputStates(imu,params,correct_updated,CONSTAN
         output_last.vel = single([0 0 0]');
         output_last.pos = single([0 0 0]');
     end
-    persistent output_buffer;
+    global output_buffer output_new;
     
     buffer_size = 3;
     persistent head_index;
@@ -18,11 +18,6 @@ function [output_new] = calculateOutputStates(imu,params,correct_updated,CONSTAN
     persistent vel_err_integ;
     persistent pos_err_integ;
     
-    if isempty(output_buffer)
-        output_buffer = [output_last;
-                        output_last;
-                        output_last;];
-    end
 
     if isempty(head_index)
         head_index = uint8(1);

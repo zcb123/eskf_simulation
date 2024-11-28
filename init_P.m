@@ -1,4 +1,4 @@
-
+function init_P(params,rtkData)
 
 global P P_M dt_ekf_avg;
 
@@ -11,7 +11,7 @@ P(5,5) = P(4,4);
 P(6,6) = P(4,4);
 P(7,7) = params.gps_pos_noise;
 P(8,8) = P(7,7);
-P(9,9) = data.RTK.pdop(1,1)^2 - data.RTK.hdop(1,1)^2;                %等于gps垂直精度(vacc)的平方
+P(9,9) = rtkData.pdop^2 - rtkData.hdop^2;                %等于gps垂直精度(vacc)的平方
 P(10,10) = params.switch_on_gyro_bias*dt_ekf_avg;
 P(11,11) = P(10,10);
 P(12,12) = P(10,10);
@@ -29,3 +29,5 @@ P(22,22) = params.initial_wind_uncertainty;
 P(23,23) = P(22,22);
 
 P_M = P;
+
+end

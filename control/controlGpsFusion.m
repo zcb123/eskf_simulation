@@ -19,7 +19,7 @@ function controlGpsFusion(gps_data,imu_t,params,control_status)
         gps_sample_delayed.sacc = 0.5;
         gps_sample_delayed.fix_type = gps_data.fix(gps_index,1);
 
-        controlGpsYawFusion(params,control_status,)
+
         fuseGpsYaw(gps_sample_delayed,params,control_status);                           %出货机天线航向偏置180，碳管机偏置90   
 
         fuseGpsVelPos(gps_sample_delayed,params);

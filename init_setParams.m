@@ -2,9 +2,9 @@ clear
 close all
 load("data/N41_2024-11-19_11-19-29.mat");
 
-clear states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M;   %清理旧的变量
+clear states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M R_to_earth time_last_imu;   %清理旧的变量
 
-global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M;
+global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M R_to_earth;
 states = struct('quat_nominal',single([1 0 0 0]'),...
                         'vel',single([0 0 0]'),...
                         'pos',single([0 0 0]'),...
@@ -21,9 +21,27 @@ imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_vel_dt',single(0),...
                             'delta_ang_clipping',logical([0 0 0]'),...
                             'delta_vel_clipping',logical([0 0 0]'));
+global output_new output_buffer;
+
+output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
+
+output_buffer = [output_new;
+                 output_new;
+                 output_new;];
+% fault_status = struct('bad_mag_x',false,...
+%     'bad_mag_x',false,...
+%     'bad_mag_y',false,...)
+
+
+R_to_earth = zeros(3,3);
+
 dt_imu_avg = 0.004;
 dt_ekf_avg = 0.008;
 
+global time_last_gps_yaw_fuse time_last_imu;
+
+time_last_imu = 0;
+time_last_gps_yaw_fuse = 0;
 CONSTANTS_ONE_G = single(9.80665);
 
 len = length(data.IMU1.t);
@@ -51,13 +69,13 @@ plot(imu_t,imu_gyro(:,3));
 % subplot(313)
 % plot(imu_t,imu_delta_ang(:,3));
 %%
-figure('Name','imu_acc')
-subplot(311)
-plot(imu_t,imu_acc(:,1));
-subplot(312)
-plot(imu_t,imu_acc(:,2));
-subplot(313)
-plot(imu_t,imu_acc(:,3));
+% figure('Name','imu_acc')
+% subplot(311)
+% plot(imu_t,imu_acc(:,1));
+% subplot(312)
+% plot(imu_t,imu_acc(:,2));
+% subplot(313)
+% plot(imu_t,imu_acc(:,3));
 % 
 % figure('Name','delta_vel')
 % subplot(311)
@@ -70,6 +88,8 @@ plot(imu_t,imu_acc(:,3));
 % figure
 % plot(imu_dt)
 %%  参数初始化
+global params control_status fault_status;
+
 params.imu_pos_body = single([1 0 0]');
 params.gps_pos_body = single([0 0 0]');
 params.vel_Tau = single(0.25);
@@ -98,11 +118,19 @@ params.switch_on_accel_bias = single(0.2);
 params.mag_noise = single(5e-2);
 params.initial_wind_uncertainty = single(1);
 params.initial_tilt_err = single(0.1);
+params.gps_yaw_offset = single(180);                                %出货机天线航向偏置180，碳管机偏置90
+params.gps_heading_noise = single(0.1);
+params.heading_innov_gate = single(2.6);
+params.reset_timeout_max = 7000000;         %微秒
 
+
+control_status.flags.gps = logical(true);
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);
+control_status.flags.in_air = logical(false);
 
 fault_status.flags.bad_vel_N = logical(true);
+
 %% 变量初始化
 P(1,1) = params.initial_tilt_err^2;
 P(2,2) = P(1,1);

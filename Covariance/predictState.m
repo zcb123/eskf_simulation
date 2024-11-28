@@ -1,5 +1,5 @@
 function predictState(imu_sample_delayed,params,CONSTANTS_ONE_G)
-    global states  dt_ekf_avg;
+    global states  dt_ekf_avg R_to_earth;
     % to do :imu 数据下采样
     delta_ang = imu_sample_delayed.delta_ang - states.delta_ang_bias;
     assignin("base","delta_ang",delta_ang);

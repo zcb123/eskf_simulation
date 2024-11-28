@@ -1,4 +1,4 @@
-function controlGpsYawFusion(gps_checks_failing)
+function controlGpsYawFusion(params,control_status)
 
 %     if (~(params.fusion_mode && GPSYAW)...
 % 	    || control_status.flags.gps_yaw_fault) 
@@ -6,15 +6,10 @@ function controlGpsYawFusion(gps_checks_failing)
 % 		stopGpsYawFusion();
 % 		return;
 % 	end
-    global params control_status time_last_gps_yaw_data time_last_imu;
+    global time_last_imu;
 % 	is_new_data_available = PX4_ISFINITE(gps_sample_delayed.yaw);
 
     is_new_data_available = true;
-
-    persistent nb_gps_yaw_reset_available;
-    if isempty(nb_gps_yaw_reset_available)
-        nb_gps_yaw_reset_available = 0;
-    end
 
 	if (is_new_data_available) 
 
@@ -30,7 +25,6 @@ function controlGpsYawFusion(gps_checks_failing)
 
 		time_last_gps_yaw_data = time_last_imu;
 
-        
 		if (control_status.flags.gps_yaw) 
 
 			if (continuing_conditions_passing) 
@@ -81,8 +75,7 @@ function controlGpsYawFusion(gps_checks_failing)
 
     elseif (control_status.flags.gps_yaw && isTimedOut(time_last_gps_yaw_data, params.reset_timeout_max)) 
 		% No yaw data in the message anymore. Stop until it comes back.
-		%stopGpsYawFusion();
-        control_status.flags.gps_yaw = false;
+		stopGpsYawFusion();
 	end
 
 	% Before takeoff, we do not want to continue to rely on the current heading
