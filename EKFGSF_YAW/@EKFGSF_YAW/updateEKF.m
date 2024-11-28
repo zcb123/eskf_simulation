@@ -1,7 +1,7 @@
 function [obj,res] = updateEKF(obj,model_index)
 
     % set observation variance from accuracy estimate supplied by GPS and apply a sanity check minimum
-	velObsVar = sq(max(obj.vel_accuracy, 0.01));
+	velObsVar = sq(max(obj.vel_accuracy, 0.01));        %限制了最小值 0.01
 
 	% calculate velocity observation innovations
 	obj.ekf_gsf(model_index,1).innov(1) = obj.ekf_gsf(model_index,1).X(1) - obj.vel_NE(1);
@@ -38,7 +38,7 @@ function [obj,res] = updateEKF(obj,model_index)
 	t14 = P01*P02;
 	t15 = P12*t7;
 	t16 = t0*velObsVar;
-	t17 = t2*t2;
+	t17 = powf(t2,-2);
 	t18 = t4*velObsVar + t8;
 	t19 = t17*t18;
 	t20 = t17*(t16 + t7*t8);
@@ -64,7 +64,7 @@ function [obj,res] = updateEKF(obj,model_index)
 	obj.ekf_gsf(model_index,1).S_inverse(2,2) = t3*t7;
 	obj.ekf_gsf(model_index,1).S_inverse(2,1) = obj.ekf_gsf(model_index,1).S_inverse(1,2);
 
-	K = zeros(3,3);
+	K = zeros(3,2);
 	K(1,1) = t3*t8;
 	K(2,1) = t9;
 	K(3,1) = t3*(-t12 + t13);
@@ -89,9 +89,9 @@ function [obj,res] = updateEKF(obj,model_index)
 		obj.ekf_gsf(model_index,1).P(index, index) = max(obj.ekf_gsf(model_index,1).P(index, index), min_var);
 	end
 
-	% test ratio = transpose(innovation) * inverse(innovation variance) * innovation = [1x2] * [3,3] * [3,2] = [2,2]
-	test_ratio = obj.ekf_gsf(model_index,1).innov * (obj.ekf_gsf(model_index,1).S_inverse * obj.ekf_gsf(model_index,1).innov);
-
+	% test ratio = transpose(innovation) * inverse(innovation variance) * innovation =[1x2] * [2,2] * [2,1] = [1,1]
+	test_ratio = obj.ekf_gsf(model_index,1).innov' * (obj.ekf_gsf(model_index,1).S_inverse * obj.ekf_gsf(model_index,1).innov);
+    assignin("base","test_ratio",test_ratio);
 	% Perform a chi-square innovation consistency test and calculate a compression scale factor
 	% that limits the magnitude of innovations to 5-sigma
 	% If the test ratio is greater than 25 (5 Sigma) then reduce the length of the innovation vector to clip it at 5-Sigma
@@ -99,7 +99,7 @@ function [obj,res] = updateEKF(obj,model_index)
     if(test_ratio > 25)
 	    innov_comp_scale_factor = sqrt(25.0 / test_ratio);
     else
-        innov_comp_scale_factor = 2;
+        innov_comp_scale_factor = 1;
     end
         
 	% Correct the state vector and capture the change in yaw angle
@@ -111,8 +111,8 @@ function [obj,res] = updateEKF(obj,model_index)
 
 	% apply the change in yaw angle to the AHRS
 	% take advantage of sparseness in the yaw rotation matrix
-	cosYaw = cosf(yawDelta);
-	sinYaw = sinf(yawDelta);
+	cosYaw = cos(yawDelta);
+	sinYaw = sin(yawDelta);
 	R_prev00 = obj.ahrs_ekf_gsf(model_index,1).R(1, 1);
 	R_prev01 = obj.ahrs_ekf_gsf(model_index,1).R(1, 2);
 	R_prev02 = obj.ahrs_ekf_gsf(model_index,1).R(1, 3);

@@ -1,6 +1,6 @@
 function obj = predictEKF(obj,model_index)
     % generate an attitude reference using IMU data
-	ahrsPredict(model_index);
+	obj.ahrsPredict(model_index);
 
 	% we don't start running the EKF part of the algorithm until there are regular velocity observations
 	if ~obj.ekf_gsf_vel_fuse_started
@@ -31,6 +31,7 @@ function obj = predictEKF(obj,model_index)
 	P11 = obj.ekf_gsf(model_index,1).P(2,2);
 	P12 = obj.ekf_gsf(model_index,1).P(2,3);
 	P22 = obj.ekf_gsf(model_index,1).P(3,3);
+
 	psi = obj.ekf_gsf(model_index,1).X(3);
 
 	% Use fixed values for delta velocity and delta angle process noise variances
@@ -66,6 +67,7 @@ function obj = predictEKF(obj,model_index)
 	min_var = 1e-6;
 
 	for index = 1: 3
+        %这里限制了最小值min_var
 		obj.ekf_gsf(model_index,1).P(index, index) = max(obj.ekf_gsf(model_index,1).P(index, index), min_var);
 	end
 

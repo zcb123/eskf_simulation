@@ -1,12 +1,12 @@
-function obj = ahrsPredict(obj)
+function obj = ahrsPredict(obj,model_index)
 
+    global FLT_EPSILON;
+    % generate attitude solution using simple complementary filter for the selected model
 
-% generate attitude solution using simple complementary filter for the selected model
-
-	ang_rate = obj.delta_ang / max(obj.delta_ang_dt, 0.001) - obj.ahrs_ekf_gsf(model_index,1).gyro_bias;
+	ang_rate = obj.delta_ang ./ max(obj.delta_ang_dt, 0.001) - obj.ahrs_ekf_gsf(model_index,1).gyro_bias;
 
 	R_to_body = obj.ahrs_ekf_gsf(model_index,1).R';
-	gravity_direction_bf = R_to_body.col(2);
+	gravity_direction_bf = R_to_body(:,3);
 
 	% Perform angular rate correction using accel data and reduce correction as accel magnitude moves away from 1 g (reduces drift when vehicle picked up and moved).
 	% During fixed wing flight, compensate for centripetal acceleration assuming coordinated turns and X axis forward
@@ -19,7 +19,7 @@ function obj = ahrsPredict(obj)
 		if (obj.true_airspeed > FLT_EPSILON) 
 			% Calculate body frame centripetal acceleration with assumption X axis is aligned with the airspeed vector
 			% Use cross product of body rate and body frame airspeed vector
-			centripetal_accel_bf = [0.0  obj.true_airspeed * ang_rate(2) - obj.true_airspeed * ang_rate(1)];
+			centripetal_accel_bf = [0.0 ; obj.true_airspeed * ang_rate(3) ;-obj.true_airspeed*ang_rate(2)];
 
 			% correct measured accel for centripetal acceleration
 			accel = accel - centripetal_accel_bf;
@@ -40,7 +40,7 @@ function obj = ahrsPredict(obj)
 
 	% delta angle from previous to current frame
 	delta_angle_corrected = obj.delta_ang + (tilt_correction - obj.ahrs_ekf_gsf(model_index,1).gyro_bias)*obj.delta_ang_dt;
-
+    assignin('base',"delta_angle_corrected",delta_angle_corrected);
 	% Apply delta angle to rotation matrix
 	obj.ahrs_ekf_gsf(model_index,1).R = ahrsPredictRotMat(obj.ahrs_ekf_gsf(model_index,1).R, delta_angle_corrected);
 

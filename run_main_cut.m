@@ -392,11 +392,92 @@ for i = 1:len_delta_t
 
 end
 %%
-figure
+figure('Name','delta_ang_var_accum_display')
 plot(imu_delta_t,delta_ang_var_accum_display(:,1),imu_delta_t,delta_ang_var_accum_display(:,2),imu_delta_t,delta_ang_var_accum_display(:,3));
 %%
-figure
+figure('Name','delta_vel_var_accum_display')
 plot(imu_delta_t,delta_vel_var_accum_display(:,1),imu_delta_t,delta_vel_var_accum_display(:,2),imu_delta_t,delta_vel_var_accum_display(:,3))
+%% EKFGSF_YAW 检查
+clear predictState predictCovariance predictCovariance_Matrix ...
+    fuseVelocityWithLevelArm fuseVelocityWithLevelArm_Matrix;   
+
+clear yawEstimator;
+global yawEstimator;
+yawEstimator = EKFGSF_YAW();
+
+close all
+
+len_delta_t = length(imu_delta_t);
+init_states();
+run("P_init.m");
+
+gps_index_last = 0;
+ahrs_accel_norm_display = zeros(len_delta_t,1);
+ahrs_accel_fusion_gain_display = zeros(len_delta_t,1);
+gsf_yaw_display = zeros(len_delta_t,1);
+P_GSF = zeros(3,3);
+figure('Name','P_GSF')
+p_m = surf(P_GSF);
+shading interp; % 平滑着色
+colormap(jet);
+colorbar;
+xlabel('X 轴');
+ylabel('Y 轴');
+zlabel('Z 轴');
+title('P_M 动态演示');
+delta_angle_corrected_display = zeros(len_delta_t,3);
+delta_angle_corrected = [0 0 0]';
+test_ratio = 0;
+test_ratio_display = zeros(len_delta_t,1);
+model_weights_display = zeros(len_delta_t,5);
+for i = 1:len_delta_t
+
+    imu_sample_updated.delta_ang = imu_delta_ang(i,:)';
+    imu_sample_updated.delta_vel = imu_delta_vel(i,:)';
+    imu_sample_updated.delta_vel_dt = imu_vel_dt(i,1);
+    imu_sample_updated.delta_ang_dt = imu_ang_dt(i,1);
+    imu_sample_updated.delta_ang_clipping = logical([0 0 0]);
+    imu_sample_updated.delta_vel_clipping = logical([0 0 0]);
+    
+    predictCovariance(imu_sample_updated,params,control_status);  
+    predictCovariance_Matrix(imu_sample_updated,params,control_status);
+    predictState(imu_sample_updated,params,CONSTANTS_ONE_G);
+
+    gps_data_ready = false;
+    gps_dt = data.RTK.t - imu_delta_t(i,1)*1e6;
+    gps_index = find(gps_dt<1e3,1,'last');
+    if gps_index_last~=gps_index    %目前都默认gps数据是能用的
+        gps_data_ready = true;
+        gps_index_last = gps_index;
+    end
+
+    runYawEKFGSF(imu_sample_updated,data.RTK,gps_data_ready,gps_index);
+    
+    ahrs_accel_norm_display(i,1) = yawEstimator.ahrs_accel_norm;
+    ahrs_accel_fusion_gain_display(i,1) = yawEstimator.ahrs_accel_fusion_gain;
+    gsf_yaw_display(i,1) = yawEstimator.gsf_yaw;
+    delta_angle_corrected_display(i,:) = delta_angle_corrected;
+    test_ratio_display(i,1) = test_ratio;
+%     P_GSF = yawEstimator.ekf_gsf(1,1).P;
+%     set(p_m,'ZData',P_GSF)
+%     pause(0.01);
+
+    model_weights_display(i,:) = yawEstimator.model_weights';
+
+end
+
+%%
+figure('Name','ahrs_accel_norm_display')
+plot(imu_delta_t,ahrs_accel_norm_display);
+%%
+figure('Name','ahrs_accel_fusion_gain_display')
+plot(imu_delta_t,ahrs_accel_fusion_gain_display);
+%%
+figure('Name','gsf_yaw_display')
+plot(imu_delta_t,gsf_yaw_display*57.3);
+%%
+figure
+plot(imu_delta_t,delta_angle_corrected_display(:,1))
 %% 误差状态更新
 
 
@@ -409,7 +490,9 @@ init_states();
 
 run("P_init.m");
 
-
+clear yawEstimator;
+global yawEstimator;
+yawEstimator = EKFGSF_YAW();
 % figure('Name','K_M')
 % h_m = surf(P_M);
 % shading interp; % 平滑着色
@@ -439,6 +522,12 @@ len_gps = length(data.RTK.t);
 states_quat_nominal_display=zeros(4,len_delta_t);
 states_vel_display=zeros(3,len_delta_t);
 states_pos_display=zeros(3,len_delta_t);
+
+
+
+gps_index_last = 0;
+
+
 for i = 1:len_delta_t
 
     imu_sample_updated.delta_ang = imu_delta_ang(i,:)';
@@ -451,12 +540,18 @@ for i = 1:len_delta_t
     predictCovariance(imu_sample_updated,params,control_status);  
     predictCovariance_Matrix(imu_sample_updated,params,control_status);
     predictState(imu_sample_updated,params,CONSTANTS_ONE_G);
-    
 
+    gps_data_ready = false;
+    gps_dt = data.RTK.t - imu_delta_t(i,1)*1e6;
+    gps_index = find(gps_dt<1e3,1,'last');
+    if gps_index_last~=gps_index    %目前都默认gps数据是能用的
+        gps_data_ready = true;
+        gps_index_last = gps_index;
+    end
 
-    yawEstimator.Update(imu_sample_updated,CONSTANTS_ONE_G);
+    runYawEKFGSF(imu_sample_updated,data.RTK,gps_data_ready,gps_index);
 
-    controlGpsFusion(data.RTK,imu_delta_t(i,1)*1e6,params,control_status)
+    controlGpsFusion(data.RTK,gps_data_ready,gps_index);
 
     K4_Display(:,i) = Kfusion4;
     states_quat_nominal_display(:,i) = states.quat_nominal;

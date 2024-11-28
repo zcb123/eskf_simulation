@@ -50,7 +50,7 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
 
 	% The 3-state EKF models only run when flying to avoid corrupted estimates due to operator handling and GPS interference
 	% 三态EKF模型仅在飞行时运行，以避免因操作员操作和GPS干扰而导致的估计错误
-	if obj.run_ekf_gsf && obj.vel_data_updated %vel_data_updated 这个值也是这里使用，GPS每次更新数据，这里置true
+	if obj.run_ekf_gsf && obj.vel_data_updated 
 		if (~obj.ekf_gsf_vel_fuse_started) 
 			obj.initialiseEKFGSF();
 			obj.ahrsAlignYaw();
@@ -69,7 +69,6 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
 			for model_index = 1:5 
 				% subsequent measurements are fused as direct state observations
                 [obj,res] = obj.updateEKF(model_index);
-                %res = true;
 				if (~res) 
 					bad_update = true;
 				end
@@ -103,7 +102,7 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
             end
 		end
 		
-    elseif (obj.ekf_gsf_vel_fuse_started && ~obj.run_ekf_gsf)               % 没有运行ekf_gsf，这里置为false
+    elseif (obj.ekf_gsf_vel_fuse_started && ~obj.run_ekf_gsf) 
 		% wait to fly again
 		obj.ekf_gsf_vel_fuse_started = false;
 	end

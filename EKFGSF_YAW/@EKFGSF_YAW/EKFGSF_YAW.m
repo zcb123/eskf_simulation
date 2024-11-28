@@ -3,7 +3,7 @@ classdef EKFGSF_YAW < handle
         % Parameters - these could be made tuneable
 	    gyro_noise = 1.0e-1; 	% yaw rate noise used for covariance prediction (rad/sec)
 	    accel_noise = 2.0;		% horizontal accel noise used for covariance prediction (m/sec**2)
-	    tilt_gain = 0.2;		% gain from tilt error to gyro correction for complementary filter (1/sec)
+	    tilt_gain = 0.2;		% gain from tilt error to gyro correction for complementary filter (1/sec)  陀螺仪互补校正的系数
 	    gyro_bias_gain = 0.04;	% gain applied to integral of gyro correction for complementary filter (1/sec)
     
 	    % Declarations used by the bank of N_MODELS_EKFGSF AHRS complementary filters
@@ -46,20 +46,24 @@ classdef EKFGSF_YAW < handle
 
         function obj = EKFGSF_YAW()
 
-            obj.delta_ang = [ 0 0 0];
-            obj.delta_vel = [ 0 0 0];
+            obj.delta_ang = [ 0 0 0]';
+            obj.delta_vel = [ 0 0 0]';
             obj.model_weights = zeros(5,1);
             obj.ahrs_ekf_gsf_tilt_aligned = logical(false);
             obj.gsf_yaw = 0;
             obj.gsf_yaw_variance = 0;
-            obj.ahrs_accel= [0 0 0];
+            obj.ahrs_accel= [0 0 0]';
             obj.tilt_gain = 0.2;
             obj.vel_data_updated = logical(false);
             obj.ekf_gsf_vel_fuse_started = logical(false);
             obj.ahrs_accel_fusion_gain = single(0);
-            
+            obj.vel_NE = zeros(2,1);
+            obj.vel_accuracy = 0;
+            obj.true_airspeed = 0;
+            obj.ahrs_accel_norm = 0;
+
             obj.ahrs_ekf_gsf_1 = struct('R',zeros(3,3),...
-                                'gyro_bias',zeros(1,3),...
+                                'gyro_bias',zeros(3,1),...
                                 'aligned',logical(true),...
                                 'vel_NE',zeros(1,2),...
                                 'fuse_gps',logical(true),...
@@ -71,14 +75,19 @@ classdef EKFGSF_YAW < handle
                             'P',zeros(3,3),...
                             'S_inverse',zeros(2,2),...
                             'S_det_inverse',0,...
-                            'innov',zeros(1,2));
+                            'innov',zeros(2,1));
             obj.ekf_gsf = [obj.ekf_gsf_1;obj.ekf_gsf_1;obj.ekf_gsf_1;obj.ekf_gsf_1;obj.ekf_gsf_1];
 
         end
 
-        obj = Update(obj,CONSTANTS_ONE_G) 
+        obj = Update(obj,imu_sample,airspeed) 
         
-        
+        function obj = setVelocity(obj,vel,accuracy)
+            obj.vel_NE = vel;
+            obj.vel_accuracy = accuracy;
+            obj.vel_data_updated = true;
+        end
+
     end
 
    methods(Access = private)
@@ -97,12 +106,14 @@ classdef EKFGSF_YAW < handle
 	    % Efficient propagation of a delta angle in body frame applied to the body to earth frame rotation matrix
 	    obj = ahrsPredictRotMat(obj,Rot,g);
         
-        obj = ahrsCalcAccelGain(obj)
+        obj = ahrsCalcAccelGain(obj);
 
+        obj = predictEKF(obj,model_index);
 	    % update state and covariance for the specified EKF using a NE velocity measurement
 	    % return false if update failed
-	    updateEKF(obj,model_index);
+	    [obj,res] = updateEKF(obj,model_index);
         
         res = gaussianDensity(obj,model_index);
+
    end
 end

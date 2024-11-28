@@ -42,7 +42,10 @@ global time_last_gps_yaw_fuse time_last_imu;
 
 time_last_imu = 0;
 time_last_gps_yaw_fuse = 0;
+
+global CONSTANTS_ONE_G FLT_EPSILON;
 CONSTANTS_ONE_G = single(9.80665);
+FLT_EPSILON = 1.192e-7;
 
 len = length(data.IMU1.t);
 imu_t = double(data.IMU1.t)/1e6;
@@ -162,6 +165,7 @@ P_M = P;
 
 %%
 clear yawEstimator;
+global yawEstimator;
 yawEstimator = EKFGSF_YAW();
 %%
 % fs = 500;
