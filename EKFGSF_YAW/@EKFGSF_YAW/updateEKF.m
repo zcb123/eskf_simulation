@@ -62,9 +62,9 @@ function [obj,res] = updateEKF(obj,model_index)
 	obj.ekf_gsf(model_index,1).S_inverse(1,2) = t6;
 	obj.ekf_gsf(model_index,1).S_inverse(2,2) = t3*t7;
 	obj.ekf_gsf(model_index,1).S_inverse(2,1) = obj.ekf_gsf(model_index,1).S_inverse(1,2);
-%     if obj.ekf_gsf(model_index,1).S_inverse(1,2) > 1e3
-%         debug = 1;
-%     end
+    if obj.ekf_gsf(model_index,1).S_det_inverse < 0
+        debug = 1;
+    end
 	K = zeros(3,2);
 	K(1,1) = t3*t8;
 	K(2,1) = t9;

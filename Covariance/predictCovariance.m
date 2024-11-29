@@ -1,4 +1,4 @@
-function predictCovariance(imu_sample_delayed,params,control_status)
+function predictCovariance(imu_sample_delayed)
 
     INHIBIT_ACC_BIAS = uint8(4);
     BADACC_BIASPNOISE = single(4.9);
@@ -6,6 +6,7 @@ function predictCovariance(imu_sample_delayed,params,control_status)
     
 
     global states dt_ekf_avg P accel_bias_inhibit;
+    global params control_status;
     
     accel_bias_inhibit = logical([false false false]);
     % assign intermediate state variables

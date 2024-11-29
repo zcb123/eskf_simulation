@@ -1,6 +1,7 @@
-function predictCovariance_Matrix(imu_sampled,params,control_status)
+function predictCovariance_Matrix(imu_sampled)
 
     global states P_M dt_ekf_avg;
+    global params control_status;
     q1 = states.quat_nominal(1);
     q2 = states.quat_nominal(2);
     q3 = states.quat_nominal(3);

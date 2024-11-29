@@ -2,7 +2,7 @@ clear
 close all
 load("data/N41_2024-11-19_11-19-29.mat");
 
-clear states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M R_to_earth time_last_imu;   %清理旧的变量
+
 
 global states imu_sample_delayed dt_imu_avg  dt_ekf_avg P P_M R_to_earth;
 states = struct('quat_nominal',single([1 0 0 0]'),...
@@ -21,6 +21,7 @@ imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_vel_dt',single(0),...
                             'delta_ang_clipping',logical([0 0 0]'),...
                             'delta_vel_clipping',logical([0 0 0]'));
+
 global output_new output_buffer;
 
 output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));

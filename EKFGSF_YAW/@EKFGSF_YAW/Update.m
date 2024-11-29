@@ -96,7 +96,7 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
 				if n_weight_clips < 5
 					obj.model_weights = obj.model_weights / total_weight;
 
-    			else 
+    			else        %
 					% all weights have collapsed due to excessive innovation variances so reset filters
 					obj.initialiseEKFGSF();
                 end

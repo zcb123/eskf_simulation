@@ -42,7 +42,7 @@ end
 vehicle_acc = getNonNaN(imu_acc_update,3);
 vehicle_gyro = getNonNaN(imu_gyro_update,3);
 vehicle_t = getNonNaN(imu_t_update,1);
-
+%%
 figure('Name','vehivle acc')
 subplot(311)
 plot(imu_t,imu_acc(:,1),vehicle_t,vehicle_acc(:,1))
@@ -250,21 +250,21 @@ plot(vehicle_t,dt_imu_avg_record(:,1));
 % legend('imuVelDt')
 %% 在进入预测之前的数据变化
 
-% figure('Name','imu_gyro setIMUData')
-% subplot(311)
-% plot(imu_t,imu_gyro(:,1),imu_delta_t,imu_delta_ang(:,1));
-% subplot(312)
-% plot(imu_t,imu_gyro(:,2),imu_delta_t,imu_delta_ang(:,2));
-% subplot(313)
-% plot(imu_t,imu_gyro(:,3),imu_delta_t,imu_delta_ang(:,3));
-% 
-% figure('Name','imu_acc setIMUData')
-% subplot(311)
-% plot(imu_t,imu_acc(:,1),imu_delta_t,imu_delta_vel(:,1));
-% subplot(312)
-% plot(imu_t,imu_acc(:,2),imu_delta_t,imu_delta_vel(:,2));
-% subplot(313)
-% plot(imu_t,imu_acc(:,3),imu_delta_t,imu_delta_vel(:,3));
+figure('Name','imu_gyro setIMUData')
+subplot(311)
+plot(imu_t,imu_gyro(:,1),imu_delta_t,imu_delta_ang(:,1));
+subplot(312)
+plot(imu_t,imu_gyro(:,2),imu_delta_t,imu_delta_ang(:,2));
+subplot(313)
+plot(imu_t,imu_gyro(:,3),imu_delta_t,imu_delta_ang(:,3));
+
+figure('Name','imu_acc setIMUData')
+subplot(311)
+plot(imu_t,imu_acc(:,1),imu_delta_t,imu_delta_vel(:,1));
+subplot(312)
+plot(imu_t,imu_acc(:,2),imu_delta_t,imu_delta_vel(:,2));
+subplot(313)
+plot(imu_t,imu_acc(:,3),imu_delta_t,imu_delta_vel(:,3));
 %%
 clear delta_ang_dt_avg target_dt_s required_samples target_dt_s min_dt_s...
     imu_sample_delta_ang  imu_sample_delta_vel quat_angle_out ...
@@ -446,6 +446,10 @@ tilt_correction = [0 0 0]';
 gyro_bias = [0 0 0]';
 R_display=zeros(3,3,len_delta_t);
 index_display = zeros(len_delta_t,3);
+
+normDist_display = zeros(len_delta_t,1);
+normDist = 0;
+
 for i = 1:len_delta_t
 
     imu_sample_updated.delta_ang = imu_delta_ang(i,:)';
@@ -484,6 +488,7 @@ for i = 1:len_delta_t
     spinRate_display(i,1) = spinRate;
     tilt_correction_display(i,:) = tilt_correction;
     gyro_bias_display(i,:) = gyro_bias;
+    normDist_display(i,1) = normDist;
     X1_display(i,1) = yawEstimator.ekf_gsf(1,1).X(1);
     X2_display(i,1) = yawEstimator.ekf_gsf(1,1).X(2);
     X3_display(i,1) = yawEstimator.ekf_gsf(1,1).X(3);
@@ -521,7 +526,9 @@ plot(imu_delta_t,gravity_direction_bf_display(:,1),imu_delta_t,gravity_direction
 
 figure('Name','accel')
 plot(imu_delta_t,accel_display(:,1),imu_delta_t,accel_display(:,2),imu_delta_t,accel_display(:,3));
-
+%%
+figure
+plot(imu_delta_t,normDist_display)
 
 %%
 figure('Name','gsf_yaw_display')
