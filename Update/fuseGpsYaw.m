@@ -17,6 +17,7 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 
 	% check if antenna array vector is within 30 degrees of vertical and therefore unable to provide a reliable heading
 	if abs(ant_vec_ef(2)) > cos(30/57.3)
+        disp('ant_vec_ef too large');
 		return;
 	end
 
@@ -50,7 +51,6 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 
 
 	HYaw = zeros(23,1);
-	HYaw = zeros(1,3);
 	HYaw(1) = SA11_inv*(-SA5 - SA8);
 	HYaw(2) = SA11_inv*(-SA10 - SA9);
 	HYaw(3) = 1;

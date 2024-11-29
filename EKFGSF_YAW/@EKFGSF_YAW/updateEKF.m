@@ -21,8 +21,7 @@ function [obj,res] = updateEKF(obj,model_index)
 	t2 = P00*P11 + P00*velObsVar + P11*velObsVar + t1 + velObsVar*velObsVar;
 	if (abs(t2) < 1e-6) 
         res = false;
-		return 
-        
+		return    
 	end
 	t3 = 1.0/t2;
 	t4 = P11 + velObsVar;
@@ -63,7 +62,9 @@ function [obj,res] = updateEKF(obj,model_index)
 	obj.ekf_gsf(model_index,1).S_inverse(1,2) = t6;
 	obj.ekf_gsf(model_index,1).S_inverse(2,2) = t3*t7;
 	obj.ekf_gsf(model_index,1).S_inverse(2,1) = obj.ekf_gsf(model_index,1).S_inverse(1,2);
-
+%     if obj.ekf_gsf(model_index,1).S_inverse(1,2) > 1e3
+%         debug = 1;
+%     end
 	K = zeros(3,2);
 	K(1,1) = t3*t8;
 	K(2,1) = t9;
@@ -108,9 +109,9 @@ function [obj,res] = updateEKF(obj,model_index)
 	obj.ekf_gsf(model_index,1).X = obj.ekf_gsf(model_index,1).X - (K * obj.ekf_gsf(model_index,1).innov) * innov_comp_scale_factor;
 
 	yawDelta = obj.ekf_gsf(model_index,1).X(3) - oldYaw;
-
+    
 	% apply the change in yaw angle to the AHRS
-	% take advantage of sparseness in the yaw rotation matrix
+	% take advantage of sparseness(稀疏) in the yaw rotation matrix
 	cosYaw = cos(yawDelta);
 	sinYaw = sin(yawDelta);
 	R_prev00 = obj.ahrs_ekf_gsf(model_index,1).R(1, 1);
@@ -125,8 +126,6 @@ function [obj,res] = updateEKF(obj,model_index)
 	obj.ahrs_ekf_gsf(model_index,1).R(2, 3) = R_prev02 * sinYaw + obj.ahrs_ekf_gsf(model_index,1).R(2, 3) * cosYaw;
 
 	res = true;
-
-
 
 end
 

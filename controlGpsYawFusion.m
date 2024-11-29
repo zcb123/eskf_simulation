@@ -1,4 +1,4 @@
-function controlGpsYawFusion(gps_checks_failing)
+function controlGpsYawFusion(gps_checks_failing,gps_sample)
 
 %     if (~(params.fusion_mode && GPSYAW)...
 % 	    || control_status.flags.gps_yaw_fault) 
@@ -71,7 +71,12 @@ function controlGpsYawFusion(gps_checks_failing)
 		else 
 			if (starting_conditions_passing) 
 				% Try to activate GPS yaw fusion
-				startGpsYawFusion();
+				% startGpsYawFusion();
+                if resetYawToGps(params,gps_sample,params.gps_yaw_offset)
+                    control_status.flags.yaw_align = true;
+                    control_status.flags.gps_yaw = true;
+                    control_status.flags.mag_dec = false;
+                end
 				mag_yaw_reset_req = false;
 				if (control_status.flags.gps_yaw) 
 					nb_gps_yaw_reset_available = 1;

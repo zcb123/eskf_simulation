@@ -17,3 +17,18 @@ di = [dix,diy,diz];
 dib = [dibx,diby,dibz];
 dw = [dwx,dwy];
 error_state = [dTheta,dVel,dPos,d_ang_db,d_vel_db,di,dib,dw];
+%%
+syms vn ve psi dvx dvy w
+X = [vn ve psi];
+Tbn = [cos(psi) -sin(psi);
+       sin(psi) cos(psi);];
+% Vned = [vn ve]';
+% Vdb = [dvx dvy]';
+% Y12 = Vned + Tbn*Vdb;
+% Y3 = psi + w;
+% Y = [Y12(1,1) Y12(2,1) Y3]';
+Y = [vn+dvx*cos(psi)-dvy*sin(psi);
+    ve+dvx*sin(psi)+dvy*cos(psi);
+    psi+w];
+dx = jacobian(Y,X);
+

@@ -1,6 +1,6 @@
 function obj = predictEKF(obj,model_index)
     % generate an attitude reference using IMU data
-	obj.ahrsPredict(model_index);
+	obj.ahrsPredict(model_index);       %预测航向角
 
 	% we don't start running the EKF part of the algorithm until there are regular velocity observations
 	if ~obj.ekf_gsf_vel_fuse_started
@@ -18,7 +18,7 @@ function obj = predictEKF(obj,model_index)
 	dvx =   del_vel_NED(1) * cos_yaw + del_vel_NED(2) * sin_yaw;
 	dvy = - del_vel_NED(1) * sin_yaw + del_vel_NED(2) * cos_yaw;
 
-	% sum delta velocities in earth frame:
+	% sum delta velocities in earth frame:  地理系速度预测
 	obj.ekf_gsf(model_index,1).X(1) = obj.ekf_gsf(model_index,1).X(1) + del_vel_NED(1);
 	obj.ekf_gsf(model_index,1).X(2) = obj.ekf_gsf(model_index,1).X(1) + del_vel_NED(2);
 

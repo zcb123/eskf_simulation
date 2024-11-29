@@ -415,21 +415,37 @@ gps_index_last = 0;
 ahrs_accel_norm_display = zeros(len_delta_t,1);
 ahrs_accel_fusion_gain_display = zeros(len_delta_t,1);
 gsf_yaw_display = zeros(len_delta_t,1);
-P_GSF = zeros(3,3);
-figure('Name','P_GSF')
-p_m = surf(P_GSF);
-shading interp; % 平滑着色
-colormap(jet);
-colorbar;
-xlabel('X 轴');
-ylabel('Y 轴');
-zlabel('Z 轴');
-title('P_M 动态演示');
+% P_GSF = zeros(3,3);
+% figure('Name','P_GSF')
+% p_m = surf(P_GSF);
+% shading interp; % 平滑着色
+% colormap(jet);
+% colorbar;
+% xlabel('X 轴');
+% ylabel('Y 轴');
+% zlabel('Z 轴');
+% title('P_M 动态演示');
 delta_angle_corrected_display = zeros(len_delta_t,3);
 delta_angle_corrected = [0 0 0]';
 test_ratio = 0;
 test_ratio_display = zeros(len_delta_t,1);
 model_weights_display = zeros(len_delta_t,5);
+X1_display = zeros(len_delta_t,1);
+X2_display = zeros(len_delta_t,1);
+X3_display = zeros(len_delta_t,1);
+gravity_direction_bf_display = zeros(len_delta_t,3);
+accel_display = zeros(len_delta_t,3);
+gravity_direction_bf = [0 0 0]';
+accel = [0 0 0]';
+
+spinRate_display = zeros(len_delta_t,1);
+tilt_correction_display = zeros(len_delta_t,3);
+gyro_bias_display = zeros(len_delta_t,3);
+spinRate = 0;
+tilt_correction = [0 0 0]';
+gyro_bias = [0 0 0]';
+R_display=zeros(3,3,len_delta_t);
+index_display = zeros(len_delta_t,3);
 for i = 1:len_delta_t
 
     imu_sample_updated.delta_ang = imu_delta_ang(i,:)';
@@ -461,9 +477,20 @@ for i = 1:len_delta_t
 %     P_GSF = yawEstimator.ekf_gsf(1,1).P;
 %     set(p_m,'ZData',P_GSF)
 %     pause(0.01);
-
+    gravity_direction_bf_display(i,:) = gravity_direction_bf';
+    accel_display(i,:) = accel';
     model_weights_display(i,:) = yawEstimator.model_weights';
 
+    spinRate_display(i,1) = spinRate;
+    tilt_correction_display(i,:) = tilt_correction;
+    gyro_bias_display(i,:) = gyro_bias;
+    X1_display(i,1) = yawEstimator.ekf_gsf(1,1).X(1);
+    X2_display(i,1) = yawEstimator.ekf_gsf(1,1).X(2);
+    X3_display(i,1) = yawEstimator.ekf_gsf(1,1).X(3);
+    R_display(:,:,i) = yawEstimator.ahrs_ekf_gsf(1,1).R;
+%     index = find(eye(3)-R_display(:,:,i)*R_display(:,:,i)'~=0)
+
+%     index_display(i,:) = index;
 end
 
 %%
@@ -473,11 +500,57 @@ plot(imu_delta_t,ahrs_accel_norm_display);
 figure('Name','ahrs_accel_fusion_gain_display')
 plot(imu_delta_t,ahrs_accel_fusion_gain_display);
 %%
-figure('Name','gsf_yaw_display')
-plot(imu_delta_t,gsf_yaw_display*57.3);
+figure
+plot(imu_delta_t,imu_delta_ang(:,1),imu_delta_t,imu_delta_ang(:,2),imu_delta_t,imu_delta_ang(:,3));
+figure
+plot(imu_delta_t,imu_ang_dt);
+figure
+plot(imu_delta_t,imu_delta_ang(:,1)./imu_ang_dt,imu_delta_t,imu_delta_ang(:,2)./imu_ang_dt,imu_delta_t,imu_delta_ang(:,3)./imu_ang_dt);
 %%
 figure
-plot(imu_delta_t,delta_angle_corrected_display(:,1))
+plot(imu_delta_t,spinRate_display);
+figure('Name','gyro_bias_display')
+plot(imu_delta_t,gyro_bias_display(:,1),imu_delta_t,gyro_bias_display(:,2),imu_delta_t,gyro_bias_display(:,3));
+figure('Name','tilt_correction_display')
+plot(imu_delta_t,tilt_correction_display(:,1),imu_delta_t,tilt_correction_display(:,2),imu_delta_t,tilt_correction_display(:,3))
+figure('Name','delta_angle_corrected_display')
+plot(imu_delta_t,delta_angle_corrected_display(:,1),imu_delta_t,delta_angle_corrected_display(:,2),imu_delta_t,delta_angle_corrected_display(:,3))
+%%
+figure('Name','gravity_direction_bf_display')
+plot(imu_delta_t,gravity_direction_bf_display(:,1),imu_delta_t,gravity_direction_bf_display(:,2),imu_delta_t,gravity_direction_bf_display(:,3));
+
+figure('Name','accel')
+plot(imu_delta_t,accel_display(:,1),imu_delta_t,accel_display(:,2),imu_delta_t,accel_display(:,3));
+
+
+%%
+figure('Name','gsf_yaw_display')
+plot(imu_delta_t,gsf_yaw_display*57.3);
+hold on
+plot(imu_delta_t,X3_display*57.3);
+%%
+figure
+subplot(311)
+plot(imu_delta_t,X1_display);
+grid on;legend('X1');
+subplot(312)
+plot(imu_delta_t,X2_display);
+grid on;legend('X2');
+subplot(313)
+plot(imu_delta_t,X3_display);
+grid on;legend('X3');
+%%
+
+%%
+figure
+plot(test_ratio_display)
+%%
+
+%%
+
+%%
+figure
+plot(imu_delta_t,delta_angle_corrected_display(:,1),imu_delta_t,imu_delta_ang(:,1))
 %% 误差状态更新
 
 
@@ -583,4 +656,11 @@ plot(imu_delta_t,states_pos_display(1,:))
 %% 状态校正
 
 
+%%
+    mag_sample.time_us = data.MAG.t;
+    mag_sample.X = data.MAG.X*0.003;
+    mag_sample.Y = data.MAG.Y*0.003;
+    mag_sample.Z = data.MAG.Z*0.003;
+    figure
+    plot(mag_sample.time_us,mag_sample.X,mag_sample.time_us,mag_sample.Y,mag_sample.time_us,mag_sample.Z)
 

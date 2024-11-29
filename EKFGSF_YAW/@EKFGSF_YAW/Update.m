@@ -111,6 +111,8 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
 	% Calculate a composite yaw vector as a weighted average of the states for each model.
 	% To avoid issues with angle wrapping, the yaw state is converted to a vector with length
 	% equal to the weighting value before it is summed.
+    % 计算复合偏航矢量，作为每个模型状态的加权平均值
+    % 为了避免角度环绕的问题，在求和之前，将偏航状态转换为长度等于加权值的向量
 	yaw_vector = zeros(2,1);
 
 	for model_index = 1:5 
@@ -119,7 +121,9 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
 	end
 
 	obj.gsf_yaw = atan2(yaw_vector(2), yaw_vector(1));
-
+    if obj.gsf_yaw*57.3 > 50
+        debug = 1;
+    end
 	% calculate a composite variance for the yaw state from a weighted average of the variance for each model
 	% models with larger innovations are weighted less
 	obj.gsf_yaw_variance = 0.0;

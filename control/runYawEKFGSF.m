@@ -1,7 +1,7 @@
 function runYawEKFGSF(imu_sample_updated,gps_data,data_ready,gps_index)
 
     global yawEstimator;
-    TAS = 15;
+    TAS = 0;
     yawEstimator.Update(imu_sample_updated,TAS);
 
     if data_ready 

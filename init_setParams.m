@@ -131,6 +131,8 @@ control_status.flags.gps = logical(true);
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);
 control_status.flags.in_air = logical(false);
+control_status.flags.gps_hgt = true;
+control_status.flags.gps_yaw = false;
 
 fault_status.flags.bad_vel_N = logical(true);
 
@@ -173,6 +175,8 @@ yawEstimator = EKFGSF_YAW();
 % order = 2;
 % Wn = fc/(fs/2);
 % [b,a] = butter(order,Wn,'low');
+global yaw_signed_test_ratio_alpha;
+yaw_signed_test_ratio_alpha = 0.1;
 
 acc_lpf = LPF_2p(250,30);
 gyro_lpf = LPF_2p(250,20);
