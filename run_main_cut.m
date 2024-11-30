@@ -79,7 +79,7 @@ for i=1:len_t
 
 end
 
-
+%%
 figure
 subplot(311)
 plot(vehicle_t,vehicle_acc(:,1),vehicle_t,acc_filted(:,1))
@@ -110,16 +110,12 @@ legend('gZ','gZF');
 %% IMU下采样
 clear setIMUData;
 
-delta_ang_dt_avg = 0.0025;                          %初始化
-target_dt_s = saturation(params.filter_update_interval_us,1000, 100000) * 1e-6;		%0703:4000 0831:8000
-required_samples = max(round(target_dt_s / delta_ang_dt_avg), 1);					%0.004
-target_dt_s = required_samples * delta_ang_dt_avg;
-min_dt_s = max(delta_ang_dt_avg * (required_samples - 1), delta_ang_dt_avg * 0.5);
+reset_setIMUData(0.0025);
 
 
 len_t = length(vehicle_t);
 vehicle_dt = zeros(len_t,1);
-vehicle_dt(end,1) = delta_ang_dt_avg;
+vehicle_dt(end,1) = 0.0025;
 vehicle_dt(1:end-1,:) = diff(vehicle_t);
 
 ang_out_display = single(zeros(len_t,3));
@@ -149,7 +145,7 @@ for i = 1:len_t
     imu_sample_delta_ang(i,:) = imu_sample_new.delta_ang';
     imu_sample_delta_vel(i,:) = imu_sample_new.delta_vel';
 
-    [delta_ang_dt_avg,updated] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s);
+    updated = setIMUData(imu_sample_new);
     
     dt_imu_avg_record(i,1) = dt_imu_avg;
     ang_out_display(i,:) = ang_out';
@@ -157,12 +153,6 @@ for i = 1:len_t
     quat_angle_out_display(i,:) = quat_angle_out;
 
     if updated
-
-       target_dt_s = saturation(params.filter_update_interval_us,1000, 100000) * 1e-6;		%0703:4000 0831:8000
-       required_samples = max(round(target_dt_s / delta_ang_dt_avg), 1);					%0.004
-       target_dt_s = required_samples * delta_ang_dt_avg;
-       min_dt_s = max(delta_ang_dt_avg * (required_samples - 1), delta_ang_dt_avg * 0.5);
-       
 
        imu_sample_delayed_ang(index,:) = imu_sample_delayed.delta_ang';
        imu_sample_delayed_vel(index,:) = imu_sample_delayed.delta_vel';
@@ -196,22 +186,22 @@ subplot(313)
 plot(vehicle_t,ang_out_display(:,3),imu_delta_t,imu_delta_ang(:,3))
 grid on
 %%
-% figure('Name','delta_vel')
-% subplot(311)
-% plot(vehicle_t,vel_out_display(:,1),imu_delta_t,imu_delta_vel(:,1))
-% grid on
-% subplot(312)
-% plot(vehicle_t,vel_out_display(:,2),imu_delta_t,imu_delta_vel(:,2))
-% grid on
-% subplot(313)
-% plot(vehicle_t,vel_out_display(:,3),imu_delta_t,imu_delta_vel(:,3))
-% grid on
-
-% figure('Name','quat_angle_out')
-% subplot(211)
-% plot(vehicle_t,quat_angle_out_display(:,1))
-% subplot(212)
-% plot(vehicle_t,quat_angle_out_display(:,2),vehicle_t,quat_angle_out_display(:,3),vehicle_t,quat_angle_out_display(:,4))
+figure('Name','delta_vel')
+subplot(311)
+plot(vehicle_t,vel_out_display(:,1),imu_delta_t,imu_delta_vel(:,1))
+grid on
+subplot(312)
+plot(vehicle_t,vel_out_display(:,2),imu_delta_t,imu_delta_vel(:,2))
+grid on
+subplot(313)
+plot(vehicle_t,vel_out_display(:,3),imu_delta_t,imu_delta_vel(:,3))
+grid on
+%%
+figure('Name','quat_angle_out')
+subplot(211)
+plot(vehicle_t,quat_angle_out_display(:,1))
+subplot(212)
+plot(vehicle_t,quat_angle_out_display(:,2),vehicle_t,quat_angle_out_display(:,3),vehicle_t,quat_angle_out_display(:,4))
 %%
 % figure
 % subplot(311)
@@ -252,19 +242,19 @@ grid on
 
 figure('Name','imu_gyro setIMUData')
 subplot(311)
-plot(imu_t,imu_gyro(:,1),imu_delta_t,imu_delta_ang(:,1));
+plot(imu_t,imu_gyro(:,1),imu_delta_t,imu_delta_ang(:,1)./imu_ang_dt(:,1));
 subplot(312)
-plot(imu_t,imu_gyro(:,2),imu_delta_t,imu_delta_ang(:,2));
+plot(imu_t,imu_gyro(:,2),imu_delta_t,imu_delta_ang(:,2)./imu_ang_dt(:,1));
 subplot(313)
-plot(imu_t,imu_gyro(:,3),imu_delta_t,imu_delta_ang(:,3));
+plot(imu_t,imu_gyro(:,3),imu_delta_t,imu_delta_ang(:,3)./imu_ang_dt(:,1));
 
 figure('Name','imu_acc setIMUData')
 subplot(311)
-plot(imu_t,imu_acc(:,1),imu_delta_t,imu_delta_vel(:,1));
+plot(imu_t,imu_acc(:,1),imu_delta_t,imu_delta_vel(:,1)./imu_vel_dt(:,1));
 subplot(312)
-plot(imu_t,imu_acc(:,2),imu_delta_t,imu_delta_vel(:,2));
+plot(imu_t,imu_acc(:,2),imu_delta_t,imu_delta_vel(:,2)./imu_vel_dt(:,1));
 subplot(313)
-plot(imu_t,imu_acc(:,3),imu_delta_t,imu_delta_vel(:,3));
+plot(imu_t,imu_acc(:,3),imu_delta_t,imu_delta_vel(:,3)./imu_vel_dt(:,1));
 %%
 clear delta_ang_dt_avg target_dt_s required_samples target_dt_s min_dt_s...
     imu_sample_delta_ang  imu_sample_delta_vel quat_angle_out ...

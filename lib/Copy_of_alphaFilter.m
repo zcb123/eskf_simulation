@@ -4,5 +4,5 @@ function res = alphaFilter(u,a)
         filt_state = zeros(length(u),1);
     end
     res = (1-a).*filt_state + a.*u;
-
+    filt_state = res;
 end

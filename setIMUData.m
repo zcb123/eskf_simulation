@@ -60,6 +60,7 @@ end
 	% 在更新的旋转坐标系中积分最新的速度增量数据
 	% assume effective sample time is halfway between the previous and current rotation frame
 	% 假设有效采样时间位于前一个旋转帧和当前旋转帧的中间
+    
 	imu_down_sampled.delta_vel = imu_down_sampled.delta_vel + (imu_sample_new.delta_vel + delta_R*imu_sample_new.delta_vel)*0.5;
     persistent accumulated_samples
     if isempty(accumulated_samples)

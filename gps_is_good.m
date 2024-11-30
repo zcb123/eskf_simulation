@@ -16,7 +16,7 @@ function ret = gps_is_good(gps)
     end
     
 
-    ret = isTimedOut(last_gps_fail_us,10000000);
+    ret = isTimedOut(last_gps_fail_us,10000000);        %从第一进入后10s返回true
     
 end
 

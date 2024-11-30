@@ -1,6 +1,6 @@
 function fuseGpsHgt()
     
-    global states params gps_sample_delayed;
+    global states params gps_sample_delayed gps_alt_ref hgt_sensor_offset; 
     
     % vertical position innovation - gps measurement has opposite sign to earth z axis
 	gps_pos_innov(2) = states.pos(2) + gps_sample_delayed.hgt - gps_alt_ref - hgt_sensor_offset;

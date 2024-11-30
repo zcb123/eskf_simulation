@@ -9,8 +9,8 @@ function controlGpsFusion(gps_data,data_ready,gps_index)
         
         time_prev_gps_us = gps_sample_delayed.time_us;
         
-        gps_checks_passing = isTimedOut(last_gps_fail_us, 5e6);	%上一次gpsfail时间+0.5s小于
-		gps_checks_failing = isTimedOut(last_gps_pass_us, 5e6);
+        gps_checks_passing = isTimedOut(last_gps_fail_us, 5e6);	%上一次last_imu_t - gpsfail时间 > 0.5s
+		gps_checks_failing = isTimedOut(last_gps_pass_us, 5e6); %上一次last_imu_t - gpspass时间 > 0.5s
         %%%%
         controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_delayed);
         %%%%

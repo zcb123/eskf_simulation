@@ -19,9 +19,10 @@ function ret = initialiseTilt(accel_lpf,gyro_lpf)
 	pitch = asin(gravity_in_body(1));
 	roll = atan2(-gravity_in_body(2), -gravity_in_body(3));
 
-	states.quat_nominal = Euler_to_Quaternion(roll, pitch, 0.0);
+	states.quat_nominal = Euler_to_Quaternion([roll pitch 0]);
 
 	R_to_earth = Quat2Tbn(states.quat_nominal);
 
+    ret = true;
 end
 

@@ -31,7 +31,8 @@ dt_ekf_avg = 0.008;
 %                             'delta_vel_clipping',logical([0 0 0]'));
 
 global output_new output_buffer head_index tail_index;
-
+head_index = 1;
+tail_index = 1;
 output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
 
 output_buffer = [output_new;
@@ -94,16 +95,21 @@ params.reset_timeout_max = 7000000;         %微秒
 params.EKFGSF_reset_delay = 1000000;
 params.EKFGSF_yaw_err_max = 0.262;
 params.mag_fusion_type = 0; %AUTO=0;HEADING=1,MAG_3D=2,UNUSED=3,INDOOR=4,NONE=5
+params.req_vacc = 8.0;
+params.baro_noise = 3.5;
 
 
-control_status.flags.gps = logical(true);
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);
 control_status.flags.in_air = logical(false);
-control_status.flags.gps_hgt = true;
-control_status.flags.gps_yaw = false;
 control_status.flags.tilt_align = false;
 control_status.flags.yaw_align = false;
+control_status.flags.gps = logical(true);
+control_status.flags.gps_yaw = false;
+control_status.flags.gps_yaw_fault = false;
+control_status.flags.gps_hgt = true;
+control_status.flags.baro_ght = false;
+control_status.flags.rng_hgt = false;
 
 fault_status.flags.bad_vel_N = logical(true);
 

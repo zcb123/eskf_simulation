@@ -1,8 +1,9 @@
-function controlGpsYawFusion(gps_checks_failing,gps_sample_delayed)
+function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_delayed)
 
     global params control_status time_last_gps_yaw_data time_last_imu time_last_gps_yaw_fuse;
-
-    if (~(params.fusion_mode && GPSYAW)...
+    GPSYAW = 1;
+    GPS_MAX_INTERVAL = 5e5;
+    if (~(params.fusion_mode & GPSYAW)...
 	    || control_status.flags.gps_yaw_fault) 
 
 % 		stopGpsYawFusion();
@@ -11,9 +12,9 @@ function controlGpsYawFusion(gps_checks_failing,gps_sample_delayed)
     end
 
     
-% 	is_new_data_available = PX4_ISFINITE(gps_sample_delayed.yaw);
+	is_new_data_available = ~isnan(gps_sample_delayed.yaw);
 
-    is_new_data_available = true;
+    %is_new_data_available = true;
 
     persistent nb_gps_yaw_reset_available;
     if isempty(nb_gps_yaw_reset_available)
