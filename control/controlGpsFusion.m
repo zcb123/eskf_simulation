@@ -4,7 +4,7 @@ function controlGpsFusion(gps_data,data_ready,gps_index)
     global gps_sample_delayed;
 %     NED_origin_initialised = true;
     global NED_origin_initialised last_gps_pass_us last_gps_fail_us;
-
+    global ekfgsf_yaw_reset_count;
     if data_ready    %目前都默认gps数据是能用的
         
         time_prev_gps_us = gps_sample_delayed.time_us;
@@ -29,6 +29,7 @@ function controlGpsFusion(gps_data,data_ready,gps_index)
                         was_gps_signal_lost = isTimedOut(time_prev_gps_us, 1000000);
                         if isYawFailure() && control_status.flags.in_air...
                                 && ~was_gps_signal_lost...
+                                && ekfgsf_yaw_reset_count < params.EKFGSF_reset_count_limit...
                                 && isTimedOut(ekfgsf_yaw_reset_time,5000000)
                             
                             resetYawToEKFGSF();

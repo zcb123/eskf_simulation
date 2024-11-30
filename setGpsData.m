@@ -22,11 +22,7 @@ global gps_hgt_accurate;
 
     gps_hgt_accurate = (gps_sample_delayed.vacc < params.req_vacc) && (gps_sample_delayed.fix_type == 6);
 
-
-
     collect_gps(gps_sample_delayed);
     
- 
 
-    
 end

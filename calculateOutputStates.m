@@ -2,7 +2,8 @@ function  calculateOutputStates(imu,correct_updated)
  
     global params CONSTANTS_ONE_G
     global states imu_sample_delayed dt_imu_avg  dt_ekf_avg;
-
+    global yaw_delta_ef;
+    
     persistent output_last;
     if isempty(output_last)
         output_last.time_us = uint64(0);
@@ -27,11 +28,21 @@ function  calculateOutputStates(imu,correct_updated)
     if isempty(pos_err_integ)
         pos_err_integ = single([0 0 0]');
     end
-
+    
+    persistent R_to_earth_now
+    if isempty(R_to_earth_now)
+        R_to_earth_now = zeros(3,3);
+    end
 	dt_scale_correction = dt_imu_avg / dt_ekf_avg;
 	delta_angle = imu.delta_ang - states.delta_ang_bias*dt_scale_correction + delta_angle_corr;
     assignin("base","delta_angle",delta_angle);
     assignin("base","delta_angle_corr",delta_angle_corr);
+
+
+    spin_del_ang_D = sum(delta_angle.*R_to_earth_now(3,:));
+    yaw_delta_ef = yaw_delta_ef + spin_del_ang_D;
+
+
 
 	output_new.time_us = imu.time_us;
 

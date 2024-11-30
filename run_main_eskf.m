@@ -27,7 +27,7 @@ for i = 1:len_t
         setGpsData(data.RTK,gps_index);
     end
     
-    
+
     if eskf_updated
         if ~filter_initialised
             filter_initialised = initialiseFilter();
@@ -47,6 +47,9 @@ for i = 1:len_t
         end
 
         runYawEKFGSF(imu_sample_delayed,data.RTK,gps_data_ready,gps_index);
+
+
+        controlMagFusion(mag_data_ready);
         controlGpsFusion(data.RTK,gps_data_ready,gps_index);
         controlHeightFusion();
     end

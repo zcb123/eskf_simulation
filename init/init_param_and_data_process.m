@@ -53,8 +53,8 @@ global time_last_gps_yaw_fuse time_last_imu;
 time_last_imu = 0;
 time_last_gps_yaw_fuse = 0;
 
-
-
+global yaw_delta_ef;
+yaw_delta_ef = 0;
 
 %% 参数初始化
 
@@ -97,6 +97,12 @@ params.EKFGSF_yaw_err_max = 0.262;
 params.mag_fusion_type = 0; %AUTO=0;HEADING=1,MAG_3D=2,UNUSED=3,INDOOR=4,NONE=5
 params.req_vacc = 8.0;
 params.baro_noise = 3.5;
+params.EKFGSF_reset_count_limit = 3;
+params.mag_declination_deg = 0;
+params.mag_acc_gate = 0.5;
+params.mag_yaw_rate_gate = 0.25;
+
+
 
 
 control_status.flags.mag_3D = logical(true);
@@ -112,6 +118,7 @@ control_status.flags.baro_ght = false;
 control_status.flags.rng_hgt = false;
 
 fault_status.flags.bad_vel_N = logical(true);
+fault_status.flags.bad_hdg = false;
 
 %% 变量初始化
 global P P_M;

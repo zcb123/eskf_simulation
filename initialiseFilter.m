@@ -1,9 +1,10 @@
-function ret = initialiseFilter()
+function ret = initialiseFilter(mag_data_ready)
 
     global states;
-    global imu_sample_delayed;
+    global imu_sample_delayed mag_sample_delayed;
     global is_first_imu_sample;
     global time_last_imu time_last_hgt_fuse time_last_hor_pos_fuse time_last_hor_vel_fuse time_last_hagl_fuse time_last_flow_terrain_fuse time_last_of_fuse;
+    global mag_counter mag_lpf;
     
     imu_init = imu_sample_delayed;
 
@@ -17,6 +18,16 @@ function ret = initialiseFilter()
         gyr_lpf = Copy_of_alphaFilter(imu_init.delta_ang/imu_init.delta_ang_dt,0.1);
     end
     
+    if mag_data_ready    %磁力计数据初始化
+        if mag_counter == 0
+            mag_lpf = mag_sample_delayed.mag;
+        else
+            mag_lpf = mag_lpf_update(mag_lpf,0.1);    
+        end
+        mag_counter = mag_counter + 1;
+    end
+
+
     if ~initialiseTilt(accel_lpf,gyr_lpf)
         disp("Initial tilt false\n")
         ret = false;
