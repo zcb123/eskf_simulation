@@ -185,16 +185,16 @@ imu_vel_dt = getNonNaN(imu_sample_vel_dt,1);
 figure
 plot(vehicle_t,dt_imu_avg_record(:,1));
 %%
-% figure('Name','delta_ang')
-% subplot(311)
-% plot(vehicle_t,ang_out_display(:,1),imu_delta_t,imu_delta_ang(:,1))
-% grid on
-% subplot(312)
-% plot(vehicle_t,ang_out_display(:,2),imu_delta_t,imu_delta_ang(:,2))
-% grid on
-% subplot(313)
-% plot(vehicle_t,ang_out_display(:,3),imu_delta_t,imu_delta_ang(:,3))
-% grid on
+figure('Name','delta_ang')
+subplot(311)
+plot(vehicle_t,ang_out_display(:,1),imu_delta_t,imu_delta_ang(:,1))
+grid on
+subplot(312)
+plot(vehicle_t,ang_out_display(:,2),imu_delta_t,imu_delta_ang(:,2))
+grid on
+subplot(313)
+plot(vehicle_t,ang_out_display(:,3),imu_delta_t,imu_delta_ang(:,3))
+grid on
 %%
 % figure('Name','delta_vel')
 % subplot(311)
@@ -670,4 +670,18 @@ plot(imu_delta_t,states_pos_display(1,:))
     mag_sample.Z = data.MAG.Z*0.003;
     figure
     plot(mag_sample.time_us,mag_sample.X,mag_sample.time_us,mag_sample.Y,mag_sample.time_us,mag_sample.Z)
+%%
+K4_Display = zeros(23,len_update);
+len_gps = length(data.RTK.t);
+states_quat_nominal_display=zeros(4,len_update);
+states_vel_display=zeros(3,len_update);
+states_pos_display=zeros(3,len_update);
+gps_index_last = 0;
 
+
+last_gps_fail_us = imu_delta_t(1,1);
+
+%     K4_Display(:,i) = Kfusion4;
+%     states_quat_nominal_display(:,i) = states.quat_nominal;
+%     states_vel_display(:,i) = states.vel;
+%     states_pos_display(:,i) = states.pos;

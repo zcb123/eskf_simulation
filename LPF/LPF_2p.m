@@ -27,6 +27,7 @@ classdef LPF_2p < handle
             obj.a2 = (1 - 2 * cos(pi / 4) * ohm + ohm * ohm) / c;
             obj.delay_element_1 = [0 0 0];
             obj.delay_element_2 = [0 0 0];
+
         end
 
         function [obj,output] = apply(obj,sample)
@@ -36,6 +37,10 @@ classdef LPF_2p < handle
             obj.delay_element_2 = obj.delay_element_1;
             obj.delay_element_1 = obj.delay_element_0;
 
+        end
+
+        function reset(sample)
+            
         end
     end
 end

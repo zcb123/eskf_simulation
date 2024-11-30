@@ -128,10 +128,11 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 	is_fused = measurementUpdate(Kfusion, heading_innov_var, heading_innov);
 
 	%fault_status.flags.bad_hdg = ~is_fused;
-
-% 	if (is_fused) 
-% 		_time_last_gps_yaw_fuse = _time_last_imu;           在运行完这个函数后调用
-% 	end
+    global time_last_gps_yaw_fuse time_last_imu;
+    
+	if (is_fused) 
+		time_last_gps_yaw_fuse = time_last_imu;           
+	end
 
 
 

@@ -2,7 +2,10 @@ run("init_param_and_data_process.m");
 run("reset.m");
 
 global states P;
-global control_status filter_initialised;
+global control_status;
+
+reset_setIMUData(0.0025);
+gps_index_last = 0;
 
 len_t = length(vehicle_t);
 
@@ -23,34 +26,24 @@ for i = 1:len_t
     if gps_index_last~=gps_index    %目前都默认gps数据是能用的
         gps_data_ready = true;
         gps_index_last = gps_index;
-        setGpsData(data.RTK,gps_index);
+        setGpsData();
     end
- 
+
+
+
+    
     if control_status.flags.in_air
         set_in_air_status(false);
     end
 
+
     if updated
         
 
-        if ~filter_initialised
-            filter_initialised = initialiseFilter();
-            if ~filter_initialised
-                disp("eskf initialised failed");
-            end
-
-        end
 
         predictCovariance();
         predictCovariance_Matrix();
         predictState();
-
-        if ~control_status.flags.tilt_align
-            angle_err_var_vec = [P(1,1) P(2,2) P(3,3)];
-            if angle_err_var_vec(1) + angle_err_var_vec(2) <sq(3/57.3)
-                control_status.flags.tilt_align = true;
-            end
-        end
 
         runYawEKFGSF(imu_sample_updated,data.RTK,gps_data_ready,gps_index);
 
@@ -60,8 +53,19 @@ for i = 1:len_t
 
     end
 
+
+
+    
+
     calculateOutputStates();
- 
+
+
+    
+    
+
+
+
+
 end
 
 

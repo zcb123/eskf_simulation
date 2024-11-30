@@ -100,9 +100,11 @@ function ret = fuseVerticalPositionWithLevelArm(pos_offset)
 	ret = measurementUpdate(Kfusion, innov_var, innov);
 
 % 	fault_status.flags.bad_pos_D = !is_fused;
-% 	if(is_fused) 
-% 		_time_last_hgt_fuse = _time_last_imu;
-% 	end
+    global time_last_hgt_fuse time_last_imu;
+    
+	if(is_fused) 
+		time_last_hgt_fuse = time_last_imu;
+	end
 % 	return is_fused;
 
 end

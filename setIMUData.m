@@ -1,17 +1,15 @@
-function [delta_ang_dt_avg,updated] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s)
+function updated = setIMUData(imu_sample_new)
 
-global imu_sample_delayed dt_imu_avg;
-persistent time_us_last;
-if isempty(time_us_last)
-    time_us_last = uint64(0);
-end
+global imu_sample_delayed dt_imu_avg time_last_imu;
+global required_samples target_dt_s min_dt_s;
 
-dt = double(imu_sample_new.time_us - time_us_last)/1e6;
+
+dt = double(imu_sample_new.time_us - time_last_imu)/1e6;
 dt = saturation(dt,1e-4,0.02);
 
-time_us_last = imu_sample_new.time_us;
+time_last_imu = imu_sample_new.time_us;
 
-if(time_us_last>0)
+if(time_last_imu>0)
     dt_imu_avg = 0.8*dt_imu_avg+0.2*dt;
 end
 
@@ -84,9 +82,11 @@ end
     assignin("base","ang_out",ang_out);
     assignin("base","vel_out",vel_out);
     assignin("base","quat_angle_out",quat_angle_out);
-%%    
+%% 
 if updated
-    imu_sample_delayed = imu_down_sampled;
+
+    imu_sample_delayed = imu_down_sampled; %这里把环形缓冲区简化了，假设缓冲区的大小为1
+
 
     accumulated_samples = single(0);
 
@@ -97,6 +97,7 @@ if updated
     imu_down_sampled.delta_vel_dt = single(0);
     imu_down_sampled.delta_vel_clipping = logical([ 0 0 0]');
 	
+    reset_setIMUData(delta_ang_dt_avg);
 end
 
     

@@ -1,27 +1,20 @@
 function controlGpsFusion(gps_data,data_ready,gps_index)
     global P;
     global params control_status;
+    global gps_sample_delayed;
 %     NED_origin_initialised = true;
+    global NED_origin_initialised last_gps_pass_us last_gps_fail_us;
+
     if data_ready    %目前都默认gps数据是能用的
-        gps_sample_delayed.time_us = gps_data.t(gps_index,1);
-        gps_sample_delayed.pos_ned = [gps_data.pN(gps_index,1) gps_data.pE(gps_index,1) gps_data.pD(gps_index,1)]';
-        gps_sample_delayed.vel_ned = [gps_data.vN(gps_index,1) gps_data.vE(gps_index,1) gps_data.vD(gps_index,1)]';
-        gps_sample_delayed.yaw = gps_data.hding(gps_index,1);      
-        gps_sample_delayed.hgt = gps_data.alt(gps_index,1)*1e-3;
-        gps_sample_delayed.hacc = gps_data.hdop(gps_index,1);        %这个赋值有待商榷
-        gps_sample_delayed.pdop = gps_data.pdop(gps_index,1);
-        gps_sample_delayed.hdop = gps_data.hdop(gps_index,1);
-        gps_sample_delayed.sacc = 0.5;
-        gps_sample_delayed.fix_type = gps_data.fix(gps_index,1);
+        
         time_prev_gps_us = gps_sample_delayed.time_us;
-
-
+        
         gps_checks_passing = isTimedOut(last_gps_fail_us, 5e6);	%上一次gpsfail时间+0.5s小于
 		gps_checks_failing = isTimedOut(last_gps_pass_us, 5e6);
         %%%%
         controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_delayed);
         %%%%
-        mandatory_conditions_passing = control_status.flags.tilt_align && control_status.flags.yaw_align;
+        mandatory_conditions_passing = control_status.flags.tilt_align && control_status.flags.yaw_align && NED_origin_initialised;
 				
 		continuing_conditions_passing = mandatory_conditions_passing && ~gps_checks_failing;
 		starting_conditions_passing = continuing_conditions_passing && gps_checks_passing;

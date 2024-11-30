@@ -2,6 +2,7 @@ function  calculateOutputStates(imu,params,correct_updated,CONSTANTS_ONE_G)
  
     
     global states imu_sample_delayed dt_imu_avg  dt_ekf_avg;
+
     persistent output_last;
     if isempty(output_last)
         output_last.time_us = uint64(0);
@@ -9,22 +10,14 @@ function  calculateOutputStates(imu,params,correct_updated,CONSTANTS_ONE_G)
         output_last.vel = single([0 0 0]');
         output_last.pos = single([0 0 0]');
     end
-    global output_buffer output_new;
+    global output_buffer output_new head_index tail_index;
     
     buffer_size = 3;
-    persistent head_index;
-    persistent tail_index;
+  
     persistent delta_angle_corr;
     persistent vel_err_integ;
     persistent pos_err_integ;
-    
-
-    if isempty(head_index)
-        head_index = uint8(1);
-    end
-    if isempty(tail_index)
-        tail_index = uint8(1);
-    end
+   
     if isempty(delta_angle_corr)
         delta_angle_corr = single([0 0 0]');
     end
@@ -34,6 +27,7 @@ function  calculateOutputStates(imu,params,correct_updated,CONSTANTS_ONE_G)
     if isempty(pos_err_integ)
         pos_err_integ = single([0 0 0]');
     end
+    
 	dt_scale_correction = dt_imu_avg / dt_ekf_avg;
 	delta_angle = imu.delta_ang - states.delta_ang_bias*dt_scale_correction + delta_angle_corr;
     assignin("base","delta_angle",delta_angle);

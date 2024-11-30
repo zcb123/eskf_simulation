@@ -30,7 +30,7 @@ dt_ekf_avg = 0.008;
 %                             'delta_ang_clipping',logical([0 0 0]'),...
 %                             'delta_vel_clipping',logical([0 0 0]'));
 
-global output_new output_buffer;
+global output_new output_buffer head_index tail_index;
 
 output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
 
@@ -51,6 +51,8 @@ global time_last_gps_yaw_fuse time_last_imu;
 
 time_last_imu = 0;
 time_last_gps_yaw_fuse = 0;
+
+
 
 
 %% 参数初始化
@@ -91,7 +93,7 @@ params.heading_innov_gate = single(2.6);
 params.reset_timeout_max = 7000000;         %微秒
 params.EKFGSF_reset_delay = 1000000;
 params.EKFGSF_yaw_err_max = 0.262;
-params.mag_fusion_type = 0; %AUTO = 0;HEADING=1,MAG_3D=2,UNUSED=3,INDOOR=4,NONE=5
+params.mag_fusion_type = 0; %AUTO=0;HEADING=1,MAG_3D=2,UNUSED=3,INDOOR=4,NONE=5
 
 
 control_status.flags.gps = logical(true);
@@ -195,23 +197,6 @@ end
 
 %%
 
-
-delta_ang_dt_avg = 0.0025;                          %初始化
-target_dt_s = saturation(params.filter_update_interval_us,1000, 100000) * 1e-6;		%0703:4000 0831:8000
-required_samples = max(round(target_dt_s / delta_ang_dt_avg), 1);					%0.004
-target_dt_s = required_samples * delta_ang_dt_avg;
-min_dt_s = max(delta_ang_dt_avg * (required_samples - 1), delta_ang_dt_avg * 0.5);
-
-
-len_t = length(vehicle_t);
-vehicle_dt = zeros(len_t,1);
-vehicle_dt(end,1) = delta_ang_dt_avg;
-vehicle_dt(1:end-1,:) = diff(vehicle_t);
-
-ang_out_display = single(zeros(len_t,3));
-vel_out_display = single(zeros(len_t,3));
-quat_angle_out_display = single(zeros(len_t,4));
-
 global imu_sample_delayed;
 imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_ang',single([0 0 0]'),...
@@ -220,6 +205,19 @@ imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_vel_dt',single(0),...
                             'delta_ang_clipping',logical([0 0 0]'),...
                             'delta_vel_clipping',logical([0 0 0]'));
+
+reset_setIMUData(0.0025);
+
+len_t = length(vehicle_t);
+vehicle_dt = zeros(len_t,1);
+vehicle_dt(end,1) = 0.0025;
+vehicle_dt(1:end-1,:) = diff(vehicle_t);
+
+ang_out_display = single(zeros(len_t,3));
+vel_out_display = single(zeros(len_t,3));
+quat_angle_out_display = single(zeros(len_t,4));
+
+
 
 imu_sample_delta_ang = NaN(len_t,3);
 imu_sample_delta_vel = NaN(len_t,3);
@@ -231,7 +229,7 @@ imu_sample_ang_dt = NaN(len_t,1);
 imu_sample_vel_dt = NaN(len_t,1);
 
 dt_imu_avg_record = zeros(len_t,1);
-
+imu_sample_last_imu_t = NaN(len_t,1);
 index = 1;
 for i = 1:len_t
 
@@ -245,21 +243,19 @@ for i = 1:len_t
     imu_sample_delta_ang(i,:) = imu_sample_new.delta_ang';
     imu_sample_delta_vel(i,:) = imu_sample_new.delta_vel';
 
-    [delta_ang_dt_avg,updated] = setIMUData(imu_sample_new,required_samples,target_dt_s,min_dt_s);
     
+    updated = setIMUData(imu_sample_new);
+    
+
+    imu_sample_last_imu_t(i,1) = time_last_imu;
+
+
     dt_imu_avg_record(i,1) = dt_imu_avg;
     ang_out_display(i,:) = ang_out';
     vel_out_display(i,:) = vel_out';
     quat_angle_out_display(i,:) = quat_angle_out;
-
-    if updated
-
-       target_dt_s = saturation(params.filter_update_interval_us,1000, 100000) * 1e-6;		%0703:4000 0831:8000
-       required_samples = max(round(target_dt_s / delta_ang_dt_avg), 1);					%0.004
-       target_dt_s = required_samples * delta_ang_dt_avg;
-       min_dt_s = max(delta_ang_dt_avg * (required_samples - 1), delta_ang_dt_avg * 0.5);
-       
-
+    
+    if updated     
        imu_sample_delayed_ang(index,:) = imu_sample_delayed.delta_ang';
        imu_sample_delayed_vel(index,:) = imu_sample_delayed.delta_vel';
        imu_sample_delayed_t(index,1) = vehicle_t(i,1);
