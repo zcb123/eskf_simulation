@@ -1,10 +1,10 @@
-function controlGpsFusion(gps_data,data_ready,gps_index)
+function controlGpsFusion(data_ready)
     global P;
     global params control_status;
-    global gps_sample_delayed;
+    global gps_sample_delayed imu_sample_delayed;
 %     NED_origin_initialised = true;
-    global NED_origin_initialised last_gps_pass_us last_gps_fail_us;
-    global ekfgsf_yaw_reset_count;
+    global NED_origin_initialised last_gps_pass_us last_gps_fail_us gps_checks_passed;
+    global ekfgsf_yaw_reset_count ;
     if data_ready    %目前都默认gps数据是能用的
         
         time_prev_gps_us = gps_sample_delayed.time_us;
@@ -52,7 +52,7 @@ function controlGpsFusion(gps_data,data_ready,gps_index)
         else
             if starting_conditions_passing
 
-                  startGpsFusion();
+                  startGpsFusion(gps_sample_delayed);
 
             elseif gps_checks_passing&&~control_status.flags.yaw_align && (params.mag_fusion_type == 5) %NONE = 5
                 
@@ -65,9 +65,15 @@ function controlGpsFusion(gps_data,data_ready,gps_index)
 
            end
         end
-    else    % 如果gps数据不能用的情况
-        todo2 = 1;
-     
+    elseif control_status.flags.gps && (imu_sample_delayed.time_us - gps_sample_delayed.time_us > 10e6)    % 如果gps数据不能用的情况
+
+        stopGpsFusion();            %切换高度源
+        disp("GPS data stopped");
+
+    elseif control_status.flags.gps && (imu_sample_delayed.time_us - gps_sample_delayed.time_us > 1e6) ...
+            && fasle    %查看有没有其他的水平位置源可以用，目前这里是没有。因此false
+
+        
     end
     
 end

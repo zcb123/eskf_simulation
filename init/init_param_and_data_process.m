@@ -48,6 +48,12 @@ FLT_EPSILON = 1.192e-7;
 global R_to_earth;
 R_to_earth = zeros(3,3);
 
+global delta_angle_var_accum delta_vel_var_accum delta_angle_bias_var_accum delta_vel_bias_var_accum;
+delta_angle_var_accum = zeros(3,1);
+delta_vel_var_accum = zeros(3,1);
+delta_angle_bias_var_accum = zeros(3,1);
+delta_vel_bias_var_accum = zeros(3,1);
+
 global time_last_gps_yaw_fuse time_last_imu;
 
 time_last_imu = 0;
@@ -96,6 +102,7 @@ params.EKFGSF_reset_delay = 1000000;
 params.EKFGSF_yaw_err_max = 0.262;
 params.mag_fusion_type = 0; %AUTO=0;HEADING=1,MAG_3D=2,UNUSED=3,INDOOR=4,NONE=5
 params.req_vacc = 8.0;
+params.baro_innov_gate = 5;
 params.baro_noise = 3.5;
 params.EKFGSF_reset_count_limit = 3;
 params.mag_declination_deg = 0;
@@ -104,6 +111,14 @@ params.mag_yaw_rate_gate = 0.25;
 params.check_mag_strength = 0;
 params.mag_declination_source = 7;
 params.mag_heading_noise = 3e-1;
+params.vdist_sensor_type = 1; %0:BARO 1:GNSS 2:RANGE 3:EV
+params.max_correction_airspeed = 20;
+params.static_pressure_coef_xp = 0;
+params.static_pressure_coef_xn = 0;
+params.static_pressure_coef_yp = 0;
+params.static_pressure_coef_yn = 0;
+params.static_pressure_coef_z = 0;
+params.max_correction_airspeed = 20;
 
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);
@@ -114,15 +129,19 @@ control_status.flags.gps = logical(true);
 control_status.flags.gps_yaw = false;
 control_status.flags.gps_yaw_fault = false;
 control_status.flags.gps_hgt = true;
-control_status.flags.baro_ght = false;
+control_status.flags.baro_hgt = false;
 control_status.flags.rng_hgt = false;
 control_status.flags.mag_field_disturbed = false;
 control_status.flags.vehicle_at_rest = true;
 control_status.flags.mag_aligned_in_flight = false;
-
+control_status.flags.gnd_effect = false;
+control_status.flags.fixed_wing = false;
+control_status.flags.opt_flow = false;
+control_status.flags.ev_vel = false;
 
 fault_status.flags.bad_vel_N = logical(true);
 fault_status.flags.bad_hdg = false;
+fault_status.flags.bad_acc_vertical = false;
 
 %% 变量初始化
 global P P_M;

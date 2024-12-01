@@ -1,6 +1,6 @@
 function resetHorizontalPositionToGps(gps_sample)
 
-    global P;
+    global P gps_sample_delayed;
     
     resetHorizontalPositionTo(gps_sample.pos_ned(1:2,1))
 

@@ -40,6 +40,7 @@ function controlMagFusion(mag_data_ready)
         selectMagAuto();
 
         if control_status.flags.in_air
+            checkHaglYawResetReq();
             runInAirYawReset();
         else
             runOnGroundYawReset();

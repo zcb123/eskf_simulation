@@ -3,7 +3,7 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
     global params control_status time_last_gps_yaw_data time_last_imu time_last_gps_yaw_fuse;
     GPSYAW = 1;
     GPS_MAX_INTERVAL = 5e5;
-    if (~(params.fusion_mode & GPSYAW)...
+    if (~(params.fusion_mode && GPSYAW)...
 	    || control_status.flags.gps_yaw_fault) 
 
 % 		stopGpsYawFusion();
@@ -21,9 +21,9 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
         nb_gps_yaw_reset_available = 0;
     end
 
-	if (is_new_data_available) 
+	if (is_new_data_available) %GPS数据可用非nan,则进入下一步，否则停止GPS航向校准 
 
-		continuing_conditions_passing = ~gps_checks_failing;
+		continuing_conditions_passing = ~gps_checks_failing; %GPS数据未超时
 
 		is_gps_yaw_data_intermittent = ~isRecent(time_last_gps_yaw_data, 2 * GPS_MAX_INTERVAL);
 
@@ -63,7 +63,7 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
                         control_status.flags.gps_yaw = false;
 						%stopGpsYawFusion();
 					end
-
+                    disp("gps yaw fuse failed");
 					% TODO: should we give a new reset credit when the fusion does not fail for some time?
 				end
 

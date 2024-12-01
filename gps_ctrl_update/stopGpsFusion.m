@@ -9,7 +9,7 @@ function stopGpsFusion()
 
         control_status.flags.gps = false;
         
-        if control_status.flags.gps_hgt
+        if control_status.flags.gps_hgt                 %GPS数据不更新了，自动切换成气压计
              
 
             startBaroHgtFusion();

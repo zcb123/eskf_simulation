@@ -1,7 +1,7 @@
 function ret = collect_gps(gps)
 
     global states filter_initialised 
-    global NED_origin_initialised gps_alt_ref gps_acc_changed gps_prev;
+    global gps_checks_passed NED_origin_initialised gps_alt_ref gps_acc_changed gps_prev;
     global mag_declination_gps mag_strength_gps;
     gps_checks_passed = gps_is_good(gps);
 
@@ -15,7 +15,7 @@ function ret = collect_gps(gps)
 
         
     elseif (~NED_origin_initialised) 
-        disp("NED origin not initialised")
+%         disp("NED origin not initialised")
     end
 
     if(NED_origin_initialised) 

@@ -6,11 +6,14 @@ function runInAirYawReset()
     if (mag_yaw_reset_req && ~is_yaw_fusion_inhibited) 
 	    has_realigned_yaw = false;
 
-		if (false) 
+		if (control_status.flags.gps && control_status.flags.fixed_wing) 
 			
+            disp("fixed wing");
 
         elseif(canResetMagHeading()) 
+
 			has_realigned_yaw = resetMagHeading(true,true);
+            
         end
 
 		if (has_realigned_yaw) 
@@ -24,6 +27,8 @@ function runInAirYawReset()
 				mag_inhibit_yaw_reset_req = false;
 				% Zero the yaw bias covariance and set the variance to the initial alignment uncertainty
 				%_P.uncorrelateCovarianceSetVariance<1>(11, sq(_params.switch_on_gyro_bias * _dt_ekf_avg));
+                P(12,:) = 0;
+                P(:,12) = 0;
                 P(12,12) = sq(params.switch_on_gyro_bias * dt_ekf_avg);
 			end
 		end

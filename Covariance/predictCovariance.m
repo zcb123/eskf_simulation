@@ -5,7 +5,7 @@ function predictCovariance(imu_sample_delayed)
     BADGYROPNOISE = single(0.2);
     
 
-    global states dt_ekf_avg P accel_bias_inhibit;
+    global states dt_ekf_avg P accel_bias_inhibit R_to_earth;
     global params control_status;
     
     accel_bias_inhibit = logical([false false false]);
@@ -31,7 +31,7 @@ function predictCovariance(imu_sample_delayed)
 	dvy_b = states.delta_vel_bias(2);
 	dvz_b = states.delta_vel_bias(3);
     
-    R_to_earth = Quat2Tbn([q1 q2 q3 q4]);
+%     R_to_earth = Quat2Tbn([q1 q2 q3 q4]);
 	% Use average update interval to reduce accumulated covariance prediction errors due to small single frame dt values
 	dt = dt_ekf_avg;
 	dt_inv = 1 / dt;
@@ -417,10 +417,8 @@ function predictCovariance(imu_sample_delayed)
         r00_sx_r10_plus_r01_sy_r11_plus_r02_sz_r12 = r00_sx * mR10 + r01_sy * mR11 + r02_sz * mR12;
         r00_sx_r20_plus_r01_sy_r21_plus_r02_sz_r22 = r00_sx * mR20 + r01_sy * mR21 + r02_sz * mR22;
         r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz = r10_sx * mR20 + r11_sy * mR21 + r12_sz * mR22;
-    persistent delta_angle_var_accum;
-    if isempty(delta_angle_var_accum)
-        delta_angle_var_accum = single([0 0 0]);
-    end
+    global delta_angle_var_accum;
+    
 	[nextP(1,1),delta_angle_var_accum(1)] = kahanSummation(nextP(1,1), mR00 * r00_sx + mR01 * r01_sy + mR02 * r02_sz, delta_angle_var_accum(1));
 	nextP(1,2) = nextP(1,2) + r00_sx_r10_plus_r01_sy_r11_plus_r02_sz_r12;
 	nextP(1,3) = nextP(1,3) + r00_sx_r20_plus_r01_sy_r21_plus_r02_sz_r22;
@@ -428,7 +426,7 @@ function predictCovariance(imu_sample_delayed)
 	nextP(2,3) = nextP(2,3) + r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz;
 	[nextP(3,3),delta_angle_var_accum(3)] = kahanSummation(nextP(3,3), mR20 * r20_sx + mR21 * r21_sy + mR22 * r22_sz, delta_angle_var_accum(3));
     
-    assignin("base","delta_angle_var_accum",delta_angle_var_accum);
+    
 	
 	 % delta velocity noise
 	 % R * diag(nVel_x, nVel_y, nVel_z) * R'
@@ -446,10 +444,8 @@ function predictCovariance(imu_sample_delayed)
         r00_sx_r20_plus_r01_sy_r21_plus_r02_sz_r22 = r00_sx * mR20 + r01_sy * mR21 + r02_sz * mR22;
         r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz = r10_sx * mR20 + r11_sy * mR21 + r12_sz * mR22;
     
-    persistent delta_vel_var_accum;
-    if isempty(delta_vel_var_accum)
-        delta_vel_var_accum = single([0 0 0]);
-    end
+    global delta_vel_var_accum;
+    
 
 	[nextP(4,4),delta_vel_var_accum(1)] = kahanSummation(nextP(4,4), mR00 * r00_sx + mR01 * r01_sy + mR02 * r02_sz, delta_vel_var_accum(1));
 	nextP(4,5) = nextP(4,5) + r00_sx_r10_plus_r01_sy_r11_plus_r02_sz_r12;
@@ -463,19 +459,16 @@ function predictCovariance(imu_sample_delayed)
 	% the variances, therefore use algorithm to minimise numerical error
 
 	noise_delta_ang_bias = (d_ang_bias_sig)^2;
-    persistent delta_angle_bias_var_accum;
-    if isempty(delta_angle_bias_var_accum)
-        delta_angle_bias_var_accum = single([0 0 0]);
-    end
+    global delta_angle_bias_var_accum;
+   
 
 	for i = 10:12 
 		index = i - 9;
 		[nextP(i, i),delta_angle_bias_var_accum(index)] = kahanSummation(nextP(i, i), noise_delta_ang_bias, delta_angle_bias_var_accum(index));
-	end
-    persistent delta_vel_bias_var_accum;
-    if isempty(delta_vel_bias_var_accum)
-        delta_vel_bias_var_accum = single([0 0 0]);
     end
+
+    global delta_vel_bias_var_accum;
+    
 
 	noise_delta_vel_bias = (d_vel_bias_sig)^2;
 	if ~accel_bias_inhibit(1) 
@@ -779,6 +772,6 @@ function predictCovariance(imu_sample_delayed)
 
 	% fix gross errors in the covariance matrix and ensure rows and
 	% columns for un-used states are zero
-	P = fixCovarianceErrors(P,control_status,false);
+	fixCovarianceErrors(false);
 
 end

@@ -36,7 +36,7 @@ function ret = fuseYaw321(yaw,yaw_variance,zero_innovation)
 	if (zero_innovation) 
 		innovation = 0;
 	else 
-		innovation = wrap_pn_pi(atan2(R_to_earth(2, 1), R_to_earth(1, 1)) - measurement);
+		innovation = wrap_pn_pi(atan2(R_to_earth(2, 1), R_to_earth(1, 1)) - measurement);   %atan2(R_to_earth(2, 1), R_to_earth(1, 1) 预测值
     end
 
 	% define the innovation gate size

@@ -27,5 +27,6 @@ function checkYawAngleObservability()
 
 
     yaw_angle_observable = yaw_angle_observable && control_status.flags.gps;
+    
 end
 
