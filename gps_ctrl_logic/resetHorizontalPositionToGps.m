@@ -2,7 +2,7 @@ function resetHorizontalPositionToGps(gps_sample)
 
     global P;
     
-    resetHorizontalPositionTo(gps_sample.pos_ned)
+    resetHorizontalPositionTo(gps_sample.pos_ned(1:2,1))
 
 
     P(7,7) = gps_sample_delayed.hdop*gps_sample_delayed.hdop;

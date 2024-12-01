@@ -3,7 +3,7 @@ function ret = resetYawToGps(params,gps_sample_delayed,gps_yaw_offset)
     % define the predicted antenna array vector and rotate into earth frame
     gps_yaw_offset = gps_yaw_offset/57.3;
 
-	ant_vec_bf = [cosf(gps_yaw_offset) sinf(gps_yaw_offset) 0.0];
+	ant_vec_bf = [cos(gps_yaw_offset) sin(gps_yaw_offset) 0.0]';
 	ant_vec_ef = R_to_earth * ant_vec_bf;
 
 	% check if antenna array vector is within 30 degrees of vertical and therefore unable to provide a reliable heading

@@ -1,6 +1,6 @@
 function resetMagCov()
     
-    global P params;
+    global P params control_status;
     global mag_decl_cov_reset;
     P(16,16) = 0;
     P(17,17) = 0;

@@ -1,6 +1,4 @@
-function mag_lpf_update(u,a)
-
-
+function res = mag_lpf_update(u,a)
 
     persistent filt_state;
     if isempty(filt_state)

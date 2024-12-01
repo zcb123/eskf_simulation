@@ -1,7 +1,7 @@
 function checkMagBiasObservability()
 
     global mag_bias_observable params imu_sample_delayed;
-    global yaw_delta_ef time_yaw_started;
+    global yaw_delta_ef time_yaw_started yaw_rate_lpf_ef;
 % check if there is enough yaw rotation to make the mag bias states observable
     
 	if (~mag_bias_observable && (fabsf(yaw_rate_lpf_ef) > params.mag_yaw_rate_gate)) 

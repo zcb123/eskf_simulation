@@ -122,7 +122,7 @@ function ret = updateQuaternion(innovation,variance,gate_sigma,yaw_jacobian)
 		% apply the covariance corrections
 		P = P- KHP;
 
-		fixCovarianceErrors(true);
+		%fixCovarianceErrors(true);
 
 		% apply the state corrections
 		fuse(Kfusion, heading_innov);

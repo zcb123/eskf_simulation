@@ -101,9 +101,9 @@ params.EKFGSF_reset_count_limit = 3;
 params.mag_declination_deg = 0;
 params.mag_acc_gate = 0.5;
 params.mag_yaw_rate_gate = 0.25;
-
-
-
+params.check_mag_strength = 0;
+params.mag_declination_source = 7;
+params.mag_heading_noise = 3e-1;
 
 control_status.flags.mag_3D = logical(true);
 control_status.flags.wind = logical(false);
@@ -116,6 +116,10 @@ control_status.flags.gps_yaw_fault = false;
 control_status.flags.gps_hgt = true;
 control_status.flags.baro_ght = false;
 control_status.flags.rng_hgt = false;
+control_status.flags.mag_field_disturbed = false;
+control_status.flags.vehicle_at_rest = true;
+control_status.flags.mag_aligned_in_flight = false;
+
 
 fault_status.flags.bad_vel_N = logical(true);
 fault_status.flags.bad_hdg = false;

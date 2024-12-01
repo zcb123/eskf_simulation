@@ -20,7 +20,7 @@ function ret = resetMagHeading(increase_yaw_var,update_buffer)
 	mag_init = mag_lpf;
 
 	% calculate the observed yaw angle and yaw variance
-	yaw_new;
+	yaw_new = 0;
 	yaw_new_variance = 0;
 
 	heading_required_for_navigation = control_status.flags.gps || control_status.flags.ev_pos;

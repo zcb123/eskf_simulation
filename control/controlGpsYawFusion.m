@@ -30,8 +30,8 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
 		starting_conditions_passing = continuing_conditions_passing...
 				&& control_status.flags.tilt_align...
 				&& gps_checks_passing...
-				&& ~is_gps_yaw_data_intermittent...
-				&& ~gps_intermittent;
+				&& ~is_gps_yaw_data_intermittent;
+				%&& ~gps_intermittent;
 
 		time_last_gps_yaw_data = time_last_imu;
 
@@ -77,7 +77,7 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
 			if (starting_conditions_passing) 
 				% Try to activate GPS yaw fusion
 				% startGpsYawFusion();  
-                if resetYawToGps(params,gps_sample,params.gps_yaw_offset)
+                if resetYawToGps(params,gps_sample_delayed,params.gps_yaw_offset)
                     control_status.flags.yaw_align = true;
                     control_status.flags.gps_yaw = true;
                     control_status.flags.mag_dec = false;

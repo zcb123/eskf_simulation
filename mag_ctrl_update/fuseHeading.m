@@ -1,7 +1,7 @@
 function fuseHeading(measured_hdg,obs_var)
 
     global control_status params R_to_earth P;
-    global last_static_yaw;
+    global last_static_yaw is_yaw_fusion_inhibited;
     % observation variance
     if ~isnan(obs_var)
 	    R_YAW =obs_var;

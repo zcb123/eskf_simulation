@@ -10,7 +10,7 @@ function resetQuatStateYaw(yaw,yaw_variance,update_buffer)
 	quat_after_reset = dcm2quat(R_to_earth);
     quat_before_reset_inver_norm = quat_normalize(Quaternion_Inverse(quat_before_reset));
 
-	q_error=(QuatMult(quat_after_reset * quat_before_reset_inver_norm));
+	q_error=(QuatMult(quat_after_reset,quat_before_reset_inver_norm));
 
 	% update quaternion states
 	states.quat_nominal = quat_after_reset;
@@ -33,12 +33,12 @@ function resetQuatStateYaw(yaw,yaw_variance,update_buffer)
 	% add the reset amount to the output observer buffered data
 	if (update_buffer) 
 		for i = 1:3 	%把缓冲区中每一个元素都更新
-			output_buffer(i).quat_nominal = states_reset_status.quat_change * output_buffer(i).quat_nominal;
+			output_buffer(i).quat_nominal = QuatMult(states_reset_status.quat_change,output_buffer(i).quat_nominal);
 		end
 
 		% apply the change in attitude quaternion to our newest quaternion estimate
 		% which was already taken out from the output buffer
-		output_new.quat_nominal = states_reset_status.quat_change * output_new.quat_nominal;
+		output_new.quat_nominal =  QuatMult(states_reset_status.quat_change,output_new.quat_nominal);
 
 	end
 

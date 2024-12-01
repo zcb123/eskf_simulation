@@ -1,6 +1,6 @@
-function runMagAndMagDeclFusions()
+function runMagAndMagDeclFusions(mag)
     
-    global states control_status R_to_earth;
+    global states params control_status R_to_earth;
 
     if (control_status.flags.mag_3D)
 

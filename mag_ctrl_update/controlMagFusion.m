@@ -1,8 +1,18 @@
 function controlMagFusion(mag_data_ready)
 
     global control_status mag_sample_delayed;
-    global is_yaw_fusion_inhibited mag_yaw_reset_req
+    global is_yaw_fusion_inhibited mag_yaw_reset_req mag_inhibit_yaw_reset_req;
+    global mag_lpf mag_counter;
 
+    if mag_data_ready
+        mag_lpf = mag_lpf_update(mag_sample_delayed.mag,0.1);
+        mag_counter = mag_counter + 1;
+    end
+    if mag_data_ready
+        
+        checkMagFieldStrength(mag_sample_delayed.mag);
+
+    end
     if ~control_status.flags.in_air
         control_status.flags.mag_aligned_in_flight = false;
     
@@ -14,7 +24,7 @@ function controlMagFusion(mag_data_ready)
 
             is_yaw_fusion_inhibited = true;
                 
-            fuseHeading()
+            fuseHeading(nan,nan)
 
             is_yaw_fusion_inhibited = false;
         end
@@ -30,7 +40,7 @@ function controlMagFusion(mag_data_ready)
         selectMagAuto();
 
         if control_status.flags.in_air
-            runInAirYawReset(mag_sample_delayed.mag);
+            runInAirYawReset();
         else
             runOnGroundYawReset();
         end

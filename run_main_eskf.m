@@ -27,10 +27,18 @@ for i = 1:len_t
         setGpsData(data.RTK,gps_index);
     end
     
+    mag_data_ready = false;
+    mag_dt = data.MAG.t - vehicle_t(i,1)*1e6;
+    mag_index = find(mag_dt < 1e3,1,'last');
+    if mag_index_last ~= mag_index
+        mag_data_ready = true;
+        gps_index_last = mag_index;
+        setMagData(data.MAG,mag_index);
+    end
 
     if eskf_updated
         if ~filter_initialised
-            filter_initialised = initialiseFilter();
+            filter_initialised = initialiseFilter(mag_data_ready);
             if ~filter_initialised
                 disp("eskf initialised failed");
                 continue;
@@ -47,7 +55,6 @@ for i = 1:len_t
         end
 
         runYawEKFGSF(imu_sample_delayed,data.RTK,gps_data_ready,gps_index);
-
 
         controlMagFusion(mag_data_ready);
         controlGpsFusion(data.RTK,gps_data_ready,gps_index);

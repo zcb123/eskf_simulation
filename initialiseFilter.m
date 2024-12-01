@@ -37,7 +37,7 @@ function ret = initialiseFilter(mag_data_ready)
 
     init_P();
     
-    %resetMagHeading();
+    resetMagHeading(false,false);
 
     time_last_hgt_fuse = time_last_imu;
 	time_last_hor_pos_fuse = time_last_imu;

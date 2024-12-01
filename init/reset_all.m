@@ -42,9 +42,11 @@ global mag_yaw_reset_req non_mag_yaw_aiding_running_prev mag_inhibit_yaw_reset_r
     is_yaw_fusion_inhibited mag_counter flt_mag_align_start_time mag_declination_gps ...
     mag_decl_cov_reset time_yaw_started ;
     
-global mag_lpf mag_bias_observable yaw_angle_observable time_last_mov_3d_mag_suitable;
+global mag_lpf mag_bias_observable yaw_angle_observable time_last_mov_3d_mag_suitable yaw_rate_lpf_ef;
 global saved_mag_bf_variance saved_mag_ef_ne_covmat saved_mag_ef_d_variance;
 global last_static_yaw mag_test_ratio;
+
+global mag_strength_gps;
 mag_yaw_reset_req = false;
 non_mag_yaw_aiding_running_prev = false;
 mag_inhibit_yaw_reset_req = false;
@@ -58,8 +60,11 @@ mag_bias_observable = false;
 yaw_angle_observable = false;
 time_yaw_started = 0;
 time_last_mov_3d_mag_suitable = 0;
+yaw_rate_lpf_ef = 0;
 saved_mag_bf_variance = zeros(3,1);
 saved_mag_ef_ne_covmat = zeros(2,2);
 saved_mag_ef_d_variance = 0;
 last_static_yaw = nan;
 mag_test_ratio = zeros(3,1);
+mag_index_last = 0;
+mag_strength_gps = nan;

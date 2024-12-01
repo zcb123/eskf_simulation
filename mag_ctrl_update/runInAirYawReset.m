@@ -10,7 +10,7 @@ function runInAirYawReset()
 			
 
         elseif(canResetMagHeading()) 
-			has_realigned_yaw = resetMagHeading();
+			has_realigned_yaw = resetMagHeading(true,true);
         end
 
 		if (has_realigned_yaw) 
