@@ -1,5 +1,5 @@
 function predictState(imu_sample_delayed)
-    global states  dt_ekf_avg R_to_earth;
+    global states  dt_ekf_avg R_to_earth ;
     global CONSTANTS_ONE_G;
     global params;
     global accel_lpf_NE;

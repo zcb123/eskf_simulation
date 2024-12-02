@@ -64,6 +64,6 @@ function predictCovariance_Matrix(imu_sampled)
     
 
 
-    P_M = fixCovarianceErrors(P_M,control_status,false);
+%     fixCovarianceErrors(false);
     
 end

@@ -67,7 +67,7 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
 			bad_update = false;
 
 			for model_index = 1:5 
-				% subsequent(后来的) measurements are fused as direct state observations
+				% subsequent measurements are fused as direct state observations
                 res= obj.updateEKF(model_index);
                 %res = true;
 				if (~res) 

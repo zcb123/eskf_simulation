@@ -1,4 +1,4 @@
-function [obj,res] = updateEKF(obj,model_index)
+function ret = updateEKF(obj,model_index)
 
     % set observation variance from accuracy estimate supplied by GPS and apply a sanity check minimum
 	velObsVar = sq(max(obj.vel_accuracy, 0.01));        %限制了最小值 0.01
@@ -20,7 +20,7 @@ function [obj,res] = updateEKF(obj,model_index)
 	t1 = -t0;
 	t2 = P00*P11 + P00*velObsVar + P11*velObsVar + t1 + velObsVar*velObsVar;
 	if (abs(t2) < 1e-6) 
-        res = false;
+        ret = false;
 		return    
 	end
 	t3 = 1.0/t2;
@@ -125,7 +125,7 @@ function [obj,res] = updateEKF(obj,model_index)
 	obj.ahrs_ekf_gsf(model_index,1).R(2, 2) = R_prev01 * sinYaw + obj.ahrs_ekf_gsf(model_index,1).R(2, 2) * cosYaw;
 	obj.ahrs_ekf_gsf(model_index,1).R(2, 3) = R_prev02 * sinYaw + obj.ahrs_ekf_gsf(model_index,1).R(2, 3) * cosYaw;
 
-	res = true;
+	ret = true;
 
 end
 

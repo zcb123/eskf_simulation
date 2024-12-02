@@ -111,7 +111,7 @@ classdef EKFGSF_YAW < handle
         obj = predictEKF(obj,model_index);
 	    % update state and covariance for the specified EKF using a NE velocity measurement
 	    % return false if update failed
-	    [obj,res] = updateEKF(obj,model_index);
+	    ret = updateEKF(obj,model_index);
         
         res = gaussianDensity(obj,model_index);
 

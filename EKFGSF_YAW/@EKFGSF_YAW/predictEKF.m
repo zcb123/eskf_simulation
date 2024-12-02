@@ -20,7 +20,7 @@ function obj = predictEKF(obj,model_index)
 
 	% sum delta velocities in earth frame:  地理系速度预测
 	obj.ekf_gsf(model_index,1).X(1) = obj.ekf_gsf(model_index,1).X(1) + del_vel_NED(1);
-	obj.ekf_gsf(model_index,1).X(2) = obj.ekf_gsf(model_index,1).X(1) + del_vel_NED(2);
+	obj.ekf_gsf(model_index,1).X(2) = obj.ekf_gsf(model_index,1).X(2) + del_vel_NED(2);
 
 	% predict covariance - equations generated using EKF/python/gsf_ekf_yaw_estimator/main.py
 
