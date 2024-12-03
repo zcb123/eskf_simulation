@@ -21,7 +21,9 @@ for i = 1:len_t
     gps_dt = data.RTK.t - vehicle_t(i,1)*1e6;
     gps_index = find(gps_dt<1e3,1,'last');
     if gps_index_last~=gps_index    %目前都默认gps数据是能用的
-        gps_data_ready = true;
+        if gps_dt(gps_index,1)<vehicle_t(i,1)*1e6 && vehicle_t(i,1)*1e6 < gps_dt(gps_index,1)+1e5
+            gps_data_ready = true;
+        end
         gps_index_last = gps_index;
         setGpsData(data.RTK,gps_index);
     end

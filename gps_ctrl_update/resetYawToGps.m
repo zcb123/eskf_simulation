@@ -1,8 +1,8 @@
-function ret = resetYawToGps(params,gps_sample_delayed,gps_yaw_offset)
-    global R_to_earth time_last_imu yaw_signed_test_ratio_alpha time_last_gps_yaw_fuse;
+function ret = resetYawToGps()
+    global params R_to_earth gps_sample_delayed gps_yaw_offset;
+    global time_last_imu yaw_signed_test_ratio_alpha time_last_gps_yaw_fuse;
     % define the predicted antenna array vector and rotate into earth frame
-    gps_yaw_offset = gps_yaw_offset/57.3;
-
+    
 	ant_vec_bf = [cos(gps_yaw_offset) sin(gps_yaw_offset) 0.0]';
 	ant_vec_ef = R_to_earth * ant_vec_bf;
 

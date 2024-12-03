@@ -429,6 +429,18 @@ gsf_yaw_display = zeros(len_delta_t,1);
 % zlabel('Z 轴');
 % title('R_GSF 动态演示');
 
+K_display = zeros(3,2);
+% R_GSF = zeros(3,3);
+figure('Name','K_GSF')
+k = surf(K_display);
+shading interp; % 平滑着色
+colormap(jet);
+colorbar;
+xlabel('X 轴');
+ylabel('Y 轴');
+zlabel('Z 轴');
+title('K_GSF 动态演示');
+
 delta_angle_corrected_display = zeros(len_delta_t,3);
 delta_angle_corrected = [0 0 0]';
 test_ratio = 0;
@@ -436,7 +448,7 @@ test_ratio_display = zeros(len_delta_t,1);
 model_weights_display = zeros(len_delta_t,5);
 X1_display = zeros(len_delta_t,1);
 X2_display = zeros(len_delta_t,1);
-X3_display = zeros(len_delta_t,1);
+X3_display = zeros(len_delta_t,5);
 gravity_direction_bf_display = zeros(len_delta_t,3);
 accel_display = zeros(len_delta_t,3);
 gravity_direction_bf = [0 0 0]';
@@ -454,6 +466,10 @@ index_display = zeros(len_delta_t,3);
 normDist_display = zeros(len_delta_t,1);
 normDist = 0;
 yaw_variance_display = zeros(len_delta_t,1);
+innov_display = zeros(len_delta_t,2);
+K = zeros(3,2);
+yawdelta_display = zeros(len_delta_t,1);
+yawDelta = 0;
 for i = 1:len_delta_t
 
     imu_sample_updated.delta_ang = imu_delta_ang(i,:)';
@@ -471,13 +487,20 @@ for i = 1:len_delta_t
     gps_dt = data.RTK.t - imu_delta_t(i,1)*1e6;
     gps_index = find(gps_dt<1e3,1,'last');
     if gps_index_last~=gps_index    %目前都默认gps数据是能用的
-        gps_data_ready = true;
+        % 找时间戳滞后但又不至于滞后太多的
+        if gps_dt(gps_index,1)<imu_delta_t(i,1)*1e6 && imu_delta_t(i,1)*1e6 < gps_dt(gps_index,1)+1e5
+            gps_data_ready = true;
+        end
         gps_index_last = gps_index;
     end
 %     gps_data_ready = false;
 
     runYawEKFGSF(imu_sample_updated,data.RTK,gps_data_ready,gps_index);
     
+    set(k,'ZData',K);
+    pause(0.01);
+    yawdelta_display(i,:) = yawDelta;
+    innov_display(i,:) = [yawEstimator.ekf_gsf(1,1).innov(1) yawEstimator.ekf_gsf(1,1).innov(2)];
 %     set(p_m,'ZData',yawEstimator.ekf_gsf(1,1).P);
 %     pause(0.01);
 
@@ -502,7 +525,8 @@ for i = 1:len_delta_t
     normDist_display(i,1) = normDist;
     X1_display(i,1) = yawEstimator.ekf_gsf(1,1).X(1);
     X2_display(i,1) = yawEstimator.ekf_gsf(1,1).X(2);
-    X3_display(i,1) = yawEstimator.ekf_gsf(1,1).X(3);
+    X3_display(i,:) = [yawEstimator.ekf_gsf(1,1).X(3) yawEstimator.ekf_gsf(2,1).X(3) yawEstimator.ekf_gsf(3,1).X(3)...
+        yawEstimator.ekf_gsf(4,1).X(3) yawEstimator.ekf_gsf(5,1).X(3)];
     R_display(:,:,i) = yawEstimator.ahrs_ekf_gsf(1,1).R;
     yaw_variance_display(i,:) = yawEstimator.gsf_yaw_variance;
 %     index = find(eye(3)-R_display(:,:,i)*R_display(:,:,i)'~=0)
@@ -513,18 +537,21 @@ end
 figure
 plot(yaw_variance_display(:,1));
 %%
+figure
+plot(yawdelta_display);
+%%
 figure('Name','ahrs_accel_norm_display')
 plot(imu_delta_t,ahrs_accel_norm_display);
 %%
 figure('Name','ahrs_accel_fusion_gain_display')
 plot(imu_delta_t,ahrs_accel_fusion_gain_display);
 %%
-figure
-plot(imu_delta_t,imu_delta_ang(:,1),imu_delta_t,imu_delta_ang(:,2),imu_delta_t,imu_delta_ang(:,3));
-figure
-plot(imu_delta_t,imu_ang_dt);
-figure
-plot(imu_delta_t,imu_delta_ang(:,1)./imu_ang_dt,imu_delta_t,imu_delta_ang(:,2)./imu_ang_dt,imu_delta_t,imu_delta_ang(:,3)./imu_ang_dt);
+% figure
+% plot(imu_delta_t,imu_delta_ang(:,1),imu_delta_t,imu_delta_ang(:,2),imu_delta_t,imu_delta_ang(:,3));
+% figure
+% plot(imu_delta_t,imu_ang_dt);
+% figure
+% plot(imu_delta_t,imu_delta_ang(:,1)./imu_ang_dt,imu_delta_t,imu_delta_ang(:,2)./imu_ang_dt,imu_delta_t,imu_delta_ang(:,3)./imu_ang_dt);
 %%
 figure
 plot(imu_delta_t,spinRate_display);

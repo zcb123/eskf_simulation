@@ -1,6 +1,6 @@
 function ret = isYawFailure()
     global yawEstimator;
-    global R_to_earth;
+    global R_to_earth params;
     if ~yawEstimator.ekf_gsf_vel_fuse_started
         ret = false;
         return

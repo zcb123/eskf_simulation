@@ -12,8 +12,7 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
     obj.true_airspeed = airspeed;
 
 	% to reduce effect of vibration, filter using an LPF whose time constant is 1/10 of the AHRS tilt correction time constant
-    
-   
+
 	filter_coef = min(10.0*obj.delta_vel_dt*obj.tilt_gain, 1.0);        %tilt_gain = 0.2
 	accel = obj.delta_vel / max(obj.delta_vel_dt, 0.001);
 

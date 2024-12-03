@@ -107,9 +107,9 @@ function ret = updateEKF(obj,model_index)
 	oldYaw = obj.ekf_gsf(model_index,1).X(3);
 
 	obj.ekf_gsf(model_index,1).X = obj.ekf_gsf(model_index,1).X - (K * obj.ekf_gsf(model_index,1).innov) * innov_comp_scale_factor;
-
+    assignin("base","K",K);
 	yawDelta = obj.ekf_gsf(model_index,1).X(3) - oldYaw;
-    
+    assignin("base","yawDelta",yawDelta);
 	% apply the change in yaw angle to the AHRS
 	% take advantage of sparseness(稀疏) in the yaw rotation matrix
 	cosYaw = cos(yawDelta);

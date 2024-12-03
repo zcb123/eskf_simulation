@@ -1,13 +1,12 @@
 function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
     global states P dt_ekf_avg R_to_earth;
-
+    global gps_yaw_offset;
 
     q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
 	q3 = states.quat_nominal(3);
 	q4 = states.quat_nominal(4);
 
-    gps_yaw_offset = params.gps_yaw_offset/57.3;                %转化成弧度
 	% calculate the observed yaw angle of antenna array, converting a from body to antenna yaw measurement
 	measured_hdg = wrap_pn_pi(gps_sample_delayed.yaw/57.3 + gps_yaw_offset);
 
@@ -72,7 +71,7 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
         disp('bad_hdg');
 		% we reinitialise the covariance matrix and abort this fusion step
 		%run("P_init.m");
-		init_P(params,gps_sample_delayed);
+		initialiseCovariance();
 		return;
 	end
 	heading_innov_var_inv = 1 / heading_innov_var;

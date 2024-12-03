@@ -1,6 +1,6 @@
 clear 
 close all
-load("data/N41_2024-11-19_11-19-29.mat");
+load("data/N162_2024-11-13_21-00-07.mat");
 
 
 
@@ -48,13 +48,19 @@ global CONSTANTS_ONE_G FLT_EPSILON;
 CONSTANTS_ONE_G = single(9.80665);
 FLT_EPSILON = 1.192e-7;
 
-len = length(data.IMU1.t);
-imu_t = double(data.IMU1.t)/1e6;
+% len = length(data.IMU1.t);
+% imu_t = double(data.IMU1.t)/1e6;
+% imu_dt = 0.002*ones(len,1);
+% imu_dt(2:end,1) = diff(imu_t);
+% imu_gyro = [data.IMU1.GY data.IMU1.GX -data.IMU1.GZ];
+% imu_acc = [data.IMU1.AY data.IMU1.AX -data.IMU1.AZ];
+
+len = length(data.IMU0.t);
+imu_t = double(data.IMU0.t)/1e6;
 imu_dt = 0.002*ones(len,1);
 imu_dt(2:end,1) = diff(imu_t);
-imu_gyro = [data.IMU1.GY data.IMU1.GX -data.IMU1.GZ];
-imu_acc = [data.IMU1.AY data.IMU1.AX -data.IMU1.AZ];
-
+imu_gyro = [data.IMU0.GY data.IMU0.GX -data.IMU0.GZ];
+imu_acc = [data.IMU0.AY data.IMU0.AX -data.IMU0.AZ];
 
 %%  传感器数据检查
 figure('Name','imu_gyro')

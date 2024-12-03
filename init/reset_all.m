@@ -52,12 +52,14 @@ baro_index_last = 0;
 gps_index_last = 0;
 global last_gps_fail_us
 last_gps_fail_us = 0;
-global gps_checks_passed NED_origin_initialised gps_alt_ref hgt_sensor_offset gps_prev;
+global gps_checks_passed NED_origin_initialised gps_alt_ref hgt_sensor_offset gps_prev time_last_on_ground_us gps_yaw_offset;
 gps_checks_passed = false;
 NED_origin_initialised = false;
 hgt_sensor_offset = 0;
 gps_alt_ref = 0;
 gps_prev.fix_type = 1;
+time_last_on_ground_us = 0;
+gps_yaw_offset = 0;
 clear controlGpsYawFusion
 %% mag
 global mag_yaw_reset_req non_mag_yaw_aiding_running_prev mag_inhibit_yaw_reset_req ...

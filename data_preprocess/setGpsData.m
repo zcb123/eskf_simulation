@@ -1,8 +1,8 @@
 function  setGpsData(gps_data,gps_index)
 
 global params;
-global gps_sample_delayed imu_sample_delayed;
-global gps_hgt_accurate;
+global gps_sample_delayed ;
+global gps_hgt_accurate gps_yaw_offset;
 
     gps_sample_delayed.time_us = gps_data.t(gps_index,1);
     gps_sample_delayed.lon = gps_data.lon(gps_index,1);
@@ -17,10 +17,16 @@ global gps_hgt_accurate;
     gps_sample_delayed.hdop = gps_data.hdop(gps_index,1);
     gps_sample_delayed.sacc = 0.5;
     gps_sample_delayed.vacc = 0.01;         %代码中0.01
-
+    gps_sample_delayed.yaw_offset = params.gps_yaw_offset/57.3;
     gps_sample_delayed.fix_type = gps_data.fix(gps_index,1);
 
     gps_hgt_accurate = (gps_sample_delayed.vacc < params.req_vacc) && (gps_sample_delayed.fix_type == 6);
+
+    if ~isnan(gps_sample_delayed.yaw_offset)
+        gps_yaw_offset = gps_sample_delayed.yaw_offset;
+    else
+        gps_yaw_offset = 0;
+    end
 
     collect_gps(gps_sample_delayed);
     

@@ -43,11 +43,17 @@ for i = 1:len_t
     
     gps_data_ready = false;
     gps_dt = data.RTK.t - vehicle_t(i,1)*1e6;
-    gps_index = find(gps_dt<1e3,1,'last');
+    gps_index = find(gps_dt<1e5,1,'last');
+    
     if gps_index_last~=gps_index    %目前都默认gps数据是能用的
-        gps_data_ready = true;
+        gps_t = data.RTK.t(gps_index,1);
+        imu_t = vehicle_t(i,1)*1e6;
+        %if gps_dt(gps_index,1)<=vehicle_t(i,1)*1e6 && vehicle_t(i,1)*1e6 < gps_dt(gps_index,1)+1e5
+            gps_data_ready = true;
+            gps_update_time(i,:) = [data.RTK.t(gps_index,1) vehicle_t(i,1)*1e6];
+        %end
         gps_index_last = gps_index;
-        gps_update_time(i,:) = [data.RTK.t(gps_index,1) vehicle_t(i,1)*1e6];
+        
         setGpsData(data.RTK,gps_index);
     end
     
@@ -55,9 +61,12 @@ for i = 1:len_t
     mag_dt = data.MAG.t - vehicle_t(i,1)*1e6;
     mag_index = find(mag_dt < 1e3,1,'last');
     if mag_index_last ~= mag_index
-        mag_data_ready = true;
+        if mag_dt(mag_index,1)<vehicle_t(i,1)*1e6 && vehicle_t(i,1)*1e6 < mag_dt(mag_index,1)+1e5
+            mag_data_ready = true;
+            mag_update_time(i,:) = [data.MAG.t(mag_index,1) vehicle_t(i,1)*1e6];
+        end
         mag_index_last = mag_index;
-        mag_update_time(i,:) = [data.MAG.t(mag_index,1) vehicle_t(i,1)*1e6];
+        
         setMagData(data.MAG,mag_index);
     end
 
@@ -65,12 +74,20 @@ for i = 1:len_t
     baro_dt = data.BAR0.t - vehicle_t(i,1)*1e6;
     baro_index = find(baro_dt < 1e3,1,'last');
     if baro_index_last ~= baro_index
-        baro_data_ready = true;
+        if baro_dt(baro_index,1)<vehicle_t(i,1)*1e6 && vehicle_t(i,1)*1e6 < baro_dt(baro_index,1)+1e5
+            baro_data_ready = true;
+            baro_update_time(i,:) = [data.BAR0.t(baro_index,1) vehicle_t(i,1)*1e6];
+        end
         baro_index_last = baro_index;
-        baro_update_time(i,:) = [data.BAR0.t(baro_index,1) vehicle_t(i,1)*1e6];
+        
         setBaroData(data.BAR0,baro_index);
     end
 %     baro_data_ready = false;
+
+    if filter_initialised && control_status.flags.in_air
+        set_in_air_status(false);
+    end
+
     if eskf_updated
         if ~filter_initialised
             filter_initialised = initialiseFilter(mag_data_ready);
@@ -100,11 +117,18 @@ for i = 1:len_t
 
     end
 
-    set(h,'ZData',P);
-    pause(0.01);
-    set(h_r,'ZData',R_to_earth);
-    pause(0.01);
+%     set(h,'ZData',P);
+%     pause(0.01);
+%     set(h_r,'ZData',R_to_earth);
+%     pause(0.01);
 
     calculateOutputStates(imu_sample_new,eskf_updated);
  
 end
+%%
+gps_update_t = getNonNaN(gps_update_time,2);
+gps_update_dt = gps_update_t(:,1) - gps_update_t(:,2);
+%%
+
+figure
+plot(vehicle_t,gps_update_time)
