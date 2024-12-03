@@ -43,7 +43,7 @@ for i = 1:len_t
     
     gps_data_ready = false;
     gps_dt = data.RTK.t - vehicle_t(i,1)*1e6;
-    gps_index = find(gps_dt<1e5,1,'last');
+    gps_index = find(gps_dt<1e3,1,'last');
     
     if gps_index_last~=gps_index    %目前都默认gps数据是能用的
         gps_t = data.RTK.t(gps_index,1);

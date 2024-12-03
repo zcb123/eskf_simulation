@@ -27,6 +27,7 @@ control_status.flags.in_air = true;
 
 global accel_lpf_NE;
 accel_lpf_NE = zeros(2,1);
+
 %% all
 global state_reset_status;
 state_reset_status = struct('velNE_counter',0,'velD_counter',0,'posNE_counter',0,'posD_counter',0,'quat_counter',0, ...
@@ -42,12 +43,15 @@ gps_pos_innov = zeros(3,1);
 baro_hgt_innov = 0;
 rng_hgt_innov = 0;
 ev_pos_innov = zeros(3,1);
+
 %% baro
 global baro_hgt_faulty baro_hgt_offset terrain_vpos;
 baro_hgt_faulty = false;
 baro_hgt_offset = 0;
 terrain_vpos = 0;
+
 baro_index_last = 0;
+
 %% gps
 gps_index_last = 0;
 global last_gps_fail_us
@@ -60,7 +64,9 @@ gps_alt_ref = 0;
 gps_prev.fix_type = 1;
 time_last_on_ground_us = 0;
 gps_yaw_offset = 0;
+
 clear controlGpsYawFusion
+
 %% mag
 global mag_yaw_reset_req non_mag_yaw_aiding_running_prev mag_inhibit_yaw_reset_req ...
     is_yaw_fusion_inhibited mag_counter flt_mag_align_start_time mag_declination_gps ...
