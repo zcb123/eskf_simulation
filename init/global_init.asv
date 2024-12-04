@@ -208,13 +208,10 @@ global mag_buffer time_last_mag
 mag_buffer = ring_buffer(obs_buffer_length);
 time_last_mag = 0;
 %% BARO 相关
-global baro_buffer time_last_baro baro_hgt_offset baro_counter
+global baro_buffer time_last_baro
 baro_buffer = ring_buffer(obs_buffer_length);
 time_last_baro = 0;
-baro_hgt_offset = 0;
-baro_counter = 0;
+
 %% sensor lpf 
 global accel_lpf gyro_lpf mag_lpf;
-accel_lpf = AlphaFilter(0.1,0);
-gyro_lpf = AlphaFilter(0.1,0);
-mag_lpf = AlphaFilter(0.1,0);
+accel_lpf = Alph

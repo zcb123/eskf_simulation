@@ -7,8 +7,8 @@ function resetHorizontalVelocityTo(new_horz_vel)
     delta_horz_vel = new_horz_vel - states.vel(1:2,1);
 	states.vel(1:2,1) = new_horz_vel;
 
-	for index = 1:3 
-		output_buffer(index).vel(1:2,1) = output_buffer(index).vel(1:2,1) + delta_horz_vel;
+	for index = 1:output_buffer.len 
+		output_buffer(index,1).vel(1:2,1) = output_buffer(index,1).vel(1:2,1) + delta_horz_vel;
     end
 
 	output_new.vel(1:2,1) = output_new.vel(1:2,1) + delta_horz_vel;

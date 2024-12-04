@@ -11,10 +11,8 @@ function  calculateOutputStates(imu,correct_updated)
         output_last.vel = single([0 0 0]');
         output_last.pos = single([0 0 0]');
     end
-    global output_buffer output_new head_index tail_index;
-    
-    buffer_size = 3;
-  
+    global output_buffer output_new ;
+ 
     persistent delta_angle_corr;
     persistent vel_err_integ;
     persistent pos_err_integ;
@@ -80,15 +78,9 @@ function  calculateOutputStates(imu,correct_updated)
 
 	if (correct_updated)
 
-        head_index = mod(head_index,buffer_size);
-        head_index = head_index + 1;
-		output_buffer(head_index,:) = output_new;
-        %这里的环形队列暂时不考虑队满和重写的情况
-        
-		output_delayed = output_buffer(tail_index,:);
-        tail_index = mod(tail_index,buffer_size);
-        tail_index = tail_index + 1;
-        
+        output_buffer.push(output_new);
+		output_delayed = output_buffer.get_oldest();
+               
         quat_nominal_inverse = quat_inverse(states.quat_nominal);
         assignin('base',"quat_nominal_inverse",quat_nominal_inverse);
 
@@ -125,18 +117,11 @@ function  calculateOutputStates(imu,correct_updated)
 		pos_err_integ = pos_err_integ + pos_err;
 		pos_correction = pos_err * pos_gain + pos_err_integ * (pos_gain^2) * 0.1;
 
-		for i = 1:3
-            output_buffer(i,1).vel = output_buffer(i,1).vel + vel_correction;
-            output_buffer(i,1).pos = output_buffer(i,1).pos + pos_correction;
-        end
+		
+        applyCorrectionToOutputBuffer(vel_correction,pos_correction);
 
-        output_new = output_buffer(head_index,:);
-        output_new.vel = output_new.vel + vel_imu_rel_body_ned;
-        
     end
-    
-
-    output_last = output_new;
+     %output_new.vel = output_new.vel + vel_imu_rel_body_ned;     这里是哪里加的
 
     % output plot
 %     dq_out = dq';

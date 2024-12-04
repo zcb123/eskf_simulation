@@ -5,7 +5,7 @@ function setMagData(mag_sample)
     global time_last_mag min_obs_interval_us;
     global initialised;
 
-    if initialised 
+    if ~initialised 
 		return;
     end
 

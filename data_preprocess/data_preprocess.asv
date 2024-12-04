@@ -162,7 +162,13 @@ rtk_index = 1;
 rtk_index_last = 1;
 mag_index = 1;
 mag_index_last = 1;
+baro_index = 1;
+baro_index_last = 1;
 
+time_last_imu_display = zeros(len_t,1);
+time_last_rtk_display = zeros(len_t,1);
+time_last_mag_display = zeros(len_t,1);
+time_last_bar_display = zeros(len_t,1);
 for i = 1:len_t
     imu_sample_new.time_us = uint64(vehicle_t(i,1)*1e6);   %转化成微秒
     imu_sample_new.delta_ang = gyro_filted(i,:)'*vehicle_dt(i,1);
@@ -172,7 +178,6 @@ for i = 1:len_t
     imu_sample_new.delta_vel_clipping = logical([0 0 0]);
     updated = setIMUData(imu_sample_new);
 
-    rtk_data_ready = false;
     rtk_dt = data.RTK.t - vehicle_t(i,1)*1e6;
     rtk_index = find(rtk_dt<1e3,1,'last');
     if rtk_index_last ~= rtk_index
@@ -204,7 +209,7 @@ for i = 1:len_t
     end
 
 
-    mag_data_ready = false;
+    
     mag_dt = data.MAG.t - vehicle_t(i,1)*1e6;
     mag_index = find(mag_dt<1e4,1,'last');
     if mag_index_last ~= mag_index
@@ -217,12 +222,20 @@ for i = 1:len_t
     end
 
 
+    baro_dt = data.BAR0.t - vehicle_t(i,1)*1e6;
+    baro_index = find(baro_dt<1e4,1,'last');
+    if baro_index_last ~= baro_index
+        baro_index_last = baro_index;
+        baro.time_us = data.BAR0.t(baro_index,1);
+        baro.hgt = data.BAR0.Hight;
+        setBaroData(baro);
+    end
 
+    time_last_imu_display = time_last_mag;
+    time_last_rtk_display = time_last_mag;
+    time_last_mag_display = time_last_mag;
+    time_last_bar_display = time_last_mag;
 
-
-
-
-    
 
     dt_imu_avg_record(i,1) = dt_imu_avg;
     ang_out_display(i,:) = ang_out';

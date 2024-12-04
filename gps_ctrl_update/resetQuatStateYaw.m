@@ -1,7 +1,7 @@
 function resetQuatStateYaw(yaw,yaw_variance,update_buffer)
     
     global output_new output_buffer;
-    global states P R_to_earth;    	
+    global states P R_to_earth FLT_EPSILON;    	
 	quat_before_reset = states.quat_nominal;
 
 	R_to_earth = updateYawInRotMat(yaw, Quat2Tbn(states.quat_nominal));
@@ -24,10 +24,10 @@ function resetQuatStateYaw(yaw,yaw_variance,update_buffer)
 	states_reset_status.quat_change = q_error;
 
 	% update the yaw angle variance
-	if (yaw_variance > 1.192e-7) 
-		%increaseQuatYawErrVariance(yaw_variance);
-        yaw_variance = min(yaw_variance,1e-2);
-        P(3,3) = P(3,3) + yaw_variance;
+	if (yaw_variance > FLT_EPSILON) 
+		increaseQuatYawErrVariance(yaw_variance);
+%         yaw_variance = min(yaw_variance,1e-2);
+%         P(3,3) = P(3,3) + yaw_variance;
 	end
 
 	% add the reset amount to the output observer buffered data

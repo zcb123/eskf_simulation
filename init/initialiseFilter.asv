@@ -1,0 +1,59 @@
+function ret = initialiseFilter()
+
+    global states;
+    global imu_sample_delayed mag_sample_delayed;
+    global is_first_imu_sample;
+    global time_last_imu time_last_hgt_fuse time_last_hor_pos_fuse time_last_hor_vel_fuse time_last_hagl_fuse time_last_flow_terrain_fuse time_last_of_fuse;
+    global mag_counter mag_lpf mag_buffer;
+    
+    imu_init = imu_sample_delayed;
+    
+    if (imu_init.delta_vel_dt < 1e-4 || imu_init.delta_ang_dt < 1e-4) 
+		ret = false;
+        return;
+    end
+
+    if is_first_imu_sample
+%         accel_lpf = imu_init.delta_vel/imu_init.delta_vel_dt;
+%         gyr_lpf = imu_init.delta_ang/imu_init.delta_ang_dt;
+        accel_lpf.reset(imu_init.delta_vel/imu_init.delta_vel_dt);
+        gyro_lpf.reset(imu_init.delta_ang/imu_init.delta_ang_dt);
+        is_first_imu_sample = false;
+    else
+        accel_lpf = alphaFilter(imu_init.delta_vel/imu_init.delta_vel_dt,0.1);
+        gyro_lpf = Copy_of_alphaFilter(imu_init.delta_ang/imu_init.delta_ang_dt,0.1);
+    end
+    
+    if mag_buffer.len >=1    %磁力计数据初始化
+        if mag_counter == 0
+            mag_lpf = mag_sample_delayed.mag;
+        else
+            mag_lpf = mag_lpf_update(mag_lpf,0.1);    
+        end
+        mag_counter = mag_counter + 1;
+    end
+
+
+    if ~initialiseTilt(accel_lpf,gyr_lpf)
+        disp("Initial tilt false\n")
+        ret = false;
+        return;
+    end
+    %setControlBaroHeight();
+
+    init_P();
+    
+    resetMagHeading(false,false);
+
+    time_last_hgt_fuse = time_last_imu;
+	time_last_hor_pos_fuse = time_last_imu;
+	time_last_hor_vel_fuse = time_last_imu;
+	time_last_hagl_fuse = time_last_imu;
+	time_last_flow_terrain_fuse = time_last_imu;
+	time_last_of_fuse = time_last_imu;
+
+    alignOutputFilter()
+    
+    ret = true;
+end
+

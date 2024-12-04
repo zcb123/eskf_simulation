@@ -74,16 +74,16 @@ acc_dt_inv gyro_dt_inv;
 clear gyro_coningIntegral acc_integral;
 
 %%
-acc_lpf = LPF_2p(250,30);
-gyro_lpf = LPF_2p(250,20);
+acc_lpf_2o = LPF_2p(250,30);
+gyro_lpf_2o = LPF_2p(250,20);
 
 len_t = length(vehicle_t);
 acc_filted = zeros(len_t,3);
 gyro_filted = zeros(len_t,3);
 
 for i=1:len_t
-    [acc_lpf,acc_filted(i,:)] = acc_lpf.apply(vehicle_acc(i,:));
-    [gyro_lpf,gyro_filted(i,:)] = gyro_lpf.apply(vehicle_gyro(i,:));
+    [acc_lpf_2o,acc_filted(i,:)] = acc_lpf_2o.apply(vehicle_acc(i,:));
+    [gyro_lpf_2o,gyro_filted(i,:)] = gyro_lpf_2o.apply(vehicle_gyro(i,:));
 
 end
 
@@ -134,6 +134,7 @@ params.accel_noise = 0.35;
 params.vdist_sensor_type =GNSS;
 params.fusion_mode = bitor(params.fusion_mode,GPSYAW);
 
+global time_last_imu time_last_gps time_last_mag time_last_baro
 
 len_t = length(vehicle_t);
 vehicle_dt = zeros(len_t,1);
@@ -162,7 +163,13 @@ rtk_index = 1;
 rtk_index_last = 1;
 mag_index = 1;
 mag_index_last = 1;
+baro_index = 1;
+baro_index_last = 1;
 
+time_last_imu_display = zeros(len_t,1);
+time_last_rtk_display = zeros(len_t,1);
+time_last_mag_display = zeros(len_t,1);
+time_last_bar_display = zeros(len_t,1);
 for i = 1:len_t
     imu_sample_new.time_us = uint64(vehicle_t(i,1)*1e6);   %转化成微秒
     imu_sample_new.delta_ang = gyro_filted(i,:)'*vehicle_dt(i,1);
@@ -216,10 +223,19 @@ for i = 1:len_t
     end
 
 
-%     baro_dt = 
+    baro_dt = data.BAR0.t - vehicle_t(i,1)*1e6;
+    baro_index = find(baro_dt<1e4,1,'last');
+    if baro_index_last ~= baro_index
+        baro_index_last = baro_index;
+        baro.time_us = data.BAR0.t(baro_index,1);
+        baro.hgt = data.BAR0.Hight;
+        setBaroData(baro);
+    end
 
-
-
+    time_last_imu_display(i,1) = time_last_imu;
+    time_last_rtk_display(i,1) = time_last_gps;
+    time_last_mag_display(i,1) = time_last_mag;
+    time_last_bar_display(i,1) = time_last_baro;
 
 
     dt_imu_avg_record(i,1) = dt_imu_avg;
@@ -255,6 +271,15 @@ plot(vibe_metrics_display)
 
 figure('Name','time_last_move_detect_us_display')
 plot(time_last_move_detect_us_display)
+%%
+figure('Name','imu time check')
+plot(vehicle_t,time_last_imu_display)
+figure('Name','rtk time check')
+plot(vehicle_t,time_last_rtk_display)
+figure('Name','mag time check')
+plot(vehicle_t,time_last_mag_display)
+figure('Name','baro time check')
+plot(vehicle_t,time_last_bar_display)
 %%
 figure('Name','delta_ang')
 subplot(311)
@@ -300,3 +325,8 @@ plot(imu_t,imu_acc(:,2),imu_delta_t,imu_delta_vel(:,2)./imu_vel_dt(:,1));
 subplot(313)
 plot(imu_t,imu_acc(:,3),imu_delta_t,imu_delta_vel(:,3)./imu_vel_dt(:,1));
 
+%%
+clear time_last_bar_display time_last_mag_display time_last_rtk_display time_last_imu_display ...
+    vibe_metrics_display time_last_move_detect_us_display ...
+    ang_out_display vel_out_display quat_angle_out_display ...
+    imu_sample_delayed_ang imu_sample_delayed_vel imu_sample_delayed_t imu_sample_ang_dt imu_sample_vel_dt...
