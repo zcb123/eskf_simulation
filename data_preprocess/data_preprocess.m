@@ -115,7 +115,7 @@ plot(vehicle_t,vehicle_gyro(:,3),vehicle_t,gyro_filted(:,3))
 grid on
 legend('gZ','gZF');
 %%
-global params imu_sample_delayed;
+global params imu_sample_delayed dt_imu_avg;
 imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_ang',single([0 0 0]'),...
                             'delta_vel',single([0 0 0]'),...)
@@ -125,6 +125,15 @@ imu_sample_delayed = struct('time_us',uint64(0),...
                             'delta_vel_clipping',logical([0 0 0]'));
 global imu_down_sampler;
 imu_down_sampler = ImuDownSampler(params.filter_update_interval_us);
+
+global GNSS GPSYAW;
+%update default params
+params.gps_pos_noise = 0.03;
+params.gps_vel_noise = 0.03;
+params.accel_noise = 0.35;
+params.vdist_sensor_type =GNSS;
+params.fusion_mode = bitor(params.fusion_mode,GPSYAW);
+
 
 len_t = length(vehicle_t);
 vehicle_dt = zeros(len_t,1);
@@ -143,7 +152,17 @@ imu_sample_delayed_vel = NaN(len_t,3);
 imu_sample_delayed_t = NaN(len_t,1);
 imu_sample_ang_dt = NaN(len_t,1);
 imu_sample_vel_dt = NaN(len_t,1);
+
+vibe_metrics_display = zeros(len_t,3);
+time_last_move_detect_us_display = zeros(len_t,1);
+dt_imu_avg_record = zeros(len_t,1);
+
 index = 1;
+rtk_index = 1;
+rtk_index_last = 1;
+mag_index = 1;
+mag_index_last = 1;
+
 for i = 1:len_t
     imu_sample_new.time_us = uint64(vehicle_t(i,1)*1e6);   %转化成微秒
     imu_sample_new.delta_ang = gyro_filted(i,:)'*vehicle_dt(i,1);
@@ -153,7 +172,64 @@ for i = 1:len_t
     imu_sample_new.delta_vel_clipping = logical([0 0 0]);
     updated = setIMUData(imu_sample_new);
 
+    rtk_dt = data.RTK.t - vehicle_t(i,1)*1e6;
+    rtk_index = find(rtk_dt<1e3,1,'last');
+    if rtk_index_last ~= rtk_index
+        rtk_index_last = rtk_index;
+		gps_msg.time_us = data.RTK.t(rtk_index,1);
+		gps_msg.lat = data.RTK.lat(rtk_index,1) * 1e7;
+		gps_msg.lon = data.RTK.lon(rtk_index,1) * 1e7;
+		gps_msg.alt = data.RTK.alt(rtk_index,1) * 1e3;
+		gps_msg.yaw = data.RTK.hding(rtk_index,1);%data.RTK.heading;
+		gps_msg.yaw_offset = params.gps_yaw_offset/57.3;
+		gps_msg.fix_type = data.RTK.fix(rtk_index,1);
+		gps_msg.eph = 0.01;%data.RTK.hstd;
+		gps_msg.epv = 0.01;%data.RTK.vstd;
+		gps_msg.sacc = 0.01;%0.5;
+		
+		gps_msg.vel_ned = [
+			data.RTK.vN(rtk_index,1)
+			data.RTK.vE(rtk_index,1)
+			data.RTK.vD(rtk_index,1)
+		];
+
+		gps_msg.vel_m_s = norm(gps_msg.vel_ned);
+		gps_msg.vel_ned_valid = true;%vehicle_gps_position.vel_ned_valid;
+		gps_msg.nsats = data.RTK.svs(rtk_index,1);
+		gps_msg.pdop = data.RTK.pdop(rtk_index,1);
+
+        setGpsData(gps_msg);
+
+    end
+
+
     
+    mag_dt = data.MAG.t - vehicle_t(i,1)*1e6;
+    mag_index = find(mag_dt<1e4,1,'last');
+    if mag_index_last ~= mag_index
+        mag_index_last = mag_index;
+		magSample.time_us = data.MAG.t(mag_index);
+        magSample.mag = [data.MAG.Y(mag_index,1)*0.003 data.MAG.X(mag_index,1)*0.003 data.MAG.Z(mag_index,1)*0.003]'; %包含坐标系旋转  
+
+        setMagData(magSample);
+
+    end
+
+
+%     baro_dt = 
+
+
+
+
+
+    dt_imu_avg_record(i,1) = dt_imu_avg;
+    ang_out_display(i,:) = ang_out';
+    vel_out_display(i,:) = vel_out';
+    quat_angle_out_display(i,:) = imu_down_sampler.delta_angle_accumulated;
+
+    vibe_metrics_display(i,:) = vibe_metrics';
+    time_last_move_detect_us_display(i,1) = time_last_move_detect_us;
+
     if updated
 
        imu_sample_delayed_ang(index,:) = imu_sample_delayed.delta_ang';
@@ -173,6 +249,12 @@ imu_delta_t = getNonNaN(imu_sample_delayed_t,1);
 imu_ang_dt = getNonNaN(imu_sample_ang_dt,1);
 imu_vel_dt = getNonNaN(imu_sample_vel_dt,1);
 
+%%
+figure('Name','vibe_metrics_display')
+plot(vibe_metrics_display)
+
+figure('Name','time_last_move_detect_us_display')
+plot(time_last_move_detect_us_display)
 %%
 figure('Name','delta_ang')
 subplot(311)

@@ -1,5 +1,6 @@
 function updated = setIMUData(imu_sample)
-
+    
+    global control_status;
     global imu_sample_delayed newest_high_rate_imu_sample dt_imu_avg time_last_imu;
     global imu_down_sampler imu_buffer imu_sample_delayed_prev;
     global min_obs_interval_us obs_buffer_length;
@@ -22,12 +23,14 @@ function updated = setIMUData(imu_sample)
 
     newest_high_rate_imu_sample = imu_sample;
 
-    updated = imu_down_sampler.update(imu_sample);
+    computeVibrationMetric(imu_sample);
+	control_status.flags.vehicle_at_rest = checkIfVehicleAtRest(dt, imu_sample);
+    updated = imu_down_sampler.Update(imu_sample);
 
     if updated
         imu_buffer.push(imu_down_sampler.getDownSampledImuAndTriggerReset());
         imu_sample_delayed_prev = imu_sample_delayed;
-        imu_sample_delayed = imu_buffer.get_oldest();
+        imu_sample_delayed = imu_buffer.get_oldest();%这里要先把缓冲区填满，tail才会+1
         
         min_obs_interval_us =  (imu_sample.time_us - imu_sample_delayed.time_us) / uint64(obs_buffer_length - 1);
 
