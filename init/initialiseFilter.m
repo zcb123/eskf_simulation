@@ -1,14 +1,16 @@
 function ret = initialiseFilter()
 
-    global states;
-    global imu_sample_delayed mag_sample_delayed;
+    
+    global imu_sample_delayed imu_buffer params;
     global is_first_imu_sample;
     global time_last_imu time_last_hgt_fuse time_last_hor_pos_fuse time_last_hor_vel_fuse time_last_hagl_fuse time_last_flow_terrain_fuse time_last_of_fuse;
     global accel_lpf gyro_lpf;
     global mag_counter mag_lpf mag_buffer;
-    global baro_buffer baro_sample_delayed baro_hgt_offset baro_counter
+    global baro_buffer baro_sample_delayed baro_hgt_offset baro_counter obs_buffer_length;
+    global MAG_3D;
 
-    imu_init = imu_sample_delayed;
+    
+    imu_init = imu_buffer.get_newest();
     
     if (imu_init.delta_vel_dt < 1e-4 || imu_init.delta_ang_dt < 1e-4) 
 		ret = false;
@@ -16,21 +18,26 @@ function ret = initialiseFilter()
     end
 
     if is_first_imu_sample
-        accel_lpf.reset(imu_init.delta_vel/imu_init.delta_vel_dt);
-        gyro_lpf.reset(imu_init.delta_ang/imu_init.delta_ang_dt);
+        acc_tmp = imu_init.delta_vel/imu_init.delta_vel_dt;
+        accel_lpf.reset_filter(acc_tmp);
+        gyro_tmp = imu_init.delta_ang/imu_init.delta_ang_dt;
+        gyro_lpf.reset_filter(gyro_tmp);
         is_first_imu_sample = false;
     else
-        accel_lpf.update(imu_init.delta_vel/imu_init.delta_vel_dt);
-        gyro_lpf.update(imu_init.delta_ang/imu_init.delta_ang_dt);
+        acc_tmp = imu_init.delta_vel/imu_init.delta_vel_dt;
+        accel_lpf.update(acc_tmp);
+        gyro_tmp = imu_init.delta_ang/imu_init.delta_ang_dt;
+        gyro_lpf.update(gyro_tmp);
     end
     
     if mag_buffer.len >=1    %磁力计数据初始化成功
+%         mag_sample = imu_sample_delayed;
         [mag_sample,mag_updated] = mag_buffer.pop_first_older_than(imu_sample_delayed.time_us);
         if mag_updated
             if mag_counter == 0
-                mag_lpf.reset(mag_sample);
+                mag_lpf.reset_filter(mag_sample);
             else
-                mag_lpf.update(mag_sample);    
+                mag_lpf.update(mag_sample.mag);    
             end
             mag_counter = mag_counter + 1;
         end
@@ -46,6 +53,13 @@ function ret = initialiseFilter()
             end
             baro_counter = baro_counter + 1;
         end
+    end
+    
+    if (baro_counter < obs_buffer_length) 
+		% not enough baro samples accumulated
+		%printf("Initial baro %d req %d\n",_baro_counter, _obs_buffer_length);
+		ret =  false;
+        return
     end
 
     setControlBaroHeight();

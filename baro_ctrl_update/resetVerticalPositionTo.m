@@ -15,7 +15,7 @@ function resetVerticalPositionTo(new_vert_pos)
 
 	% add the reset amount to the output observer buffered data
 	for i = 1:output_buffer.len
-		output_buffer(i,1).pos(3) = output_buffer(i,1).pos(3) + state_reset_status.posD_change;
+		output_buffer.elements{i,1}.pos(3) = output_buffer.elements{i,1}.pos(3) + state_reset_status.posD_change;
 		%output_vert_buffer[i].vert_vel_integ += state_reset_status.posD_change;
     end
 

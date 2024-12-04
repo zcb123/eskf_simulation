@@ -228,7 +228,7 @@ for i = 1:len_t
     if baro_index_last ~= baro_index
         baro_index_last = baro_index;
         baro.time_us = data.BAR0.t(baro_index,1);
-        baro.hgt = data.BAR0.Hight;
+        baro.hgt = data.BAR0.Hight(baro_index,1);
         setBaroData(baro);
     end
 

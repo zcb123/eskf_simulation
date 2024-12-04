@@ -22,7 +22,7 @@ classdef MapProjection < handle
             
         end
 
-        function initReference(obj,lat_0,lon_0,timestamp)
+        function obj = initReference(obj,lat_0,lon_0,timestamp)
         
             obj.ref_timestamp = timestamp;
 	        obj.ref_lat = radians(lat_0);

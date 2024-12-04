@@ -33,13 +33,7 @@ ROTATE_EV  = bitshift(1,6);		%/< set to true to if the EV observations are in a 
 GPSYAW  = bitshift(1,7);		%/< set to true to use GPS yaw data if available
 EVVEL   = bitshift(1,8);
 
-global obs_buffer_length;
-obs_buffer_length = 0;
 
-
-global output_new;
-output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
-% output_buffer = ring_buffer(obs_buffer_length);
 
 %%
 global params control_status fault_status;
@@ -168,8 +162,17 @@ baro_hgt_innov = 0;
 rng_hgt_innov = 0;
 ev_pos_innov = zeros(3,1);
 
+global obs_buffer_length;
+obs_buffer_length = 0;
 
 
+global output_new;
+output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
+% output_buffer = ring_buffer(obs_buffer_length);
+
+global filter_initialised is_first_imu_sample
+is_first_imu_sample = true;
+filter_initialised = false;
 %% IMU 相关
 global initialised
 initialised = false;

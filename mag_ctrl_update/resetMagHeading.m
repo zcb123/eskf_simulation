@@ -3,6 +3,7 @@ function ret = resetMagHeading(increase_yaw_var,update_buffer)
     global states R_to_earth imu_sample_delayed;
     global mag_counter flt_mag_align_start_time;
     global mag_lpf
+    global MAG_3D INDOOR;
  % prevent a reset being performed more than once on the same frame
 	if (imu_sample_delayed.time_us == flt_mag_align_start_time) 
 
@@ -17,7 +18,7 @@ function ret = resetMagHeading(increase_yaw_var,update_buffer)
         return ;
 	end
 
-	mag_init = mag_lpf;
+	mag_init = mag_lpf.getState();
 
 	% calculate the observed yaw angle and yaw variance
 	yaw_new = 0;
@@ -25,7 +26,7 @@ function ret = resetMagHeading(increase_yaw_var,update_buffer)
 
 	heading_required_for_navigation = control_status.flags.gps || control_status.flags.ev_pos;
 
-	if ((params.mag_fusion_type <= 2) || ((params.mag_fusion_type == 4) && heading_required_for_navigation)) 
+	if ((params.mag_fusion_type <= MAG_3D) || ((params.mag_fusion_type == INDOOR) && heading_required_for_navigation)) 
 
 		% rotate the magnetometer measurements into earth frame using a zero yaw angle
 		R_to_earth = updateYawInRotMat(0, R_to_earth);
@@ -38,7 +39,7 @@ function ret = resetMagHeading(increase_yaw_var,update_buffer)
 			yaw_new_variance = sq(fmaxf(params.mag_heading_noise, 1.0e-2));
         end
 
-    elseif (params.mag_fusion_type == 4) 
+    elseif (params.mag_fusion_type == INDOOR) 
 		% we are operating temporarily without knowing the earth frame yaw angle
 		ret = true;
         return

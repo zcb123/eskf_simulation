@@ -61,14 +61,19 @@ function ret = initialise_interface(timestamp)
     
     imu_buffer = ring_buffer(imu_buffer_length);
     output_buffer = ring_buffer(imu_buffer_length);
-
+    
 	if imu_buffer.len < 1 || output_buffer.len<1
 % 	    || !_output_vert_buffer.allocate(imu_buffer_length)) 
 
 		disp("IMU and output allocate failed");
 		ret = false;
         return
-	end
+    end
+    %将所有元素置零
+    output = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
+    for i = 1:output_buffer.len
+        output_buffer.elements{i,1} = output;
+    end
 
 	imu_sample_delayed.time_us = timestamp;
 	imu_sample_delayed.delta_vel_clipping(1) = false;

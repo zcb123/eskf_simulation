@@ -7,7 +7,7 @@ function resetHorizontalPositionTo(new_horz_pos)
 	states.pos(1:2,1) = new_horz_pos;
 
 	for index = 1:output_buffer.len 
-		output_buffer(index,1).pos(1:2,1) = output_buffer(index,1).pos(1:2,1) + delta_horz_pos;
+		output_buffer.elements{index,1}.pos(1:2,1) = output_buffer.elements{index,1}.pos(1:2,1) + delta_horz_pos;
     end
 
 	output_new.pos(1:2,1) = output_new.pos(1:2,1) + delta_horz_pos;

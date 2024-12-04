@@ -121,7 +121,8 @@ function  calculateOutputStates(imu,correct_updated)
         applyCorrectionToOutputBuffer(vel_correction,pos_correction);
 
     end
-     %output_new.vel = output_new.vel + vel_imu_rel_body_ned;     这里是哪里加的
+
+    output_new.vel = output_new.vel + vel_imu_rel_body_ned;     %这里是哪里加的
 
     % output plot
 %     dq_out = dq';

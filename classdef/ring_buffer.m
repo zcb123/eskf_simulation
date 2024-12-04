@@ -37,7 +37,7 @@ classdef ring_buffer < handle
 
         function [res,ret] = pop_first_older_than(obj,timestamp)
             for i = 1:obj.len
-                index = obj.head - i + 1;
+                index = obj.head - i + 1;   %往前遍历
 %                 if index <= 0
 %                     index = index + 1;
 %                 end
@@ -66,6 +66,7 @@ classdef ring_buffer < handle
                 %
                 if index == obj.tail
                     ret = false;
+                    res = obj.elements{index};          %随便返回一个值，这个值不用
                     return;
                 end
             end
@@ -73,10 +74,10 @@ classdef ring_buffer < handle
         end
 
         function res = get_newest(obj)
-            res = obj.elements{obj.head};
+            res = obj.elements{obj.head,1};
         end
         function res = get_oldest(obj)
-            res = obj.elements{obj.tail};
+            res = obj.elements{obj.tail,1};
         end
         %不判满，满了直接覆盖.只判空
         function ret = isEmpty(obj)

@@ -33,7 +33,7 @@ function resetQuatStateYaw(yaw,yaw_variance,update_buffer)
 	% add the reset amount to the output observer buffered data
 	if (update_buffer) 
 		for i = 1:3 	%把缓冲区中每一个元素都更新
-			output_buffer(i).quat_nominal = QuatMult(states_reset_status.quat_change,output_buffer(i).quat_nominal);
+			output_buffer.elements{i,1}.quat_nominal = QuatMult(states_reset_status.quat_change,output_buffer.elements{i,1}.quat_nominal);
 		end
 
 		% apply the change in attitude quaternion to our newest quaternion estimate
