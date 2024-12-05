@@ -1,12 +1,13 @@
 function uncorrelateCovarianceSetVariance(width,first,vec)
 
     global P;
-    P(first:first+width,first:first+width) = 0;
+    P(first:first+width-1,first:first+width-1) = 0;
 
     vec_idx = 0;
-	for idx = first:first + Width
+	for idx = first:first + width-1
+        vec_idx = vec_idx + 1;
 		P(idx, idx) = vec(vec_idx);
-		vec_idx = vec_idx + 1;
+		
     end
 
 

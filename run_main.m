@@ -14,6 +14,7 @@ vehicle_dt = zeros(len_t,1);
 vehicle_dt(end,1) = 0.0025;
 vehicle_dt(1:end-1,:) = diff(vehicle_t);
 
+
 clear setSensorData calculateOutputStates;
 for i = 1:len_t
 

@@ -1,9 +1,9 @@
-function predictState(imu_sample_delayed)
+function predictState()
     global states  dt_ekf_avg R_to_earth ;
     global CONSTANTS_ONE_G;
-    global params;
+    global params imu_sample_delayed;
     global accel_lpf_NE;
-    % to do :imu 数据下采样
+    
     delta_ang = imu_sample_delayed.delta_ang - states.delta_ang_bias;
     assignin("base","delta_ang",delta_ang);
 
@@ -97,6 +97,6 @@ function predictState(imu_sample_delayed)
     input = 0.5*(imu_sample_delayed.delta_ang_dt + imu_sample_delayed.delta_vel_dt);
     filter_update_s = params.filter_update_interval_us*1e-6;
     input = saturation(input,0.5*filter_update_s,2*filter_update_s);
-    dt_ekf_avg = 0.99*dt_ekf_avg+0.01*input;
+    dt_ekf_avg = 0.99*dt_ekf_avg+0.01*double(input);
 end
 

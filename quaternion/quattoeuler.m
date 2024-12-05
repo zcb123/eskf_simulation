@@ -1,3 +1,4 @@
+%返回行向量
 function [euler] = quattoeuler(q)
 rad2deg=180/pi;
 T=[ 1 - 2 * (q(4) *q(4) + q(3) * q(3))  2 * (q(2) * q(3) +q(1) * q(4))         2 * (q(2) * q(4)-q(1) * q(3));

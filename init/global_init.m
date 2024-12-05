@@ -85,6 +85,7 @@ params.mag_declination_source = 7;
 params.mag_heading_noise = 3e-1;
 params.vdist_sensor_type = 1; %0:BARO 1:GNSS 2:RANGE 3:EV
 params.sensor_interval_max_ms = 10;
+params.acc_bias_lim = 0.4;
 
 params.max_correction_airspeed = 20;
 params.static_pressure_coef_xp = 0;
@@ -165,17 +166,39 @@ ev_pos_innov = zeros(3,1);
 global obs_buffer_length;
 obs_buffer_length = 0;
 
-
-global output_new;
+global output_new yaw_delta_ef delta_angle_corr R_to_earth_now;
 output_new = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
-% output_buffer = ring_buffer(obs_buffer_length);
+yaw_delta_ef = 0;
+delta_angle_corr = 0;
+R_to_earth_now = zeros(3,3);
 
-global filter_initialised is_first_imu_sample
+global filter_initialised is_first_imu_sample time_last_imu
 is_first_imu_sample = true;
 filter_initialised = false;
+time_last_imu = 0;
+
+
+
+global accel_lpf_NE;
+accel_lpf_NE = zeros(2,1);
+%%  predictCovariance
+global ang_rate_magnitude_filt accel_magnitude_filt accel_vec_filt accel_bias_inhibit;
+ang_rate_magnitude_filt = 0;
+accel_magnitude_filt = 0;
+accel_vec_filt = 0;
+accel_bias_inhibit = logical([false false false]);
+
+global delta_angle_var_accum delta_vel_var_accum delta_angle_bias_var_accum delta_vel_bias_var_accum;
+delta_angle_var_accum = 0;
+delta_vel_var_accum = 0;
+delta_angle_bias_var_accum = 0;
+delta_vel_bias_var_accum = 0;
 %% IMU 相关
 global initialised
 initialised = false;
+
+global imu_down_sampler;
+imu_down_sampler = ImuDownSampler(params.filter_update_interval_us);
 
 global min_obs_interval_us
 min_obs_interval_us = 0;
@@ -210,12 +233,43 @@ clear controlGpsYawFusion
 global mag_buffer time_last_mag
 mag_buffer = ring_buffer(obs_buffer_length);
 time_last_mag = 0;
+
+global mag_yaw_reset_req non_mag_yaw_aiding_running_prev mag_inhibit_yaw_reset_req ...
+    is_yaw_fusion_inhibited mag_counter flt_mag_align_start_time mag_declination_gps ...
+    mag_decl_cov_reset time_yaw_started;
+    
+global mag_bias_observable yaw_angle_observable time_last_mov_3d_mag_suitable yaw_rate_lpf_ef;
+global saved_mag_bf_variance saved_mag_ef_ne_covmat saved_mag_ef_d_variance;
+global last_static_yaw mag_test_ratio;
+
+global mag_strength_gps;
+mag_yaw_reset_req = false;
+non_mag_yaw_aiding_running_prev = false;
+mag_inhibit_yaw_reset_req = false;
+is_yaw_fusion_inhibited = false;
+mag_counter = 0;
+flt_mag_align_start_time = 0;
+mag_declination_gps = nan;
+mag_decl_cov_reset = false;
+mag_bias_observable = false;	
+yaw_angle_observable = false;
+time_yaw_started = 0;
+time_last_mov_3d_mag_suitable = 0;
+yaw_rate_lpf_ef = 0;
+saved_mag_bf_variance = zeros(3,1);
+saved_mag_ef_ne_covmat = zeros(2,2);
+saved_mag_ef_d_variance = 0;
+last_static_yaw = nan;
+mag_test_ratio = zeros(3,1);
+mag_strength_gps = nan;
+
 %% BARO 相关
-global baro_buffer time_last_baro baro_hgt_offset baro_counter
+global baro_buffer time_last_baro baro_hgt_offset baro_counter terrain_vpos
 baro_buffer = ring_buffer(obs_buffer_length);
 time_last_baro = 0;
 baro_hgt_offset = 0;
 baro_counter = 0;
+terrain_vpos = 0;
 %% sensor lpf 
 global accel_lpf gyro_lpf mag_lpf;
 accel_lpf = AlphaFilter(0.1,0);

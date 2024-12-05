@@ -35,7 +35,7 @@ function ret = initialiseFilter()
         [mag_sample,mag_updated] = mag_buffer.pop_first_older_than(imu_sample_delayed.time_us);
         if mag_updated
             if mag_counter == 0
-                mag_lpf.reset_filter(mag_sample);
+                mag_lpf.reset_filter(mag_sample.mag);
             else
                 mag_lpf.update(mag_sample.mag);    
             end

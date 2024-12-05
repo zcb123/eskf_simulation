@@ -1,14 +1,13 @@
-function predictCovariance(imu_sample_delayed)
+function predictCovariance()
 
-    INHIBIT_ACC_BIAS = uint8(4);
+    INHIBIT_ACC_BIAS = bitshift(1,2);
     BADACC_BIASPNOISE = single(4.9);
     BADGYROPNOISE = single(0.2);
     
-
     global states dt_ekf_avg P accel_bias_inhibit R_to_earth;
-    global params control_status;
+    global params control_status fault_status imu_sample_delayed;
+    global ang_rate_magnitude_filt accel_magnitude_filt accel_vec_filt;
     
-    accel_bias_inhibit = logical([false false false]);
     % assign intermediate state variables
 	q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
@@ -44,29 +43,17 @@ function predictCovariance(imu_sample_delayed)
 
 	% inhibit learning of imu accel bias if the manoeuvre levels are too high to protect against the effect of sensor nonlinearities or bad accel data is detected
 	% xy accel bias learning is also disabled on ground as those states are poorly observable when perpendicular to the gravity vector
-	persistent ang_rate_magnitude_filt;
-    if isempty(ang_rate_magnitude_filt)
-        ang_rate_magnitude_filt = 0;
-    end
-    persistent accel_magnitude_filt;
-    if isempty(accel_magnitude_filt)
-        accel_magnitude_filt = 0;
-    end
-    persistent accel_vec_filt;
-    if isempty(accel_vec_filt)
-        accel_vec_filt = 0;
-    end
     alpha = saturation((dt / params.acc_bias_learn_tc), 0, 1);      %acc_bias_learn_tc = 0.5
 	beta = 1 - alpha;
-	ang_rate_magnitude_filt = max(dt_inv * norm(imu_sample_delayed.delta_ang), beta * ang_rate_magnitude_filt);
-	accel_magnitude_filt = max(dt_inv * norm(imu_sample_delayed.delta_vel), beta * accel_magnitude_filt);
-	accel_vec_filt = alpha * dt_inv * imu_sample_delayed.delta_vel + beta * accel_vec_filt;
+	ang_rate_magnitude_filt = max(dt_inv*norm(imu_sample_delayed.delta_ang), beta*ang_rate_magnitude_filt);
+	accel_magnitude_filt = max(dt_inv*norm(imu_sample_delayed.delta_vel), beta*accel_magnitude_filt);
+	accel_vec_filt = alpha * dt_inv*imu_sample_delayed.delta_vel + beta*accel_vec_filt;
 
 	is_manoeuvre_level_high = logical(ang_rate_magnitude_filt > params.acc_bias_learn_gyr_lim...
 					     || accel_magnitude_filt > params.acc_bias_learn_acc_lim);
 
-	do_inhibit_all_axes = logical((params.fusion_mode && INHIBIT_ACC_BIAS)...    %   params.fusion_mode = 1
-					 || is_manoeuvre_level_high...
+	do_inhibit_all_axes = logical(bitand(params.fusion_mode , INHIBIT_ACC_BIAS)...    %   params.fusion_mode = 1
+					 || is_manoeuvre_level_high...                              %manoeuvre:操纵
 					 || fault_status.flags.bad_acc_vertical);
     
     persistent prev_dvel_bias_var
@@ -132,25 +119,10 @@ function predictCovariance(imu_sample_delayed)
 
     else 
 		wind_vel_sig = 0;
-	end
-
+    end
 	% compute noise variance for stationary processes
-	%Vector23f process_noise;
-
 	% Construct the process noise variance diagonal for those states with a stationary process model
 	% These are kinematic states and their error growth is controlled separately by the IMU noise variances
-
-	% delta angle bias states
-	%process_noise.slice<3, 1>(10, 0) = sq(d_ang_bias_sig);
-	% delta_velocity bias states
-	%process_noise.slice<3, 1>(13, 0) = sq(d_vel_bias_sig);
-	% earth frame magnetic field states
-	%process_noise.slice<3, 1>(16, 0) = sq(mag_I_sig);
-	% body frame magnetic field states
-	%process_noise.slice<3, 1>(19, 0) = sq(mag_B_sig);
-	% wind velocity states
-	%process_noise.slice<2, 1>(22, 0) = sq(wind_vel_sig);
-
 	% assign IMU noise variances
 	% inputs to the system are 3 delta angles and 3 delta velocities
 	gyro_noise = saturation(params.gyro_noise, 0, 1);
@@ -175,12 +147,12 @@ function predictCovariance(imu_sample_delayed)
 
 	accel_noise = saturation(params.accel_noise, 0, 1);
 
-    %%这里暂时不用
-% 	if (fault_status.flags.bad_acc_vertical) 
-% 		% Increase accelerometer process noise if bad accel data is detected. Measurement errors due to
-% 		% vibration induced clipping commonly reach an equivalent 0.5g offset.
-% 		accel_noise = BADACC_BIASPNOISE;
-% 	end
+    
+	if (fault_status.flags.bad_acc_vertical) 
+		% Increase accelerometer process noise if bad accel data is detected. Measurement errors due to
+		% vibration induced clipping commonly reach an equivalent 0.5g offset.
+		accel_noise = BADACC_BIASPNOISE;
+	end
 
 	
 	dvxVar = (dt * accel_noise)^2 ;
@@ -446,30 +418,25 @@ function predictCovariance(imu_sample_delayed)
     
     global delta_vel_var_accum;
     
-
-	[nextP(4,4),delta_vel_var_accum(1)] = kahanSummation(nextP(4,4), mR00 * r00_sx + mR01 * r01_sy + mR02 * r02_sz, delta_vel_var_accum(1));
+	[nextP(4,4),delta_vel_var_accum(1)] = kahanSummation(nextP(4,4), mR00*r00_sx + mR01*r01_sy + mR02*r02_sz, delta_vel_var_accum(1));
 	nextP(4,5) = nextP(4,5) + r00_sx_r10_plus_r01_sy_r11_plus_r02_sz_r12;
 	nextP(4,6) = nextP(4,6) + r00_sx_r20_plus_r01_sy_r21_plus_r02_sz_r22;
-	[nextP(5,5),delta_vel_var_accum(2)] = kahanSummation(nextP(5,5), mR10 * r10_sx + mR11 * r11_sy + mR12 * r12_sz, delta_vel_var_accum(2));
+	[nextP(5,5),delta_vel_var_accum(2)] = kahanSummation(nextP(5,5), mR10*r10_sx + mR11*r11_sy + mR12*r12_sz, delta_vel_var_accum(2));
 	nextP(5,6) = nextP(5,6) + r10_r20_sx_plus_r11_r21_sy_plus_r12_r22_sz;
-	[nextP(6,6),delta_vel_var_accum(3)] = kahanSummation(nextP(6,6), mR20 * r20_sx + mR21 * r21_sy + mR22 * r22_sz, delta_vel_var_accum(3));
+	[nextP(6,6),delta_vel_var_accum(3)] = kahanSummation(nextP(6,6), mR20*r20_sx + mR21 * r21_sy + mR22 * r22_sz, delta_vel_var_accum(3));
 
-    assignin("base","delta_vel_var_accum",delta_vel_var_accum);
 	% process noise contribution for delta angle states can be very small compared to
 	% the variances, therefore use algorithm to minimise numerical error
 
 	noise_delta_ang_bias = (d_ang_bias_sig)^2;
     global delta_angle_bias_var_accum;
    
-
 	for i = 10:12 
 		index = i - 9;
 		[nextP(i, i),delta_angle_bias_var_accum(index)] = kahanSummation(nextP(i, i), noise_delta_ang_bias, delta_angle_bias_var_accum(index));
     end
 
     global delta_vel_bias_var_accum;
-    
-
 	noise_delta_vel_bias = (d_vel_bias_sig)^2;
 	if ~accel_bias_inhibit(1) 
 		% calculate variances and upper diagonal covariances for IMU X axis delta velocity bias state
@@ -490,15 +457,14 @@ function predictCovariance(imu_sample_delayed)
 		% add process noise that is not from the IMU
 		% process noise contribution for delta velocity states can be very small compared to
 		% the variances, therefore use algorithm to minimise numerical error
-   
 
 		[nextP(13, 13),delta_vel_bias_var_accum(1)] = kahanSummation(nextP(13, 13), noise_delta_vel_bias, delta_vel_bias_var_accum(1));
-        disp('nexp(13,13)')
+        %disp('nexp(13,13)');
 	else 
 		%nextP.uncorrelateCovarianceSetVariance<1>(13, prev_dvel_bias_var(1));
         nextP(13,13) = prev_dvel_bias_var(1);
 		delta_vel_bias_var_accum(1) = 0;
-        
+    
 	end
 
 	if ~accel_bias_inhibit(2) 
@@ -522,7 +488,7 @@ function predictCovariance(imu_sample_delayed)
 		% process noise contribution for delta velocity states can be very small compared to
 		% the variances, therefore use algorithm to minimise numerical error
 		[nextP(14, 14),delta_vel_bias_var_accum(2)] = kahanSummation(nextP(14, 14), noise_delta_vel_bias, delta_vel_bias_var_accum(2));
-        disp('nexp(14,14)')
+        %disp('nexp(14,14)');
 	else 
 		%nextP.uncorrelateCovarianceSetVariance<1>(14, prev_dvel_bias_var(2));
         nextP(14,14) = prev_dvel_bias_var(2);
@@ -551,7 +517,7 @@ function predictCovariance(imu_sample_delayed)
 		% process noise contribution for delta velocity states can be very small compared to
 		% the variances, therefore use algorithm to minimise numerical error
 		nextP(15, 15) = kahanSummation(nextP(15, 15), noise_delta_vel_bias, delta_vel_bias_var_accum(3));
-        disp('nexp(15,15)')
+        %disp('nexp(15,15)');
 	else 
 		%nextP.uncorrelateCovarianceSetVariance<2>(15, prev_dvel_bias_var(3));
         nextP(15,15) = prev_dvel_bias_var(3);

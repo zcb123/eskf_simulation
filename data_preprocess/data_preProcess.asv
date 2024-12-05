@@ -91,28 +91,28 @@ end
 
 figure('Name','acc_filted and frame transform')
 subplot(311)
-plot(vehicle_t,vehicle_acc(:,2),vehicle_t,acc_filted(:,1))
+plot(vehicle_t,vehicle_acc(:,2),vehicle_t,acc_filted(:,2))
 grid on
 legend('aX','aXF');
 subplot(312)
-plot(vehicle_t,vehicle_acc(:,1),vehicle_t,acc_filted(:,2))
+plot(vehicle_t,vehicle_acc(:,1),vehicle_t,acc_filted(:,1))
 grid on
 legend('aY','aYF');
 subplot(313)
-plot(vehicle_t,-vehicle_acc(:,3),vehicle_t,acc_filted(:,3))
+plot(vehicle_t,-vehicle_acc(:,3),vehicle_t,-acc_filted(:,3))
 grid on
 legend('aZ','aZF');
 
 figure('Name','gyro_filted and frame transform')
 subplot(311)
-plot(vehicle_t,vehicle_gyro(:,2),vehicle_t,gyro_filted(:,1))
+plot(vehicle_t,vehicle_gyro(:,2),vehicle_t,gyro_filted(:,2))
 grid on
 legend('gX','gXF');
 subplot(312)
-plot(vehicle_t,vehicle_gyro(:,1),vehicle_t,gyro_filted(:,2))
+plot(vehicle_t,vehicle_gyro(:,2),vehicle_t,gyro_filted(:,1))
 grid on
 legend('gY','gYF');
 subplot(313)
-plot(vehicle_t,-vehicle_gyro(:,3),vehicle_t,gyro_filted(:,3))
+plot(vehicle_t,vehicle_gyro(:,3),vehicle_t,-gyro_filted(:,3))
 grid on
 legend('gZ','gZF');

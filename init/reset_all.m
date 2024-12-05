@@ -25,8 +25,7 @@ reset_eskf();
 global control_status; 
 control_status.flags.in_air = true;
 
-global accel_lpf_NE;
-accel_lpf_NE = zeros(2,1);
+
 
 %% all
 global state_reset_status;
@@ -70,7 +69,7 @@ clear controlGpsYawFusion
 %% mag
 global mag_yaw_reset_req non_mag_yaw_aiding_running_prev mag_inhibit_yaw_reset_req ...
     is_yaw_fusion_inhibited mag_counter flt_mag_align_start_time mag_declination_gps ...
-    mag_decl_cov_reset time_yaw_started ;
+    mag_decl_cov_reset time_yaw_started;
     
 global mag_lpf mag_bias_observable yaw_angle_observable time_last_mov_3d_mag_suitable yaw_rate_lpf_ef;
 global saved_mag_bf_variance saved_mag_ef_ne_covmat saved_mag_ef_d_variance;
@@ -96,5 +95,4 @@ saved_mag_ef_ne_covmat = zeros(2,2);
 saved_mag_ef_d_variance = 0;
 last_static_yaw = nan;
 mag_test_ratio = zeros(3,1);
-mag_index_last = 0;
 mag_strength_gps = nan;
