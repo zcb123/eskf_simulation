@@ -101,4 +101,19 @@ plot(euler);
 %%
 figure
 plot(quat_delta_delay_display)
+%%
+figure
+plot(data.ESKF.pN);
+hold on
+plot(data.ESKF.pE);
+hold on
+plot(data.ESKF.pD);
+%%
+figure
+plot(data.ESKF.vN);
+hold on
+plot(data.ESKF.vE);
+hold on
+plot(data.ESKF.vD);
+
 

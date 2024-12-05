@@ -63,6 +63,8 @@ for i = 1:len_t
         predictCovariance();
         predictState();
         
+        controlFusionModes();
+        
         delta_angle_var_accum_display(i,:) = delta_angle_var_accum';
         delta_vel_var_accum_display(i,:) = delta_vel_var_accum';
         delta_angle_bias_var_accum_display(i,:) = delta_angle_bias_var_accum';

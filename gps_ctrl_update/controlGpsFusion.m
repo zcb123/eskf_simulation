@@ -1,11 +1,12 @@
-function controlGpsFusion(data_ready)
+function controlGpsFusion()
     global P;
     global params control_status;
     global gps_sample_delayed imu_sample_delayed;
 %     NED_origin_initialised = true;
     global NED_origin_initialised last_gps_pass_us last_gps_fail_us gps_checks_passed;
     global ekfgsf_yaw_reset_count ;
-    if data_ready    %目前都默认gps数据是能用的
+    global gps_data_ready;
+    if  gps_data_ready   %目前都默认gps数据是能用的
         
         time_prev_gps_us = gps_sample_delayed.time_us;
         

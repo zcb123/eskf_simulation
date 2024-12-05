@@ -38,7 +38,7 @@ EVVEL   = bitshift(1,8);
 %%
 global params control_status fault_status;
 
-params.imu_pos_body = single([1 0 0]');
+params.imu_pos_body = single([0 0 0]');
 params.gps_pos_body = single([0 0 0]');
 params.vel_Tau = single(0.25);
 params.pos_Tau = single(0.25);
@@ -86,7 +86,7 @@ params.mag_heading_noise = 3e-1;
 params.vdist_sensor_type = 1; %0:BARO 1:GNSS 2:RANGE 3:EV
 params.sensor_interval_max_ms = 10;
 params.acc_bias_lim = 0.4;
-
+params.synthesize_mag_z = 0;
 params.max_correction_airspeed = 20;
 params.static_pressure_coef_xp = 0;
 params.static_pressure_coef_xn = 0;
@@ -108,24 +108,26 @@ params.range_aid = 0;           %allow switching primary height source to range 
 control_status.flags.tilt_align = 1;
 control_status.flags.yaw_align = 1;
 control_status.flags.mag_3D = 1;
-control_status.flags.wind = 1;
+control_status.flags.wind = false;
 control_status.flags.in_air = 1;
 control_status.flags.gps = 1;
 control_status.flags.gps_yaw = 1;
-control_status.flags.gps_yaw_fault = 1;
+control_status.flags.gps_yaw_fault = false;
 control_status.flags.gps_hgt = 1;
 control_status.flags.baro_hgt = 1;
-control_status.flags.rng_hgt = 1;
+control_status.flags.rng_hgt = false;
 control_status.flags.mag_field_disturbed = 1;
 control_status.flags.vehicle_at_rest = 1;
 control_status.flags.mag_aligned_in_flight = 1;
+control_status.flags.mag_fault = false;
 control_status.flags.gnd_effect = 1;
-control_status.flags.fixed_wing = 1;
-control_status.flags.opt_flow = 1;
-control_status.flags.ev_pos = 1;
-control_status.flags.ev_vel = 1;
-control_status.flags.fuse_beta = 1;
-control_status.flags.fuse_aspd = 1;
+control_status.flags.fixed_wing = false;
+control_status.flags.opt_flow = false;
+control_status.flags.ev_pos = false;
+control_status.flags.ev_vel = false;
+control_status.flags.ev_yaw = false;
+control_status.flags.fuse_beta = false;
+control_status.flags.fuse_aspd = false;
 
 % control_status.value = sum(control_status.flags.)
 
@@ -177,10 +179,9 @@ is_first_imu_sample = true;
 filter_initialised = false;
 time_last_imu = 0;
 
+global time_last_in_air;
+time_last_in_air = 0;
 
-
-global accel_lpf_NE;
-accel_lpf_NE = zeros(2,1);
 %%  predictCovariance
 global ang_rate_magnitude_filt accel_magnitude_filt accel_vec_filt accel_bias_inhibit;
 ang_rate_magnitude_filt = 0;
@@ -193,6 +194,13 @@ delta_angle_var_accum = 0;
 delta_vel_var_accum = 0;
 delta_angle_bias_var_accum = 0;
 delta_vel_bias_var_accum = 0;
+%% predictStates
+global ang_rate_delayed_raw
+ang_rate_delayed_raw = 0;
+
+
+global accel_lpf_NE;
+accel_lpf_NE = zeros(2,1);
 %% IMU 相关
 global initialised
 initialised = false;
@@ -225,7 +233,22 @@ gps_alt_ref = 0;
 gps_prev.fix_type = 1;
 time_last_on_ground_us = 0;
 gps_yaw_offset = 0;
+global gps_intermittent time_prev_gps_us gps_hgt_accurate;
+gps_intermittent = false;
+time_prev_gps_us = 0;
+gps_hgt_accurate = false;
 
+global gps_sample_delayed gps_data_ready
+gps_sample_delayed = struct('time_us',0,...
+                            'pos',[0 0]',...	%/< 水平位置(相对于home点的北东向为正)
+				            'hgt',	0,...	%/< 海拔高度(向上为正)
+			                'vel',[0 0 0]',...		%/< gps速度(北东地)
+		                    'yaw', 0 ,...    %/< 板卡融合出的航向
+				            'hacc',	0,...	%/< 水平位置标准差
+				            'vacc',	0,...	%/< 海拔高度标准差
+				            'sacc',0,...		%/< 速度标准差
+		                    'fix_type',0);
+gps_data_ready = false;
 
 clear controlGpsYawFusion        
 
@@ -262,7 +285,8 @@ saved_mag_ef_d_variance = 0;
 last_static_yaw = nan;
 mag_test_ratio = zeros(3,1);
 mag_strength_gps = nan;
-
+global USE_GEO_DECL
+USE_GEO_DECL = bitshift(1,0);
 %% BARO 相关
 global baro_buffer time_last_baro baro_hgt_offset baro_counter terrain_vpos
 baro_buffer = ring_buffer(obs_buffer_length);
@@ -270,8 +294,16 @@ time_last_baro = 0;
 baro_hgt_offset = 0;
 baro_counter = 0;
 terrain_vpos = 0;
+global baro_hgt_intermittent delta_time_baro_us;
+baro_hgt_intermittent = false;
+delta_time_baro_us = 0;
+
 %% sensor lpf 
 global accel_lpf gyro_lpf mag_lpf;
 accel_lpf = AlphaFilter(0.1,0);
 gyro_lpf = AlphaFilter(0.1,0);
 mag_lpf = AlphaFilter(0.1,0);
+
+%% EKFGSF
+global yawEstimator
+yawEstimator = EKFGSF_YAW();

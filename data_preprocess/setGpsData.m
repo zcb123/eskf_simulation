@@ -26,7 +26,7 @@ end
 		gps_sample_new.sacc = gps.sacc;
 		gps_sample_new.hacc = gps.eph;
 		gps_sample_new.vacc = gps.epv;
-		gps_sample_new.hgt = gps.alt * 1e-3;			%原始的gps_alt单位是毫米
+		gps_sample_new.hgt = double(gps.alt) * 1e-3;			%原始的gps_alt单位是毫米
 		gps_sample_new.yaw = gps.yaw;
 		gps_sample_new.fix_type = gps.fix_type;
 

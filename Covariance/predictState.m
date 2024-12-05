@@ -2,7 +2,7 @@ function predictState()
     global states  dt_ekf_avg R_to_earth ;
     global CONSTANTS_ONE_G;
     global params imu_sample_delayed;
-    global accel_lpf_NE;
+    global accel_lpf_NE ang_rate_delayed_raw; 
     
     delta_ang = imu_sample_delayed.delta_ang - states.delta_ang_bias;
     assignin("base","delta_ang",delta_ang);
@@ -88,15 +88,19 @@ function predictState()
 	states.pos = states.pos + (k1_p_dot + 2 * k2_p_dot + 2 * k3_p_dot + k4_p_dot) * imu_sample_delayed.delta_vel_dt / 6;
 	states.pos(2) = states.pos(2) + 0.5 * CONSTANTS_ONE_G * imu_sample_delayed.delta_vel_dt * imu_sample_delayed.delta_vel_dt;
 
-    %% 状态限幅
+
     states.quat_nominal = saturation(states.quat_nominal,-1,1);
     states.vel = saturation(states.vel,-1000,1000);
     states.pos = saturation(states.pos,-1e6,1e6);
 
-    %%  这个量暂时不用
+   
     input = 0.5*(imu_sample_delayed.delta_ang_dt + imu_sample_delayed.delta_vel_dt);
     filter_update_s = params.filter_update_interval_us*1e-6;
     input = saturation(input,0.5*filter_update_s,2*filter_update_s);
     dt_ekf_avg = 0.99*dt_ekf_avg+0.01*double(input);
+
+    if (imu_sample_delayed.delta_ang_dt > 0.25*dt_ekf_avg) 
+		ang_rate_delayed_raw = imu_sample_delayed.delta_ang / imu_sample_delayed.delta_ang_dt;
+    end
 end
 

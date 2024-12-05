@@ -1,4 +1,4 @@
-function obj = Update(obj,imu_sample_delayed,airspeed)
+function obj = Update(obj,imu_sample_delayed,run_EKF,airspeed)
     % copy to class variables
     global states  dt_ekf_avg CONSTANTS_ONE_G;
 
@@ -8,7 +8,7 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
 	obj.delta_vel = imu_sample_delayed.delta_vel;
     obj.delta_ang_dt = imu_sample_delayed.delta_ang_dt;
 	obj.delta_vel_dt = imu_sample_delayed.delta_vel_dt;
-	obj.run_ekf_gsf = logical(true);
+	obj.run_ekf_gsf = run_EKF;
     obj.true_airspeed = airspeed;
 
 	% to reduce effect of vibration, filter using an LPF whose time constant is 1/10 of the AHRS tilt correction time constant
@@ -49,6 +49,7 @@ function obj = Update(obj,imu_sample_delayed,airspeed)
 
 	% The 3-state EKF models only run when flying to avoid corrupted estimates due to operator handling and GPS interference
 	% 三态EKF模型仅在飞行时运行，以避免因操作员操作和GPS干扰而导致的估计错误
+    %在天上run_ekf_gsf为true时才运行
 	if obj.run_ekf_gsf && obj.vel_data_updated %vel_data_updated 这个值也是这里使用，GPS每次更新数据，这里置true
 		if (~obj.ekf_gsf_vel_fuse_started) 
 			obj.initialiseEKFGSF();

@@ -80,7 +80,7 @@ classdef EKFGSF_YAW < handle
 
         end
 
-        obj = Update(obj,imu_sample,airspeed) 
+        obj = Update(obj,imu_sample,run_EKF,airspeed) ;
         
         function obj = setVelocity(obj,vel,accuracy)
             obj.vel_NE = vel;

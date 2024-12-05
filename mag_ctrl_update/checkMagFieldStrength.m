@@ -1,5 +1,6 @@
 function checkMagFieldStrength(mag_sample)
     global params control_status;
+    global MAG_3D INDOOR;
     if (params.check_mag_strength ...
 	    && ((params.mag_fusion_type <= MAG_3D) || (params.mag_fusion_type == INDOOR && control_status.flags.gps))) 
 

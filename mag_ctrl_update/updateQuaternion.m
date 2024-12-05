@@ -3,7 +3,7 @@ function ret = updateQuaternion(innovation,variance,gate_sigma,yaw_jacobian)
     % Calculate innovation variance and Kalman gains, taking advantage of the fact that only the first 4 elements in H are non zero
 	% calculate the innovation variance
     global control_status params fault_status P;
-    global mag_test_ratio;
+    global mag_test_ratio time_last_in_air;
 	heading_innov_var = variance;
 
 	for row = 1:3 
