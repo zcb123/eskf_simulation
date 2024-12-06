@@ -87,7 +87,6 @@ params.vdist_sensor_type = 1; %0:BARO 1:GNSS 2:RANGE 3:EV
 params.sensor_interval_max_ms = 10;
 params.acc_bias_lim = 0.4;
 params.synthesize_mag_z = 0;
-params.gnd_effect_deadzone = 5;
 
 params.max_correction_airspeed = 20;
 params.static_pressure_coef_xp = 0;
@@ -299,14 +298,9 @@ time_last_baro = 0;
 baro_hgt_offset = 0;
 baro_counter = 0;
 terrain_vpos = 0;
-global baro_hgt_intermittent delta_time_baro_us baro_hgt_faulty;
+global baro_hgt_intermittent delta_time_baro_us;
 baro_hgt_intermittent = false;
 delta_time_baro_us = 0;
-baro_hgt_faulty = false;
-
-
-global baro_b_est;
-baro_b_est = BaroBiasEstimator();
 
 %% sensor lpf 
 global accel_lpf gyro_lpf mag_lpf;
@@ -326,4 +320,4 @@ vert_vel_innov_ratio = 0;
 global clip_counter time_bad_vert_accel time_good_vert_accel;
 clip_counter = 0;
 time_bad_vert_accel = 0;
-time_good_vert_accel = 0;
+time_good_vert_accel

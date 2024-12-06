@@ -5,7 +5,7 @@ function runOnGroundYawReset()
     if (mag_yaw_reset_req && ~is_yaw_fusion_inhibited) 
 
         if canResetMagHeading()
-            has_realigned_yaw = resetMagHeading();
+            has_realigned_yaw = resetMagHeading(false,false);
         else
             has_realigned_yaw = false;
         end

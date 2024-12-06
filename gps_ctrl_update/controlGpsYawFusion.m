@@ -23,7 +23,7 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
 
 	if (is_new_data_available) %GPS数据可用非nan,则进入下一步，否则停止GPS航向校准 
 
-		continuing_conditions_passing = ~gps_checks_failing; %GPS数据未超时
+		continuing_conditions_passing = ~gps_checks_failing; %GPS检查通过
 
 		is_gps_yaw_data_intermittent = ~isRecent(time_last_gps_yaw_data, 2 * GPS_MAX_INTERVAL);
 

@@ -1,12 +1,13 @@
 function [innov_var,test_ratio,ret]=fuseVerticalPosition(innov, innov_gate, obs_var)
     global P fault_status
     global time_last_imu;
+    global vert_pos_innov_ratio vert_pos_fuse_attempt_time_us;
     k_pos_id = 7;
     innov_var = P(k_pos_id+2, k_pos_id+2) + obs_var;
 	test_ratio = sq(innov) / (sq(innov_gate) * innov_var);
 
-% 	vert_pos_innov_ratio = innov / sqrtf(innov_var);
-% 	vert_pos_fuse_attempt_time_us = time_last_imu;
+	vert_pos_innov_ratio = innov / sqrt(innov_var);
+	vert_pos_fuse_attempt_time_us = time_last_imu;
 
 	innov_check_pass = test_ratio <= 1;
 

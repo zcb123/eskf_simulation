@@ -6,7 +6,8 @@ function controlGpsFusion()
     global NED_origin_initialised last_gps_pass_us last_gps_fail_us gps_checks_passed;
     global ekfgsf_yaw_reset_count ;
     global gps_data_ready;
-    if  gps_data_ready   %目前都默认gps数据是能用的
+    
+    if  gps_data_ready   
         
         time_prev_gps_us = gps_sample_delayed.time_us;
         

@@ -25,8 +25,8 @@ function fuseGpsVelPos(gps_sample_delayed,params)
 	gps_vel_obs_var = single([vel_var  vel_var  vel_var*sq(2.5)]);
 
 	% calculate innovations
-	gps_vel_innov = states.vel - gps_sample_delayed.vel_ned';
-	gps_pos_innov_xy = states.pos(1:2,1) - gps_sample_delayed.pos_ned(1:2,1);
+	gps_vel_innov = states.vel - gps_sample_delayed.vel';
+	gps_pos_innov_xy = states.pos(1:2,1) - gps_sample_delayed.pos(1:2,1);
 
 	% set innovation gate size
 	pos_innov_gate = max(params.gps_pos_innov_gate, 2);

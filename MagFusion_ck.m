@@ -18,7 +18,7 @@ vehicle_dt(1:end-1,:) = diff(vehicle_t);
 
 
 % display val
-
+close all
 for i = 1:len_t
 
     updated = setSensorData(i,gyro_filted,acc_filted,vehicle_t,vehicle_dt,data);
@@ -42,11 +42,16 @@ for i = 1:len_t
         controlFusionModes();
 
         runYawEKFGSF();
+
+        controlHeightSensorTimeouts();
         
         controlMagFusion();
-
+        %controlOpticalFlowFusion();
         controlGpsFusion();
-
+    %   controlAirDataFusion();
+    % 	controlBetaFusion();
+    % 	controlDragFusion();
+        controlHeightFusion();
     end
 
     calculateOutputStates(newest_high_rate_imu_sample,updated);

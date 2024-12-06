@@ -1,10 +1,10 @@
-function controlHeightFusion(baro_data_ready,gps_data_ready)
+function controlHeightFusion()
 
     global control_status params;
     global gps_checks_passed gps_hgt_accurate baro_hgt_faulty;
+    global baro_data_ready gps_data_ready;
+    global baro_hgt_intermittent gps_intermittent;
 
-    baro_hgt_intermittent = true;
-    gps_intermittent = true;        %这里默认不存在丢包，数据连续
     do_range_aid = false;
     switch (params.vdist_sensor_type) 
 	
@@ -40,9 +40,9 @@ function controlHeightFusion(baro_data_ready,gps_data_ready)
 	end
 
 
-%     updateBaroHgtBias();
-% 	updateBaroHgtOffset();
-% 	updateGroundEffect();
+    updateBaroHgtBias();
+	updateBaroHgtOffset();
+	updateGroundEffect();
 
 
     

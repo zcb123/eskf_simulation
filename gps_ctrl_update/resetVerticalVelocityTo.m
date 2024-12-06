@@ -7,7 +7,7 @@ function resetVerticalVelocityTo(new_vert_vel)
     delta_vert_vel = new_vert_vel - states.vel(3,1);
 	states.vel(3,1) = new_vert_vel;
 
-	for index = 1:3 
+	for index = 1:output_buffer.len 
 		output_buffer.elements{index,1}.vel(3,1) = output_buffer.elements{index,1}.vel(3,1) + delta_vert_vel;
     end
 

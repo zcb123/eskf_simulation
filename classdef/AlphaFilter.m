@@ -16,12 +16,23 @@ classdef AlphaFilter < handle
         function obj = reset_filter(obj,sample)
             obj.filter_state = sample;
         end
+        function obj = setParameters(sample_interval,time_constant)
+            global FLT_EPSILON;
+            denominator = time_constant + sample_interval;
 
-        function res = update(obj,sample)
-            [row,col]=size(sample);
-            if row < 3
-                col = 2;
+		    if denominator > FLT_EPSILON
+			    setAlpha(sample_interval / denominator);
             end
+
+        end
+        function obj = setAlpha(obj,alpha)
+            obj.alpha = alpha;
+        end
+        function res = update(obj,sample)
+%             [row,col]=size(sample);
+%             if row < 3
+%                 col = 2;
+%             end
             obj.filter_state = updateCalculation(obj,sample);
             res = obj.filter_state;
         end
