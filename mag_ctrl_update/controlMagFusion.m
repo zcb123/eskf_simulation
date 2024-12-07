@@ -62,27 +62,7 @@ function controlMagFusion()
 	mag_yaw_reset_req = mag_yaw_reset_req | mag_inhibit_yaw_reset_req;
 
     if noOtherYawAidingThanMag()&&mag_data_ready
-        
-%         switch (params.mag_fusion_type) 
-%             otherwise
-% 
-% 		
-% 		case AUTO:
-% 			selectMagAuto();
-% 			break;
-% 
-% 		case INDOOR:
-% 
-% 		/* fallthrough */
-% 		case HEADING:
-% 			startMagHdgFusion();
-% 			break;
-% 
-% 		case MAG_3D:
-% 			startMag3DFusion();
-% 			break;
-% 		}
-
+     
         selectMagAuto();
 
         if control_status.flags.in_air
@@ -92,16 +72,14 @@ function controlMagFusion()
             runOnGroundYawReset();
         end
 
-
-
         if (~control_status.flags.yaw_align) 
 			    %Having the yaw aligned is mandatory to continue
                 disp('yaw_align not complete return')
 			    return;
         end
 
-
-
+        checkMagDeclRequired();
+        checkMagInhibition();
         runMagAndMagDeclFusions(mag_sample_delayed.mag)
 
     end

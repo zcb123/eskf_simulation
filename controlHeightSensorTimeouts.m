@@ -17,7 +17,7 @@ function controlHeightSensorTimeouts()
     % 		const char *new_height_source = nullptr;
             failing_height_source = "";
             new_height_source = "";
-		    if (control_status.flags.baro_hgt) 
+		    if control_status.flags.baro_hgt
 			    reset_to_gps = false;
     
 			    % reset to GPS if adequate GPS data is available and the timeout cannot be blamed on IMU data

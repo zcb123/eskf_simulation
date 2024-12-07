@@ -375,7 +375,7 @@ function predictCovariance()
 	
 	mR00 = R_to_earth(1,1); mR01 = R_to_earth(1,2); mR02 = R_to_earth(1,3);
 	mR10 = R_to_earth(2,1); mR11 = R_to_earth(2,2); mR12 = R_to_earth(2,3);
-	mR20 = R_to_earth(3,1); mR21 = R_to_earth(3,2); mR22 = R_to_earth(3,2);
+	mR20 = R_to_earth(3,1); mR21 = R_to_earth(3,2); mR22 = R_to_earth(3,3);
 
         r00_sx = mR00 * daxVar;
         r01_sy = mR01 * dayVar;
@@ -462,6 +462,8 @@ function predictCovariance()
         %disp('nexp(13,13)');
 	else 
 		%nextP.uncorrelateCovarianceSetVariance<1>(13, prev_dvel_bias_var(1));
+        nextP(1:23,13) = 0;
+        nextP(13,1:23) = 0;
         nextP(13,13) = prev_dvel_bias_var(1);
 		delta_vel_bias_var_accum(1) = 0;
     
@@ -491,6 +493,8 @@ function predictCovariance()
         %disp('nexp(14,14)');
 	else 
 		%nextP.uncorrelateCovarianceSetVariance<1>(14, prev_dvel_bias_var(2));
+        nextP(1:23,14) = 0;
+        nextP(14,1:23) = 0;
         nextP(14,14) = prev_dvel_bias_var(2);
 		delta_vel_bias_var_accum(2) = 0;
 
@@ -520,6 +524,8 @@ function predictCovariance()
         %disp('nexp(15,15)');
 	else 
 		%nextP.uncorrelateCovarianceSetVariance<2>(15, prev_dvel_bias_var(3));
+        nextP(1:23,15) = 0;
+        nextP(15,1:23) = 0;
         nextP(15,15) = prev_dvel_bias_var(3);
 		delta_vel_bias_var_accum(3) = 0;
 	end

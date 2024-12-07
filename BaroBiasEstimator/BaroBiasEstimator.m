@@ -43,7 +43,7 @@ classdef BaroBiasEstimator<handle
     
             obj.state_var = obj.state_var +obj.process_var * dt * dt;
     
-	        rainStateVar();
+	        constrainStateVar();
         
 	        if (dt > FLT_EPSILON && fabsf(obj.dt - dt) > 0.001) 
 		        obj.signed_innov_test_ratio_lpf.setParameters(dt, obj.lpf_time_ant);
@@ -51,22 +51,17 @@ classdef BaroBiasEstimator<handle
             end
     
         end
-    
-        function obj = rainStateVar(obj)
-    
-            obj.state_var = saturation(obj.state_var, 1e-8, obj.state_var_max);
-        
-        end
-    
-    
-	    function obj = fuseBias(obj,measurement, measurement_var)
+
+
+        function obj = fuseBias(obj,measurement, measurement_var)
             
                 innov_var = obj.state_var + measurement_var;
 	            innov = measurement - obj.state;
 	            K = obj.state_var / innov_var;
 	            innov_test_ratio = obj.computeInnovTestRatio(innov, innov_var);
-            
-	            if (isTestRatioPassing(innov_test_ratio)) 
+                passing = obj.isTestRatioPassing(innov_test_ratio);
+
+	            if passing
 		            obj.updateState(K, innov);
 		            obj.updateStateCovariance(K);
             
@@ -83,6 +78,17 @@ classdef BaroBiasEstimator<handle
             
 	            obj.status = obj.packStatus(innov, innov_var, innov_test_ratio);
         end
+
+
+    
+        function obj = constrainStateVar(obj)
+    
+            obj.state_var = saturation(obj.state_var, 1e-8, obj.state_var_max);
+        
+        end
+    
+    
+	    
     
     
         function obj = setBias(obj,bias)  
@@ -124,12 +130,12 @@ classdef BaroBiasEstimator<handle
     
 	    
     
-        function val = computeInnovTestRatio(innov, innov_var) 
+        function val = computeInnovTestRatio(obj,innov, innov_var) 
             val = innov * innov / (obj.gate_size * obj.gate_size * innov_var);
         end
     
     
-        function ret = isTestRatioPassing(innov_test_ratio) 
+        function ret = isTestRatioPassing(~,innov_test_ratio) 
             ret= innov_test_ratio<1;
         end
     
@@ -139,7 +145,7 @@ classdef BaroBiasEstimator<handle
     
         function obj = updateStateCovariance(obj,K)
             obj.state_var =obj.state_var - K * obj.state_var;
-	        constrainStateVar();
+	        obj.constrainStateVar();
         end
     
         function ret = isLargeOffsetDetected(obj) 
@@ -153,6 +159,10 @@ classdef BaroBiasEstimator<handle
             obj.state_var = obj.state_var + obj.process_var_boost_gain * obj.process_var * obj.dt * obj.dt;
     
         end
+
+        
+
+
 	    function res = packStatus(obj,innov, innov_var, innov_test_ratio) 
             obj.status.bias = obj.state;
             obj.status.bias_var = obj.state_var;

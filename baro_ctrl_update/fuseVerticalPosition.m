@@ -27,7 +27,8 @@ function [innov_var,test_ratio,ret]=fuseVerticalPosition(innov, innov_gate, obs_
 	if (innov_check_pass) 
 		%innov_check_fail_status.flags.reject_ver_pos = false;
 
-		ret = fuseVelPosHeight(innovation, innov_var, 5);
+		ret = fuseVelPosHeight(innovation, innov_var, 6);
+        
         return 
 	else 
 		%innov_check_fail_status.flags.reject_ver_pos = true;

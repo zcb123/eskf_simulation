@@ -33,8 +33,10 @@ ROTATE_EV  = bitshift(1,6);		%/< set to true to if the EV observations are in a 
 GPSYAW  = bitshift(1,7);		%/< set to true to use GPS yaw data if available
 EVVEL   = bitshift(1,8);
 
-
-
+global USE_GEO_DECL SAVE_GEO_DECL FUSE_DECL
+USE_GEO_DECL = bitshift(1,0);
+SAVE_GEO_DECL = bitshift(1,1);
+FUSE_DECL = bitshift(1,2);
 %%
 global params control_status fault_status;
 
@@ -134,12 +136,13 @@ control_status.flags.ev_yaw = false;
 control_status.flags.fuse_beta = false;
 control_status.flags.fuse_aspd = false;
 
+global control_status_prev;
 % control_status.value = sum(control_status.flags.)
 
 fault_status.flags.bad_vel_N = logical(true);
 fault_status.flags.bad_hdg = false;
 fault_status.flags.bad_acc_vertical = false;
-
+fault_status.flags.bad_pos_D = false;
 
 global states dt_imu_avg  dt_ekf_avg R_to_earth;
 states = struct('quat_nominal',single([1 0 0 0]'),...
@@ -153,7 +156,9 @@ states = struct('quat_nominal',single([1 0 0 0]'),...
 dt_imu_avg = 0.004;
 dt_ekf_avg = 0.008;
 R_to_earth = zeros(3,3);
-
+global k_vel_id k_vel_bias_id
+k_vel_id = 4;
+k_vel_bias_id = 13;
 %% ALL
 global state_reset_status;
 state_reset_status = struct('velNE_counter',0,'velD_counter',0,'posNE_counter',0,'posD_counter',0,'quat_counter',0, ...
@@ -230,7 +235,7 @@ pos_ref = MapProjection();
 
 global last_gps_fail_us
 last_gps_fail_us = 0;
-global gps_checks_passed NED_origin_initialised gps_alt_ref hgt_sensor_offset gps_prev time_last_on_ground_us gps_yaw_offset;
+global gps_checks_passed NED_origin_initialised gps_alt_ref hgt_sensor_offset gps_prev time_last_on_ground_us gps_yaw_offset gps_acc_changed;
 gps_checks_passed = false;
 NED_origin_initialised = false;
 hgt_sensor_offset = 0;
@@ -238,6 +243,8 @@ gps_alt_ref = 0;
 gps_prev.fix_type = 1;
 time_last_on_ground_us = 0;
 gps_yaw_offset = 0;
+gps_acc_changed = false;
+
 global gps_intermittent time_prev_gps_us gps_hgt_accurate;
 gps_intermittent = false;
 time_prev_gps_us = 0;
@@ -255,7 +262,26 @@ gps_sample_delayed = struct('time_us',0,...
 		                    'fix_type',0);
 gps_data_ready = false;
 
-clear controlGpsYawFusion        
+global gps_pos_innov_var gps_pos_test_ratio gps_vel_test_ratio
+gps_vel_test_ratio = [0 0 0]';
+gps_pos_innov_var = [0 0 0]';
+gps_pos_test_ratio = [0 0]';
+
+
+
+
+
+global time_last_hgt_fuse time_last_hor_pos_fuse time_last_hor_vel_fuse time_last_hagl_fuse time_last_flow_terrain_fuse time_last_of_fuse;
+
+time_last_hgt_fuse = 0;
+time_last_hor_pos_fuse = 0;
+time_last_hor_vel_fuse = 0;
+time_last_hagl_fuse = 0;
+time_last_flow_terrain_fuse = 0;
+time_last_of_fuse = 0;
+
+
+clear controlGpsYawFusion yaw_signed_test_ratio_lpf       
 
 %% MAG 相关
 global mag_buffer time_last_mag
@@ -292,6 +318,7 @@ mag_test_ratio = zeros(3,1);
 mag_strength_gps = nan;
 global USE_GEO_DECL
 USE_GEO_DECL = bitshift(1,0);
+
 %% BARO 相关
 global baro_buffer time_last_baro baro_hgt_offset baro_counter terrain_vpos
 baro_buffer = ring_buffer(obs_buffer_length);
@@ -317,7 +344,7 @@ mag_lpf = AlphaFilter(0.1,0);
 %% EKFGSF
 global yawEstimator
 yawEstimator = EKFGSF_YAW();
-%% 
+%% 速度位置
 global vert_pos_fuse_attempt_time_us vert_vel_fuse_time_us vert_pos_innov_ratio vert_vel_innov_ratio;
 vert_pos_fuse_attempt_time_us = 0;
 vert_vel_fuse_time_us = 0;
@@ -327,3 +354,7 @@ global clip_counter time_bad_vert_accel time_good_vert_accel;
 clip_counter = 0;
 time_bad_vert_accel = 0;
 time_good_vert_accel = 0;
+
+global time_last_zero_velocity_fuse
+time_last_zero_velocity_fuse = 0;
+

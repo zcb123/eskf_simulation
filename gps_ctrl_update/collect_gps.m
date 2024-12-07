@@ -34,12 +34,12 @@ function ret = collect_gps(gps)
 
     if(NED_origin_initialised) 
 
-    
-		if((gps_prev.fix_type ~= gps.fix_type) && (gps_prev.fix_type >= 3 && gps.fix_type >= 3)) 
+		if (gps_prev.fix_type ~= gps.fix_type) && (gps_prev.fix_type >= 3 && gps.fix_type >= 3)
 			gps_acc_changed = true;
         end
 
 		gps_prev = gps;
+        
     end
 
     ret = NED_origin_initialised && (gps.fix_type >= 3);

@@ -68,16 +68,15 @@ for i = 1:len_t
         delta_angle_var_accum_display(i,:) = delta_angle_var_accum';
         delta_vel_var_accum_display(i,:) = delta_vel_var_accum';
         delta_angle_bias_var_accum_display(i,:) = delta_angle_bias_var_accum';
-        delta_vel_bias_var_accum_display(i,:) = delta_vel_bias_var_accum';
-
-        accel_lpf_NE_display(i,:) = accel_lpf_NE';
-        quat_display(i,:) = states.quat_nominal';
-        vel_display(i,:) = states.vel';
-        pos_display(i,:) = states.pos';
+        delta_vel_bias_var_accum_display(i,:) = delta_vel_bias_var_accum';   
 %         set(h,'ZData',P);
 %         pause(0.01);
-
     end
+
+    accel_lpf_NE_display(i,:) = accel_lpf_NE';
+    quat_display(i,:) = states.quat_nominal';
+    vel_display(i,:) = states.vel';
+    pos_display(i,:) = states.pos';
 
     calculateOutputStates(newest_high_rate_imu_sample,updated);
     

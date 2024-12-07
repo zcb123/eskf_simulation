@@ -1,12 +1,13 @@
 function controlGpsFusion()
-    global P;
+   
     global params control_status;
     global gps_sample_delayed imu_sample_delayed;
 %     NED_origin_initialised = true;
     global NED_origin_initialised last_gps_pass_us last_gps_fail_us gps_checks_passed;
     global ekfgsf_yaw_reset_count ;
-    global gps_data_ready;
-    
+    global gps_data_ready gps_acc_changed;
+    global mag_yaw_reset_req;
+
     if  gps_data_ready   
         
         time_prev_gps_us = gps_sample_delayed.time_us;
@@ -23,20 +24,38 @@ function controlGpsFusion()
 		
         if control_status.flags.gps
             if (mandatory_conditions_passing)
-                if (continuing_conditions_passing)
+                if continuing_conditions_passing || isOtherSourceOfHorizontalAidingThan(control_status.flags.gps)
                     %%%%
-                    fuseGpsVelPos(gps_sample_delayed,params);
+                    fuseGpsVelPos();
                     %%%%
-                    if shouldResetGpsFusion()
+                    if shouldResetGpsFusion() || gps_acc_changed
                         was_gps_signal_lost = isTimedOut(time_prev_gps_us, 1000000);
                         if isYawFailure() && control_status.flags.in_air...
                                 && ~was_gps_signal_lost...
                                 && ekfgsf_yaw_reset_count < params.EKFGSF_reset_count_limit...
                                 && isTimedOut(ekfgsf_yaw_reset_time,5000000)
                             
-                            resetYawToEKFGSF();
+                            if resetYawToEKFGSF()
+                                disp("GPS emergency yaw reset");
+                            end
+
+
                         else
-                            todo = 1;
+
+                            if (control_status.flags.fixed_wing && control_status.flags.in_air) 
+								%if flying a fixed wing aircraft, do a complete reset that includes yaw
+							    mag_yaw_reset_req = true;
+                            end
+
+                            
+                            if(gps_acc_changed) 
+								disp("GPS fix status changed - resetting");
+							else 
+								disp("GPS fusion timeout - resetting");
+                            end
+
+                            gps_acc_changed = false;
+          
                         end
                         %resetVelocityToGps
                         resetVelocityToGps(gps_sample_delayed);
@@ -73,9 +92,9 @@ function controlGpsFusion()
         disp("GPS data stopped");
 
     elseif control_status.flags.gps && (imu_sample_delayed.time_us - gps_sample_delayed.time_us > 1e6) ...
-            && fasle    %查看有没有其他的水平位置源可以用，目前这里是没有。因此false
-
-        
+            && isOtherSourceOfHorizontalAidingThan(control_status.flags.gps)    %查看有没有其他的水平位置源可以用，目前这里是没有。因此false
+        stopGpsFusion();
+        disp('use other pos data');
     end
     
 end

@@ -20,13 +20,9 @@ function fuseHeading(measured_hdg,obs_var)
 	fuse_zero_innov = false;
 
 	if (is_yaw_fusion_inhibited) 
-		% The yaw measurement cannot be trusted but we need to fuse something to prevent a badly
-		% conditioned covariance matrix developing over time.
+		
 		if (~control_status.flags.vehicle_at_rest) 
-			% Vehicle is not at rest so fuse a zero innovation if necessary to prevent
-			% unconstrained quaternion variance growth and record the predicted heading
-			% to use as an observation when movement ceases.
-			% TODO a better way of determining when this is necessary
+			
 			sumQuatVar = P(1, 1) + P(2, 2) + P(3, 3);
 
 			if (sumQuatVar > params.quat_max_variance) 

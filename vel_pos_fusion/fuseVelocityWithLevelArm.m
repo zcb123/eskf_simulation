@@ -1,6 +1,7 @@
 function [innov_var,test_ratio_out,ret] = fuseVelocityWithLevelArm(params,pos_offset,innov,innov_gate,obs_var)
     %innov实际上是速度差
-    global states P imu_sample_delayed;
+    global states P imu_sample_delayed fault_status;
+    global time_last_ver_vel_fuse time_last_hor_vel_fuse time_last_imu
     % assign intermediate variables
 	q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
@@ -395,29 +396,29 @@ function [innov_var,test_ratio_out,ret] = fuseVelocityWithLevelArm(params,pos_of
 	    is_fused = measurementUpdate(Kfusion, innov_var(index), innov(index));
     
     
-% 	    switch (index) 
-% 	    case 1
-% 		    fault_status.flags.bad_vel_N = !is_fused;
-% 		    _velx_deltastates = deltastates;
-% 		    
-%     
-% 	    case 2
-% 		    fault_status.flags.bad_vel_E = !is_fused;
-% 		    _vely_deltastates = deltastates;
-% 		    
-% 	    case 3
-% 		    fault_status.flags.bad_vel_D = !is_fused;
-% 		    _velz_deltastates = deltastates;
-% 		    
-% 	    end
+	    switch (index) 
+	    case 1
+		    fault_status.flags.bad_vel_N = ~is_fused;
+		    %_velx_deltastates = deltastates;
+		    
     
-% 	    if(is_fused) 
-% 		    if(index == 3) 
-% 			    time_last_ver_vel_fuse = time_last_imu;
-%             elseif(index == 1 || index == 2) 
-% 			    time_last_hor_vel_fuse = time_last_imu;
-% 		    end
-% 	    end
+	    case 2
+		    fault_status.flags.bad_vel_E = ~is_fused;
+		    %_vely_deltastates = deltastates;
+		    
+	    case 3
+		    fault_status.flags.bad_vel_D = ~is_fused;
+		    %_velz_deltastates = deltastates;
+		    
+	    end
+    
+	    if(is_fused) 
+		    if(index == 3) 
+			    time_last_ver_vel_fuse = time_last_imu;
+            elseif(index == 1 || index == 2) 
+			    time_last_hor_vel_fuse = time_last_imu;
+		    end
+	    end
 	    ret = ret && is_fused;
     end
     

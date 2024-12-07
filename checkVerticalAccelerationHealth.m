@@ -55,7 +55,7 @@ function checkVerticalAccelerationHealth()
 	end
 
 	% declare a bad vertical acceleration measurement and make the declaration persist
-	% for a minimum of BADACC_PROBATION seconds
+	% for a minimum of BADACC_PROBATION seconds 
 	if (fault_status.flags.bad_acc_vertical) 
 		fault_status.flags.bad_acc_vertical = isRecent(time_bad_vert_accel, BADACC_PROBATION);
 

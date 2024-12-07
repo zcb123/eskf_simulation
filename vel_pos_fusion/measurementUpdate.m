@@ -41,7 +41,7 @@ function is_healthy = measurementUpdate(K,variance,innovation)
 
 		end
 
-		is_healthy = checkAndFixCovarianceUpdate(KHP);
+		is_healthy = checkAndFixCovarianceUpdate(KHP);      %方差大于0，否则是有问题的
 
 		if (is_healthy) 
 			% apply the covariance corrections

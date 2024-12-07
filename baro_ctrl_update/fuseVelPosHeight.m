@@ -1,7 +1,7 @@
 function ret = fuseVelPosHeight(innov, innov_var, obs_index)
     global P;
     Kfusion = zeros(23,1);  % Kalman gain vector for any single observation - sequential fusion is used.
-	state_index = obs_index + 3;  % we start with vx and this is the 4. state
+	state_index = obs_index + 3;  % we start with vx and this is the 5. state
 
 	% calculate kalman gain K = PHS, where S = 1/innovation variance
 	for row = 1:23 
@@ -23,8 +23,8 @@ function ret = fuseVelPosHeight(innov, innov_var, obs_index)
 	for i = 1:23
 		if (P(i, i) < KHP(i, i)) 
 			% zero rows and columns
-			%P.uncorrelateCovarianceSetVariance<1>(i, 0.0);
-            P(i,i) = 0;
+			uncorrelateCovarianceSetVariance(1,i,0);
+            %P(i,i) = 0;
 
 			healthy = false;
 		end
@@ -36,12 +36,9 @@ function ret = fuseVelPosHeight(innov, innov_var, obs_index)
 		% apply the covariance corrections
 		P = P - KHP;
 
-		%fixCovarianceErrors(true);
+		fixCovarianceErrors(true);
 
 		switch (obs_index)
-		
-		case 0
-			fuse(Kfusion, innov);
 			
 		
 		case 1
@@ -63,11 +60,15 @@ function ret = fuseVelPosHeight(innov, innov_var, obs_index)
 		case 5
 			fuse(Kfusion, innov);
 			
-		otherwise
-			
+
+		case 6
+			fuse(Kfusion, innov);
+			    
 		end
-			ret = true;
-        return
+		% apply the state corrections
+		%fuse(Kfusion, innov);
+        ret = true;
+		return;
 	end
 
 	ret = false;
