@@ -14,4 +14,6 @@ states.mag_I = states.mag_I - K(16:18,1)*innovation;
 states.mag_B = states.mag_B - K(19:21,1)*innovation;
 states.wind_vel = states.wind_vel - K(22:23,1)*innovation;
 
+
+% assignin("base","states_delta_ang_bias",states.delta_ang_bias);
 end

@@ -1,10 +1,15 @@
 function predictState()
     global states  dt_ekf_avg R_to_earth ;
     global CONSTANTS_ONE_G;
-    global params imu_sample_delayed;
+    global params imu_sample_delayed imu_sample_delayed_prev;
     global accel_lpf_NE ang_rate_delayed_raw; 
     
-    delta_ang = imu_sample_delayed.delta_ang - states.delta_ang_bias;
+    corrected_delta_ang_prev = imu_sample_delayed_prev.delta_ang - states.delta_ang_bias;
+    corrected_delta_ang = imu_sample_delayed.delta_ang - states.delta_ang_bias;   
+    delta_ang = (corrected_delta_ang + corrected_delta_ang_prev)*0.5 + cross(corrected_delta_ang_prev,corrected_delta_ang)/12;
+   
+    assignin("base","corrected_delta_ang_prev",corrected_delta_ang_prev);
+    assignin("base","corrected_delta_ang",corrected_delta_ang);
     assignin("base","delta_ang",delta_ang);
 
     q1 = states.quat_nominal(1);
@@ -88,11 +93,7 @@ function predictState()
 	states.pos = states.pos + (k1_p_dot + 2 * k2_p_dot + 2 * k3_p_dot + k4_p_dot) * imu_sample_delayed.delta_vel_dt / 6;
 	states.pos(2) = states.pos(2) + 0.5 * CONSTANTS_ONE_G * imu_sample_delayed.delta_vel_dt * imu_sample_delayed.delta_vel_dt;
 
-
-    states.quat_nominal = saturation(states.quat_nominal,-1,1);
-    states.vel = saturation(states.vel,-1000,1000);
-    states.pos = saturation(states.pos,-1e6,1e6);
-
+    constrainStates();
    
     input = 0.5*(imu_sample_delayed.delta_ang_dt + imu_sample_delayed.delta_vel_dt);
     filter_update_s = params.filter_update_interval_us*1e-6;

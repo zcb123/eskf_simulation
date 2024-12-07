@@ -6,9 +6,10 @@ function ret = checkAndFixCovarianceUpdate(KHP)
 	for i = 1:23
 		if (P(i, i) < KHP(i, i)) 
             %zero rows and columns
-			P(i,:) = 0;
-            P(:,i) = 0;
-            P(i,i) = 0;
+% 			P(i,:) = 0;
+%             P(:,i) = 0;
+%             P(i,i) = 0;
+            uncorrelateCovarianceSetVariance(1,i,0);
 			healthy = false;
 		end
 	end

@@ -29,7 +29,7 @@ vehicle_dt(1:end-1,:) = diff(vehicle_t);
 % zlabel('Z 轴');
 % title('P 动态演示');
 global time_last_ver_vel_fuse gps_hgt_accurate time_last_zero_velocity_fuse;
-global states yaw_test_ratio;
+global states yaw_test_ratio imu_sample_delayed;
 quat_nominal_display = zeros(len_t,4);
 vel_display = zeros(len_t,3);
 pos_display = zeros(len_t,3);
@@ -55,9 +55,19 @@ Kfusion6 = zeros(1,23);
 innovation_display = zeros(len_t,1);
 innovation = 0;
 yaw_test_ratio_display = zeros(len_t,1);
-fuse_time_display = zeros(len_t,2);
-fuse_time_gps = 0;
-fuse_time_imu = 0;
+
+imu_delta_ang_display = zeros(len_t,3);
+delta_ang_display = zeros(len_t,3);
+corrected_delta_ang_prev = zeros(len_t,3);
+corrected_delta_ang = zeros(len_t,3);
+
+
+
+
+states_quat_nominal_display = zeros(len_t,4);
+states_delta_ang_bias_display = zeros(len_t,3);
+states_delta_vel_bias_display = zeros(len_t,3);
+
 for i = 1:len_t
 
     updated = setSensorData(i,gyro_filted,acc_filted,vehicle_t,vehicle_dt,data);
@@ -112,8 +122,14 @@ for i = 1:len_t
     dq_dt_display(i,:) =dq_dt;
     delta_ang_bias_display(i,:) = states.delta_ang_bias';
     yaw_test_ratio_display(i,1) = yaw_test_ratio;
-    fuse_time_display(i,:) = [fuse_time_gps fuse_time_imu];
+   
 
+    imu_delta_ang_display(i,:) = imu_sample_delayed.delta_ang';
+    delta_ang_display(i,:) = delta_ang';
+    states_quat_nominal_display(i,:) = states.quat_nominal';
+    
+    states_delta_ang_bias_display(i,:) = states.delta_ang_bias';
+    states_delta_vel_bias_display(i,:) = states.delta_vel_bias';
 
     time_last_ver_vel_fuse_display(i,1) = time_last_ver_vel_fuse;
 
@@ -143,27 +159,31 @@ end
 % zlabel('Z 轴');
 % title('P 动态演示');
 %%
-
+figure('Name','imu_delta_ang_display')
+plot(imu_delta_ang_display)
 figure
-plot(fuse_time_display)
+plot(delta_ang_display)
+figure
+plot(states_delta_ang_bias_display)
 %%
 figure
-plot(fuse_time_display(:,2) - fuse_time_display(:,1))
+plot(Kfusion_yaw_display);
 %%
-figure
-plot(Kfusion_yaw_display)
-figure
-plot(innovation_display)
+% figure
+% plot(Kfusion_yaw_display(:,10))
+% hold on 
+% plot(Kfusion_yaw_display(:,11))
+% hold on 
+% plot(Kfusion_yaw_display(:,12))
+% figure
+% plot(innovation_display)
 % figure
 % plot(Kfusion4_display(:,11));
 % figure
 % plot(Kfusion6_display(:,11));
 % figure
 % plot(Kfusion6_display(:,11));
-figure('Name','test_ratio yaw')
-plot(yaw_test_ratio_display)
-hold on 
-plot(data.ESTU.mR);
+
 %%
 figure
 plot(dq_dt_display)
@@ -172,10 +192,6 @@ plot(delta_ang_bias_display)
 %%
 figure('Name','quat_nominal_display')
 plot(quat_nominal_display);
-figure('Name','vel_display')
-plot(vel_display);
-figure('Name','pos_display')
-plot(pos_display);
 
 % figure
 % plot(data.PCMD.q1);
@@ -186,32 +202,7 @@ plot(pos_display);
 % hold on
 % plot(data.PCMD.q4);
 % hold on
-% figure
-% plot(data.ESKF.vN);
-% hold on
-% plot(data.ESKF.vE);
-% hold on
-% plot(data.ESKF.vD);
-% hold on
-% figure
-% plot(data.ESKF.pN);
-% hold on
-% plot(data.ESKF.pE);
-% hold on
-% plot(data.ESKF.pD);
-% hold on
-
-%%
-% figure
-% plot(time_last_ver_vel_fuse_display);
-% figure('Name','gps_yaw');
-% plot(gps_yaw_display);
-%%
-% figure('Name','baro_hgt_display');
-% plot(baro_hgt_display)
-% figure('Name','gps_hgt_display');
-% plot(gps_hgt_display)
-% figure('Name','gps_hgt_accurate_display');
-% plot(gps_hgt_accurate_display)
-% figure('Name','time_last_zero_velocity_fuse_display');
-% plot(time_last_zero_velocity_fuse_display)
+% figure('Name','test_ratio yaw')
+% plot(yaw_test_ratio_display)
+% hold on 
+% plot(data.ESTU.mR);

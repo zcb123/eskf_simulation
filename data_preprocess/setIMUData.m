@@ -36,7 +36,9 @@ function updated = setIMUData(imu_sample)
 
     if updated
         imu_buffer.push(imu_down_sampler.getDownSampledImuAndTriggerReset());
+
         imu_sample_delayed_prev = imu_sample_delayed;
+        
         imu_sample_delayed = imu_buffer.get_oldest();%这里要先把缓冲区填满，tail才会+1
         
         min_obs_interval_us =  (imu_sample.time_us - imu_sample_delayed.time_us) / uint64(obs_buffer_length - 1);

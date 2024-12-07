@@ -48,26 +48,26 @@ vehicle_acc = getNonNaN(imu_acc_update,3);
 vehicle_gyro = getNonNaN(imu_gyro_update,3);
 vehicle_t = getNonNaN(imu_t_update,1);
 
-figure('Name','vehivle acc')
-subplot(311)
-plot(imu_t,imu_acc(:,1),vehicle_t,vehicle_acc(:,1))
-grid on 
-subplot(312)
-plot(imu_t,imu_acc(:,2),vehicle_t,vehicle_acc(:,2))
-grid on 
-subplot(313)
-plot(imu_t,imu_acc(:,3),vehicle_t,vehicle_acc(:,3))
-grid on 
-figure('Name','vehivle gyro')
-subplot(311)
-plot(imu_t,imu_gyro(:,1),vehicle_t,vehicle_gyro(:,1))
-grid on 
-subplot(312)
-plot(imu_t,imu_gyro(:,2),vehicle_t,vehicle_gyro(:,2))
-grid on 
-subplot(313)
-plot(imu_t,imu_gyro(:,3),vehicle_t,vehicle_gyro(:,3))
-grid on 
+% figure('Name','vehivle acc')
+% subplot(311)
+% plot(imu_t,imu_acc(:,1),vehicle_t,vehicle_acc(:,1))
+% grid on 
+% subplot(312)
+% plot(imu_t,imu_acc(:,2),vehicle_t,vehicle_acc(:,2))
+% grid on 
+% subplot(313)
+% plot(imu_t,imu_acc(:,3),vehicle_t,vehicle_acc(:,3))
+% grid on 
+% figure('Name','vehivle gyro')
+% subplot(311)
+% plot(imu_t,imu_gyro(:,1),vehicle_t,vehicle_gyro(:,1))
+% grid on 
+% subplot(312)
+% plot(imu_t,imu_gyro(:,2),vehicle_t,vehicle_gyro(:,2))
+% grid on 
+% subplot(313)
+% plot(imu_t,imu_gyro(:,3),vehicle_t,vehicle_gyro(:,3))
+% grid on 
 
 clear index imu_t_update imu_gyro_update imu_acc_update imu_gyro_integral_output imu_gyro_integral_dt...
 imu_gyro_integral imu_acc_integral_output imu_acc_integral_dt imu_acc_integral...
@@ -89,30 +89,31 @@ for i=1:len_t
 
 end
 
-figure('Name','acc_filted and frame transform')
-subplot(311)
-plot(vehicle_t,vehicle_acc(:,2),vehicle_t,acc_filted(:,1))
-grid on
-legend('aX','aXF');
-subplot(312)
-plot(vehicle_t,vehicle_acc(:,1),vehicle_t,acc_filted(:,2))
-grid on
-legend('aY','aYF');
-subplot(313)
-plot(vehicle_t,-vehicle_acc(:,3),vehicle_t,acc_filted(:,3))
-grid on
-legend('aZ','aZF');
-
-figure('Name','gyro_filted and frame transform')
-subplot(311)
-plot(vehicle_t,vehicle_gyro(:,2),vehicle_t,gyro_filted(:,1))
-grid on
-legend('gX','gXF');
-subplot(312)
-plot(vehicle_t,vehicle_gyro(:,1),vehicle_t,gyro_filted(:,2))
-grid on
-legend('gY','gYF');
-subplot(313)
-plot(vehicle_t,-vehicle_gyro(:,3),vehicle_t,gyro_filted(:,3))
-grid on
-legend('gZ','gZF');
+% figure('Name','acc_filted and frame transform')
+% subplot(311)
+% plot(vehicle_t,vehicle_acc(:,2),vehicle_t,acc_filted(:,1))
+% grid on
+% legend('aX','aXF');
+% subplot(312)
+% plot(vehicle_t,vehicle_acc(:,1),vehicle_t,acc_filted(:,2))
+% grid on
+% legend('aY','aYF');
+% subplot(313)
+% plot(vehicle_t,-vehicle_acc(:,3),vehicle_t,acc_filted(:,3))
+% grid on
+% legend('aZ','aZF');
+% 
+%%
+% figure('Name','gyro_filted and frame transform')
+% subplot(311)
+% plot(vehicle_t,vehicle_gyro(:,2),vehicle_t,gyro_filted(:,1))
+% grid on
+% legend('gX','gXF');
+% subplot(312)
+% plot(vehicle_t,vehicle_gyro(:,1),vehicle_t,gyro_filted(:,2))
+% grid on
+% legend('gY','gYF');
+% subplot(313)
+% plot(vehicle_t,-vehicle_gyro(:,3),vehicle_t,gyro_filted(:,3))
+% grid on
+% legend('gZ','gZF');

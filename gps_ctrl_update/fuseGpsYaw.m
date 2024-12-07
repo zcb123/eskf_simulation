@@ -64,15 +64,14 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 	tmp1 = P(1, 1) * HYaw(1) + P(1, 2) * HYaw(2) + P(1, 3) * HYaw(3);
 	tmp2 = P(2, 1) * HYaw(1) + P(2, 2) * HYaw(2) + P(2, 3) * HYaw(3);
 	tmp3 = P(3, 1) * HYaw(1) + P(3, 2) * HYaw(2) + P(3, 3) * HYaw(3);
-	heading_innov_var = heading_innov_var + tmp1 * HYaw(1) + tmp2 * HYaw(2) + tmp3 * HYaw(3);   
+	heading_innov_var = heading_innov_var + tmp1*HYaw(1) + tmp2*HYaw(2) + tmp3*HYaw(3);   
 
-	
 
 	if heading_innov_var < R_YAW    %这里是个平方和，必然大于R_YAW
 		% the innovation variance contribution from the state covariances is negative which means the covariance matrix is badly conditioned
 		fault_status.flags.bad_hdg = true;
         disp('bad heading_innov_var');
-		% we reinitialise the covariance matrix and abort this fusion step
+		
 		initialiseCovariance();
 		return;
 	end
@@ -86,7 +85,8 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 
 	% wrap the innovation to the interval between +-pi
 	heading_innov = wrap_pn_pi(heading_innov);
-
+    
+    global yaw_test_ratio;
 	% innovation test ratio
 	yaw_test_ratio = sq(heading_innov) / (sq(innov_gate) * heading_innov_var);
 
@@ -101,9 +101,9 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 	else 
 		%innov_check_fail_status.flags.reject_yaw = false;
 	end
-
-	yaw_getState = yaw_signed_test_ratio_lpf(sign(heading_innov) * yaw_test_ratio);
-    
+    global yaw_signed_test_ratio_lpf;
+    yaw_signed_test_ratio_lpf.update(sign(heading_innov) * yaw_test_ratio);
+    yaw_getState = yaw_signed_test_ratio_lpf.getState();
 	if (~control_status.flags.in_air...
 	    && abs(yaw_getState) > 0.2) 
 
@@ -111,7 +111,7 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 		% Reset the yaw gyro variance to converge faster and avoid
 		% being stuck on a previous bad estimate
 		resetZDeltaAngBiasCov();
-        P(10,10) = (params.switch_on_gyro_bias*dt_ekf_avg)^2;
+
 	end
 
 	% calculate the Kalman gains
@@ -124,8 +124,13 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 		Kfusion(row)  = Kfusion(row) + P(row, 3) * HYaw(3);
 
 		Kfusion(row) = Kfusion(row)*heading_innov_var_inv;
+
+%         if row == 11
+%             assignin("base","Kfusionyaw"+num2str(row),Kfusion(row))
+%         end
+
 	end
-    
+    assignin("base","Kfusion",Kfusion);
 	is_fused = measurementUpdate(Kfusion, heading_innov_var, heading_innov);
 
 	fault_status.flags.bad_hdg = ~is_fused;

@@ -111,6 +111,8 @@ params.range_aid = 0;           %allow switching primary height source to range 
 params.bad_acc_reset_delay_us = 500000;
 params.vert_innov_test_lim = 3;
 params.vert_innov_test_min = 1;
+params.acc_bias_lim = 0.4;
+
 
 control_status.flags.tilt_align = 1;
 control_status.flags.yaw_align = 1;
@@ -226,6 +228,7 @@ vibe_metrics = [0 0 0]';
 delta_ang_prev = [0 0 0]';
 delta_vel_prev = [0 0 0]';
 time_last_move_detect_us = 0;
+global imu_sample_delayed_prev;
 
 %% GPS 相关
 global gps_buffer time_last_gps pos_ref
@@ -271,7 +274,8 @@ gps_pos_test_ratio = [0 0]';
 
 
 
-global time_last_hgt_fuse time_last_hor_pos_fuse time_last_hor_vel_fuse time_last_hagl_fuse time_last_flow_terrain_fuse time_last_of_fuse;
+global time_last_hgt_fuse time_last_hor_pos_fuse time_last_hor_vel_fuse time_last_hagl_fuse time_last_flow_terrain_fuse time_last_of_fuse ...
+time_last_ver_vel_fuse;
 
 time_last_hgt_fuse = 0;
 time_last_hor_pos_fuse = 0;
@@ -279,9 +283,9 @@ time_last_hor_vel_fuse = 0;
 time_last_hagl_fuse = 0;
 time_last_flow_terrain_fuse = 0;
 time_last_of_fuse = 0;
+time_last_ver_vel_fuse = 0;
 
-
-clear controlGpsYawFusion yaw_signed_test_ratio_lpf       
+clear controlGpsYawFusion        
 
 %% MAG 相关
 global mag_buffer time_last_mag
@@ -357,4 +361,7 @@ time_good_vert_accel = 0;
 
 global time_last_zero_velocity_fuse
 time_last_zero_velocity_fuse = 0;
-
+%% 航向
+global yaw_signed_test_ratio_lpf yaw_test_ratio
+yaw_signed_test_ratio_lpf = AlphaFilter_float(0.1,0);
+yaw_test_ratio = 0;

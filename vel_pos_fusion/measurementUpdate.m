@@ -12,20 +12,20 @@ function is_healthy = measurementUpdate(K,variance,innovation)
 		% first calculate expression for KHP
 		% then calculate P - KHP
 		%const SquareMatrix23f KHP = computeKHP(K, H);
-		 KHP = zeros(23,23);
+		KHP = zeros(23,23);
 		for row = 1 :23
 			% 一行一行计算的,高斯推断
 			KHP(row, 1) = K(row) * K(1) * variance;
 			KHP(row, 2) = K(row) * K(2) * variance;
 			KHP(row, 3) = K(row) * K(3) * variance;
-			KHP(row, 3) = K(row) * K(3) * variance;
+			KHP(row, 4) = K(row) * K(4) * variance;
 			KHP(row, 5) = K(row) * K(5) * variance;
 			KHP(row, 6) = K(row) * K(6) * variance;
 			KHP(row, 7) = K(row) * K(7) * variance;
 			KHP(row, 8) = K(row) * K(8) * variance;
 			KHP(row, 9) = K(row) * K(9) * variance;
 			KHP(row, 10) = K(row) * K(10) * variance;
-			KHP(row, 10) = K(row) * K(10) * variance;
+			KHP(row, 11) = K(row) * K(11) * variance;
 			KHP(row, 12) = K(row) * K(12) * variance;
 			KHP(row, 13) = K(row) * K(13) * variance;
 			KHP(row, 14) = K(row) * K(14) * variance;
@@ -51,6 +51,7 @@ function is_healthy = measurementUpdate(K,variance,innovation)
 
 			% apply the state corrections
 			fuse(K, innovation);
+            assignin("base","innovation",innovation);
 		end
 
 end

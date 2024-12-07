@@ -13,13 +13,10 @@ function [innov_var,test_ratio_out,ret] = fuseVelocityWithLevelArm(params,pos_of
 	z_offset_body = pos_offset(3);
 
 	dt = imu_sample_delayed.delta_ang_dt;
-	gyro_unbias = (imu_sample_delayed.delta_ang - states.delta_ang_bias) / dt;
+	gyro_unbias = (imu_sample_delayed.delta_ang - states.delta_ang_bias) ./ dt;
 
 	% XYZ Measurement uncertainty. Need to consider timing errors for fast rotations
-	%R_VEL = obs_var(1);
-	%char* numerical_error_covariance_reset_string = "numerical error - covariance reset";
-
-	innov_check_fail = logical(false);
+	
 	% Observation jacobian and Kalman gain vectors
 	Kfusion = zeros(23,1);
 % 	deltastates = zeros(23,1);
