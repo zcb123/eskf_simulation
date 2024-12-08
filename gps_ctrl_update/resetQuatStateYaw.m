@@ -8,9 +8,9 @@ function resetQuatStateYaw(yaw,yaw_variance,update_buffer)
 
 	% calculate the amount that the quaternion has changed by
 	quat_after_reset = dcm2quat(R_to_earth);
-    quat_before_reset_inver_norm = quat_normalize(Quaternion_Inverse(quat_before_reset));
+    quat_before_reset_inver = Quaternion_Inverse(quat_before_reset);
 
-	q_error=(QuatMult(quat_after_reset,quat_before_reset_inver_norm));
+	q_error= quat_normalize((QuatMult(quat_after_reset,quat_before_reset_inver)));
 
 	% update quaternion states
 	states.quat_nominal = quat_after_reset;

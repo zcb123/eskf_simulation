@@ -52,15 +52,15 @@ function predictCovariance()
 	is_manoeuvre_level_high = logical(ang_rate_magnitude_filt > params.acc_bias_learn_gyr_lim...
 					     || accel_magnitude_filt > params.acc_bias_learn_acc_lim);
 
-	do_inhibit_all_axes = logical(bitand(params.fusion_mode , INHIBIT_ACC_BIAS)...    %   params.fusion_mode = 1
-					 || is_manoeuvre_level_high...                              %manoeuvre:操纵
+	do_inhibit_all_axes = logical(bitand(params.fusion_mode , INHIBIT_ACC_BIAS)...      %params.fusion_mode = 1
+					 || is_manoeuvre_level_high...                                      %manoeuvre:操纵
 					 || fault_status.flags.bad_acc_vertical);
     
     persistent prev_dvel_bias_var
     if isempty(prev_dvel_bias_var)
         prev_dvel_bias_var = zeros(3,3);
     end
-
+    assignin("base","do_inhibit_all_axes",do_inhibit_all_axes);
 	for stateIndex = 12 : 14 
 		index = stateIndex - 11;
 
@@ -110,7 +110,7 @@ function predictCovariance()
         height_rate_lpf = single(0);
     end
 	alpha_height_rate_lpf = 0.1 * dt; % 10 seconds time constant
-	height_rate_lpf = height_rate_lpf * (1 - alpha_height_rate_lpf) + states.vel(2) * alpha_height_rate_lpf;
+	height_rate_lpf = height_rate_lpf * (1 - alpha_height_rate_lpf) + states.vel(3) * alpha_height_rate_lpf;
 
 	% Don't continue to grow wind velocity state variances if they are becoming too large or we are not using wind velocity states as this can make the covariance matrix badly conditioned
 	k_wind_vel_id = uint8(22);
@@ -375,7 +375,7 @@ function predictCovariance()
 	
 	mR00 = R_to_earth(1,1); mR01 = R_to_earth(1,2); mR02 = R_to_earth(1,3);
 	mR10 = R_to_earth(2,1); mR11 = R_to_earth(2,2); mR12 = R_to_earth(2,3);
-	mR20 = R_to_earth(3,1); mR21 = R_to_earth(3,2); mR22 = R_to_earth(3,2);%这里暂时和代码中保持一致
+	mR20 = R_to_earth(3,1); mR21 = R_to_earth(3,2); mR22 = R_to_earth(3,3);%这里有点问题
 
         r00_sx = mR00 * daxVar;
         r01_sy = mR01 * dayVar;

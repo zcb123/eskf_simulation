@@ -95,7 +95,7 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 
 	if (yaw_test_ratio > 1.0) 
 		%innov_check_fail_status.flags.reject_yaw = true;
-        disp('reject gps yaw fuse');
+        disp('reject gps yaw fuse yaw_test_ratio>1');
 		return;
 
 	else 
@@ -130,7 +130,7 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 %         end
 
 	end
-    assignin("base","Kfusion",Kfusion);
+    assignin("base","Kfusion_gps_yaw",Kfusion);
 	is_fused = measurementUpdate(Kfusion, heading_innov_var, heading_innov);
 
 	fault_status.flags.bad_hdg = ~is_fused;

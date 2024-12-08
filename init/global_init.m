@@ -38,59 +38,60 @@ USE_GEO_DECL = bitshift(1,0);
 SAVE_GEO_DECL = bitshift(1,1);
 FUSE_DECL = bitshift(1,2);
 %%
-global params control_status fault_status;
+global params control_status fault_status innov_check_fail_status;
 
+params.fusion_mode = 128;
+params.vdist_sensor_type = 1; %0:BARO 1:GNSS 2:RANGE 3:EV
+params.gyro_noise = single(1.5e-2);
+params.accel_noise = single(3.5e-1);
+params.gyro_bias_p_noise = single(1e-3);
+params.accel_bias_p_noise = single(3e-3);
+params.gps_vel_noise = single(0.3);
+params.gps_pos_noise = single(0.5);
+params.baro_noise = 3.5;
+params.mag_heading_noise = 3e-1;
+params.mag_noise = single(5e-2);
+params.mag_declination_deg = 0;
+params.mag_fusion_type = 0; %AUTO=0;HEADING=1,MAG_3D=2,UNUSED=3,INDOOR=4,NONE=5
+params.gps_heading_noise = 0.1;
 params.imu_pos_body = single([0 0 0]');
 params.gps_pos_body = single([0 0 0]');
 params.vel_Tau = single(0.25);
 params.pos_Tau = single(0.25);
 params.filter_update_interval_us = single(8000);
-params.gyro_noise = single(1.5e-2);
-params.gyro_bias_p_noise = single(1e-3);
-params.accel_noise = single(3.5e-1);
-params.accel_bias_p_noise = single(3e-3);
+
+
 params.wind_vel_p_noise = single(1e-1);
 params.wind_vel_p_noise_scaler = single(0.5);
 params.acc_bias_learn_tc = single(0.5);
 params.acc_bias_learn_gyr_lim = single(3);
 params.acc_bias_learn_acc_lim = single(25);
-params.fusion_mode = bitor(GPS,GPSYAW);
 params.mage_p_noise = single(1e-3);
 params.magb_p_noise = single(1e-4);
 params.initial_wind_uncertainty = single(1);
 params.pos_noaid_noise = single(10);
 params.gps_pos_innov_gate = single(5);
 params.gps_vel_innov_gate = single(5);
-params.gps_pos_noise = single(0.5);
-params.gps_vel_noise = single(0.3);
 params.switch_on_gyro_bias = single(0.1);
 params.switch_on_accel_bias = single(0.2);
-params.mag_noise = single(5e-2);
 params.initial_wind_uncertainty = single(1);
 params.initial_tilt_err = single(0.1);
 params.gps_yaw_offset = single(180);                                %出货机天线航向偏置180，碳管机偏置90
-params.gps_heading_noise = single(0.1);
 params.heading_innov_gate = single(2.6);
 params.reset_timeout_max = 7000000;         %微秒
 params.EKFGSF_reset_delay = 1000000;
 params.EKFGSF_yaw_err_max = 0.262;
-params.mag_fusion_type = 0; %AUTO=0;HEADING=1,MAG_3D=2,UNUSED=3,INDOOR=4,NONE=5
 params.req_vacc = 8.0;
 params.baro_innov_gate = 5;
-params.baro_noise = 3.5;
 params.EKFGSF_reset_count_limit = 3;
-params.mag_declination_deg = 0;
 params.mag_acc_gate = 0.5;
 params.mag_yaw_rate_gate = 0.25;
 params.check_mag_strength = 0;
 params.mag_declination_source = 7;
-params.mag_heading_noise = 3e-1;
-params.vdist_sensor_type = 1; %0:BARO 1:GNSS 2:RANGE 3:EV
 params.sensor_interval_max_ms = 10;
 params.acc_bias_lim = 0.4;
 params.synthesize_mag_z = 0;
 params.gnd_effect_deadzone = 5;
-
 params.max_correction_airspeed = 20;
 params.static_pressure_coef_xp = 0;
 params.static_pressure_coef_xn = 0;
@@ -98,6 +99,7 @@ params.static_pressure_coef_yp = 0;
 params.static_pressure_coef_yn = 0;
 params.static_pressure_coef_z = 0;
 params.max_correction_airspeed = 20;
+
 params.mag_delay_ms = 0;		%/< magnetometer measurement delay relative to the IMU (mSec)
 params.baro_delay_ms = 0;		%/< barometer height measurement delay relative to the IMU (mSec)
 params.gps_delay_ms = 110;		%/< GPS measurement delay relative to the IMU (mSec)
@@ -106,6 +108,7 @@ params.flow_delay_ms = 5;		%/< optical flow measurement delay relative to the IM
 params.range_delay_ms = 5;		%/< range finder measurement delay relative to the IMU (mSec)
 params.ev_delay_ms = 175;		%/< off-board vision measurement delay relative to the IMU (mSec)
 params.auxvel_delay_ms = 5;		%/< auxiliary velocity measurement delay relative to the IMU (mSec)
+
 params.arsp_thr = 2;
 params.range_aid = 0;           %allow switching primary height source to range finder if certain conditions are met
 params.bad_acc_reset_delay_us = 500000;
@@ -145,6 +148,8 @@ fault_status.flags.bad_vel_N = logical(true);
 fault_status.flags.bad_hdg = false;
 fault_status.flags.bad_acc_vertical = false;
 fault_status.flags.bad_pos_D = false;
+
+innov_check_fail_status.flags.reject_hor_pos = false;
 
 global states dt_imu_avg  dt_ekf_avg R_to_earth;
 states = struct('quat_nominal',single([1 0 0 0]'),...
@@ -206,6 +211,8 @@ delta_angle_var_accum = 0;
 delta_vel_var_accum = 0;
 delta_angle_bias_var_accum = 0;
 delta_vel_bias_var_accum = 0;
+
+clear predictCovariance;
 %% predictStates
 global ang_rate_delayed_raw
 ang_rate_delayed_raw = 0;
@@ -275,16 +282,16 @@ gps_pos_test_ratio = [0 0]';
 
 
 global time_last_hgt_fuse time_last_hor_pos_fuse time_last_hor_vel_fuse time_last_hagl_fuse time_last_flow_terrain_fuse time_last_of_fuse ...
-time_last_ver_vel_fuse;
+time_last_ver_vel_fuse time_last_gps_yaw_fuse;
 
-time_last_hgt_fuse = 0;
-time_last_hor_pos_fuse = 0;
-time_last_hor_vel_fuse = 0;
-time_last_hagl_fuse = 0;
-time_last_flow_terrain_fuse = 0;
-time_last_of_fuse = 0;
-time_last_ver_vel_fuse = 0;
-
+time_last_hgt_fuse = uint64(0);
+time_last_hor_pos_fuse = uint64(0);
+time_last_hor_vel_fuse = uint64(0);
+time_last_hagl_fuse = uint64(0);
+time_last_flow_terrain_fuse = uint64(0);
+time_last_of_fuse = uint64(0);
+time_last_ver_vel_fuse = uint64(0);
+time_last_gps_yaw_fuse = uint64(0);
 clear controlGpsYawFusion        
 
 %% MAG 相关
@@ -306,7 +313,7 @@ non_mag_yaw_aiding_running_prev = false;
 mag_inhibit_yaw_reset_req = false;
 is_yaw_fusion_inhibited = false;
 mag_counter = 0;
-flt_mag_align_start_time = 0;
+flt_mag_align_start_time = uint64(0);
 mag_declination_gps = nan;
 mag_decl_cov_reset = false;
 mag_bias_observable = false;	
@@ -365,3 +372,8 @@ time_last_zero_velocity_fuse = 0;
 global yaw_signed_test_ratio_lpf yaw_test_ratio
 yaw_signed_test_ratio_lpf = AlphaFilter_float(0.1,0);
 yaw_test_ratio = 0;
+%% fake pos
+global using_synthetic_position time_last_fake_pos_fuse fuse_hpos_as_odom
+using_synthetic_position = false;
+time_last_fake_pos_fuse = 0;
+fuse_hpos_as_odom = false;

@@ -13,7 +13,7 @@ function [innov_var,test_ratio,ret]=fuseVerticalPosition(innov, innov_gate, obs_
 
 	% if there is bad vertical acceleration data, then don't reject measurement,
 	% but limit innovation to prevent spikes that could destabilise the filter
-	innovation = 0;
+	
 
 	if (fault_status.flags.bad_acc_vertical && ~innov_check_pass) 
 		innov_limit = innov_gate * sqrtf(innov_var);

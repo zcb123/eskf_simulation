@@ -22,73 +22,71 @@ function controlGpsFusion()
 		continuing_conditions_passing = mandatory_conditions_passing && ~gps_checks_failing;
 		starting_conditions_passing = continuing_conditions_passing && gps_checks_passing;
 		
-        assignin("base",'fuse_time_gps',gps_sample_delayed.time_us);
-        assignin("base",'fuse_time_imu',imu_sample_delayed.time_us);
 
-%         if control_status.flags.gps
-%             if (mandatory_conditions_passing)
-%                 if continuing_conditions_passing || isOtherSourceOfHorizontalAidingThan(control_status.flags.gps)
-%                     %%%%
-%                     fuseGpsVelPos();
-%                     %%%%
-%                     if shouldResetGpsFusion() || gps_acc_changed
-%                         was_gps_signal_lost = isTimedOut(time_prev_gps_us, 1000000);
-%                         if isYawFailure() && control_status.flags.in_air...
-%                                 && ~was_gps_signal_lost...
-%                                 && ekfgsf_yaw_reset_count < params.EKFGSF_reset_count_limit...
-%                                 && isTimedOut(ekfgsf_yaw_reset_time,5000000)
-%                             
-%                             if resetYawToEKFGSF()
-%                                 disp("GPS emergency yaw reset");
-%                             end
-% 
-% 
-%                         else
-% 
-%                             if (control_status.flags.fixed_wing && control_status.flags.in_air) 
-% 								%if flying a fixed wing aircraft, do a complete reset that includes yaw
-% 							    mag_yaw_reset_req = true;
-%                             end
-% 
-%                             
-%                             if(gps_acc_changed) 
-% 								disp("GPS fix status changed - resetting");
-% 							else 
-% 								disp("GPS fusion timeout - resetting");
-%                             end
-% 
-%                             gps_acc_changed = false;
-%           
-%                         end
-%                         %resetVelocityToGps
-%                         resetVelocityToGps(gps_sample_delayed);
-%                         resetHorizontalPositionToGps(gps_sample_delayed);
-% 
-%                     end
-%                 else
-%                     stopGpsFusion();
-%                     disp("GPS quality poor - stopping use");
-%                 end
-%             else
-%                 stopGpsFusion();
-%                 disp("GPS bad")
-%             end
-%         else
-%             if starting_conditions_passing
-% 
-%                   startGpsFusion(gps_sample_delayed);
-% 
-%             elseif gps_checks_passing&&~control_status.flags.yaw_align && (params.mag_fusion_type == 5) %NONE = 5
-%                 
-%                 if (resetYawToEKFGSF()) 
-% 
-%                     resetVelocityToGps(gps_sample_delayed);
-% 					resetHorizontalPositionToGps(gps_sample_delayed);
-%                     disp("Yaw aligned using IMU and GPS");
-%                 end
-% 
-%            end
-%         end
+        if control_status.flags.gps
+            if (mandatory_conditions_passing)
+                if continuing_conditions_passing || isOtherSourceOfHorizontalAidingThan(control_status.flags.gps)
+                    %%%%
+                    fuseGpsVelPos();
+                    %%%%
+                    if shouldResetGpsFusion() || gps_acc_changed
+                        was_gps_signal_lost = isTimedOut(time_prev_gps_us, 1000000);
+                        if isYawFailure() && control_status.flags.in_air...
+                                && ~was_gps_signal_lost...
+                                && ekfgsf_yaw_reset_count < params.EKFGSF_reset_count_limit...
+                                && isTimedOut(ekfgsf_yaw_reset_time,5000000)
+                            
+                            if resetYawToEKFGSF()
+                                disp("GPS emergency yaw reset");
+                            end
+
+
+                        else
+
+                            if (control_status.flags.fixed_wing && control_status.flags.in_air) 
+								%if flying a fixed wing aircraft, do a complete reset that includes yaw
+							    mag_yaw_reset_req = true;
+                            end
+
+                            
+                            if(gps_acc_changed) 
+								disp("GPS fix status changed - resetting");
+							else 
+								disp("GPS fusion timeout - resetting");
+                            end
+
+                            gps_acc_changed = false;
+          
+                        end
+                        %resetVelocityToGps
+                        resetVelocityToGps(gps_sample_delayed);
+                        resetHorizontalPositionToGps(gps_sample_delayed);
+
+                    end
+                else
+                    stopGpsFusion();
+                    disp("GPS quality poor - stopping use");
+                end
+            else
+                stopGpsFusion();
+                disp("GPS bad")
+            end
+        else
+            if starting_conditions_passing
+
+                  startGpsFusion(gps_sample_delayed);
+
+            elseif gps_checks_passing&&~control_status.flags.yaw_align && (params.mag_fusion_type == 5) %NONE = 5
+                
+                if (resetYawToEKFGSF()) 
+
+                    resetVelocityToGps(gps_sample_delayed);
+					resetHorizontalPositionToGps(gps_sample_delayed);
+                    disp("Yaw aligned using IMU and GPS");
+                end
+
+           end
+        end
     elseif control_status.flags.gps && (imu_sample_delayed.time_us - gps_sample_delayed.time_us > 10e6)    % 如果gps数据不能用的情况
 
         stopGpsFusion();            %切换高度源

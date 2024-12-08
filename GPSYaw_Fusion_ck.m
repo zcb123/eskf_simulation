@@ -19,15 +19,15 @@ vehicle_dt(1:end-1,:) = diff(vehicle_t);
 
 % display val
 
-% figure('Name','P')
-% h = surf(P);
-% shading interp; % 平滑着色
-% colormap(jet);
-% colorbar;
-% xlabel('X 轴');
-% ylabel('Y 轴');
-% zlabel('Z 轴');
-% title('P 动态演示');
+figure('Name','P')
+h = surf(P);
+shading interp; % 平滑着色
+colormap(jet);
+colorbar;
+xlabel('X 轴');
+ylabel('Y 轴');
+zlabel('Z 轴');
+title('P 动态演示');
 global time_last_ver_vel_fuse gps_hgt_accurate time_last_zero_velocity_fuse;
 global states yaw_test_ratio imu_sample_delayed;
 quat_nominal_display = zeros(len_t,4);
@@ -43,11 +43,11 @@ time_last_zero_velocity_fuse_display = zeros(len_t,1);
 dq_dt_display = zeros(len_t,4);
 dq_dt = [1 0 0 0]';
 delta_ang_bias_display = zeros(len_t,3);
-Kfusion_yaw_display = zeros(len_t,23);
+Kfusion_gps_yaw_display = zeros(len_t,23);
 Kfusion4_display = zeros(len_t,23);
 Kfusion5_display = zeros(len_t,23);
 Kfusion6_display = zeros(len_t,23);
-Kfusion =0 ;
+Kfusion_gps_yaw = zeros(1,23) ;
 Kfusion4 = zeros(1,23);
 Kfusion5 = zeros(1,23);
 Kfusion6 = zeros(1,23);
@@ -68,6 +68,12 @@ states_quat_nominal_display = zeros(len_t,4);
 states_delta_ang_bias_display = zeros(len_t,3);
 states_delta_vel_bias_display = zeros(len_t,3);
 
+continuing_conditions_passing_display = zeros(len_t,1);
+continuing_conditions_passing = nan;
+do_inhibit_all_axes_display = zeros(len_t,1);
+do_inhibit_all_axes = 0;
+
+euler = zeros(len_t,3);
 for i = 1:len_t
 
     updated = setSensorData(i,gyro_filted,acc_filted,vehicle_t,vehicle_dt,data);
@@ -85,9 +91,13 @@ for i = 1:len_t
     end
 
     if updated
-
         predictCovariance();
+        set(h,'ZData',P)
+        pause(0.01);
+
+
         predictState();
+        
         
 
         control_status_prev = control_status;
@@ -98,23 +108,31 @@ for i = 1:len_t
 
         controlHeightSensorTimeouts();
         
-%         controlMagFusion();
-%                     
-        controlGpsFusion();
-%                     
-%         controlHeightFusion();
-% 
-%         controlZeroVelocityUpdate();
+        controlMagFusion();
+        set(h,'ZData',P)
+        pause(0.01);
 
-        
-%         set(h,'ZData',P)
-%         pause(0.01);
+        controlGpsFusion();
+        set(h,'ZData',P)
+        pause(0.01);            
+        controlHeightFusion();
+        set(h,'ZData',P)
+        pause(0.01);
+        controlZeroVelocityUpdate();
+        set(h,'ZData',P)
+        pause(0.01);
+        controlFakePosFusion();
+        set(h,'ZData',P)
+        pause(0.01);
         
     end
-    
-    calculateOutputStates(newest_high_rate_imu_sample,updated);
 
-    Kfusion_yaw_display(i,:) = Kfusion;
+
+    euler(i,:) = quattoeuler(states.quat_nominal);
+
+    calculateOutputStates(newest_high_rate_imu_sample,updated);
+    
+    Kfusion_gps_yaw_display(i,:) = Kfusion_gps_yaw;
     Kfusion4_display(i,:) = Kfusion4';
     Kfusion5_display(i,:) = Kfusion5';
     Kfusion6_display(i,:) = Kfusion6';
@@ -127,6 +145,9 @@ for i = 1:len_t
     imu_delta_ang_display(i,:) = imu_sample_delayed.delta_ang';
     corrected_delta_ang_prev_display(i,:) = corrected_delta_ang_prev';
     corrected_delta_ang_display(i,:) = corrected_delta_ang';
+
+    do_inhibit_all_axes_display(i,1) = do_inhibit_all_axes;
+    continuing_conditions_passing_display(i,1) = continuing_conditions_passing;
 
     delta_ang_display(i,:) = delta_ang';
     states_quat_nominal_display(i,:) = states.quat_nominal';
@@ -150,32 +171,22 @@ for i = 1:len_t
 
 
 end
-%%
 
-% figure('Name','P')
-% h = surf(P);
-% shading interp; % 平滑着色
-% colormap(jet);
-% colorbar;
-% xlabel('X 轴');
-% ylabel('Y 轴');
-% zlabel('Z 轴');
-% title('P 动态演示');
 %%
-figure('Name','imu_delta_ang_display')
-plot(imu_delta_ang_display)
-figure('Name','corrected_delta_ang_prev_display')
-plot(corrected_delta_ang_prev_display)
-figure('Name','corrected_delta_ang_display')
-plot(corrected_delta_ang_display)
-
-figure
-plot(delta_ang_display)
-figure
-plot(states_delta_ang_bias_display)
+% figure('Name','imu_delta_ang_display')
+% plot(imu_delta_ang_display)
+% figure('Name','corrected_delta_ang_prev_display')
+% plot(corrected_delta_ang_prev_display)
+% figure('Name','corrected_delta_ang_display')
+% plot(corrected_delta_ang_display)
+% 
+% figure('Name','delta_ang_display')
+% plot(delta_ang_display)
+% figure('Name','states_delta_ang_bias_display')
+% plot(states_delta_ang_bias_display)
 %%
-figure
-plot(Kfusion_yaw_display);
+figure('Name','Kfusion_yaw_display');
+plot(Kfusion_gps_yaw_display);
 %%
 % figure
 % plot(Kfusion_yaw_display(:,10))
@@ -191,15 +202,22 @@ plot(Kfusion_yaw_display);
 % plot(Kfusion6_display(:,11));
 % figure
 % plot(Kfusion6_display(:,11));
-
-%%
 figure
-plot(dq_dt_display)
+plot(euler)
 figure
-plot(delta_ang_bias_display)
+plot(states_quat_nominal_display,'*-');
+figure
+plot(do_inhibit_all_axes_display);
+figure
+plot(continuing_conditions_passing_display);
 %%
-figure('Name','quat_nominal_display')
-plot(quat_nominal_display);
+% figure('Name','dq_dt_display')
+% plot(dq_dt_display)
+% figure('Name','delta_ang_bias_display')
+% plot(delta_ang_bias_display)
+%%
+% figure('Name','quat_nominal_display')
+% plot(quat_nominal_display);
 
 % figure
 % plot(data.PCMD.q1);

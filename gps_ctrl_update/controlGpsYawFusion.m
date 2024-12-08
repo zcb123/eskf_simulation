@@ -33,14 +33,13 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
 				&& ~gps_intermittent;
 
 		time_last_gps_yaw_data = time_last_imu;
-
-        
+        assignin("base","continuing_conditions_passing",continuing_conditions_passing);
 		if (control_status.flags.gps_yaw) 
 			if (continuing_conditions_passing) 
                 %%%%
                 fuseGpsYaw(gps_sample_delayed,params,control_status);                           %出货机天线航向偏置180，碳管机偏置90 
 				%%%%
-                is_fusion_failing = isTimedOut(time_last_gps_yaw_fuse, params.reset_timeout_max);   %7s之后超时
+                is_fusion_failing = isTimedOut(time_last_gps_yaw_fuse, params.reset_timeout_max);   %7s之后超时 第一遍总是会超时
 				if (is_fusion_failing) 
 					if (nb_gps_yaw_reset_available > 0) 
 						% Data seems good, attempt a reset
@@ -62,7 +61,7 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
                         control_status.flags.gps_yaw = false;       %stopGpsYawFusion();
 						
 					end
-                    disp("gps yaw fuse failed");
+                    disp("gps yaw fuse failed--timeout");
 					% TODO: should we give a new reset credit when the fusion does not fail for some time?
 				end
 
@@ -76,6 +75,7 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
 			if (starting_conditions_passing) 
 				% Try to activate GPS yaw fusion
 				% startGpsYawFusion();  
+                disp('resetYawToGps');
                 if resetYawToGps()
                     control_status.flags.yaw_align = true;
                     control_status.flags.gps_yaw = true;

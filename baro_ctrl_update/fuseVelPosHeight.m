@@ -5,7 +5,7 @@ function ret = fuseVelPosHeight(innov, innov_var, obs_index)
 
 	% calculate kalman gain K = PHS, where S = 1/innovation variance
 	for row = 1:23 
-		Kfusion(row) = P(row, state_index) / innov_var;
+		Kfusion(row) = P(row, state_index) / innov_var;%这里也有点问题,K = PH'/(HPH'+innov_var)
 	end
 
 	KHP = zeros(23,23);

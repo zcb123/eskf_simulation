@@ -16,29 +16,20 @@ function controlMagFusion()
         if params.synthesize_mag_z && bitand(params.mag_declination_source,USE_GEO_DECL)...
 			    && (NED_origin_initialised || ~isnan(mag_declination_gps))
 			    dcm = Euler2Dcm([0 -mag_inclination_gps mag_declination_gps]); %机体系到地理系的旋转矩阵
-
                 mag_vec = [mag_strength_gps 0 0]';
 				mag_earth_pred = dcm * mag_vec;
-
 				mag_sample.mag(3) = calculate_synthetic_mag_z_measurement(mag_sample.mag, mag_earth_pred);
 				control_status.flags.synthetic_mag_z = true;
-
 		else 
 				control_status.flags.synthetic_mag_z = false;
         end
-
-
     end
 
-    if mag_data_ready
-        
-        checkMagFieldStrength(mag_sample_delayed.mag);
-
+    if mag_data_ready      
+        checkMagFieldStrength(mag_sample_delayed.mag);  %不检查磁场强度
     end
     if ~control_status.flags.in_air
-
-        control_status.flags.mag_aligned_in_flight = false;
-    
+        control_status.flags.mag_aligned_in_flight = false;  
     end
 
     if(params.mag_fusion_type >= NONE||control_status.flags.mag_fault||~control_status.flags.tilt_align) 

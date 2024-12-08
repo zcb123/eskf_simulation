@@ -45,13 +45,21 @@ function ret = initialiseFilter()
 
     if baro_buffer.len >=1    %气压计数据初始化成功
         [baro_sample_delayed,bar_updated] = baro_buffer.pop_first_older_than(imu_sample_delayed.time_us);
-        if bar_updated
+
+        if bar_updated && baro_sample_delayed.time_us ~=0
             if baro_counter == 0
                baro_hgt_offset = baro_sample_delayed.hgt;
             else
                baro_hgt_offset = 0.9*baro_hgt_offset + 0.1*baro_sample_delayed.hgt; 
             end
             baro_counter = baro_counter + 1;
+        end
+    end
+
+    if params.mag_fusion_type <= MAG_3D
+        if mag_counter < obs_buffer_length
+            ret = false;
+            return
         end
     end
     
