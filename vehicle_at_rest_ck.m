@@ -44,8 +44,6 @@ for i = 1:len_t
  
         predictState();
         
-        
-
         control_status_prev = control_status;
 
         controlFusionModes();
@@ -55,7 +53,6 @@ for i = 1:len_t
         controlHeightSensorTimeouts();
         
         controlMagFusion();
-
 
         controlGpsFusion();
            

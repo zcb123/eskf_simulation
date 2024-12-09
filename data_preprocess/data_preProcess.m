@@ -1,18 +1,18 @@
 clear 
 close all
 
-load("data/N41_2024-11-19_11-19-29.mat");
+load("data/N162_2024-11-13_21-00-07.mat");
 
 run("global_init.m");
 
-len = length(data.IMU1.t);
-imu_t = double(data.IMU1.t)/1e6;
+len = length(data.IMU0.t);
+imu_t = double(data.IMU0.t)/1e6;
 imu_dt = 0.002*ones(len,1);
 imu_dt(2:end,1) = diff(imu_t);
-% imu_gyro = [data.IMU1.GY data.IMU1.GX -data.IMU1.GZ];
-% imu_acc = [data.IMU1.AY data.IMU1.AX -data.IMU1.AZ];
-imu_gyro = [data.IMU1.GX data.IMU1.GY data.IMU1.GZ];
-imu_acc = [data.IMU1.AX data.IMU1.AY data.IMU1.AZ];
+% imu_gyro = [data.IMU0.GY data.IMU0.GX -data.IMU0.GZ];
+% imu_acc = [data.IMU0.AY data.IMU0.AX -data.IMU0.AZ];
+imu_gyro = [data.IMU0.GX data.IMU0.GY data.IMU0.GZ];
+imu_acc = [data.IMU0.AX data.IMU0.AY data.IMU0.AZ];
 
 %% 传感器数据预处理  梯形积分与锥运动补偿
 imu_acc_integral = zeros(len,3);
@@ -88,32 +88,32 @@ for i=1:len_t
     [gyro_lpf_2o,gyro_filted(i,:)] = gyro_lpf_2o.apply([vehicle_gyro(i,2) vehicle_gyro(i,1) -vehicle_gyro(i,3)]);
 
 end
-
-% figure('Name','acc_filted and frame transform')
-% subplot(311)
-% plot(vehicle_t,vehicle_acc(:,2),vehicle_t,acc_filted(:,1))
-% grid on
-% legend('aX','aXF');
-% subplot(312)
-% plot(vehicle_t,vehicle_acc(:,1),vehicle_t,acc_filted(:,2))
-% grid on
-% legend('aY','aYF');
-% subplot(313)
-% plot(vehicle_t,-vehicle_acc(:,3),vehicle_t,acc_filted(:,3))
-% grid on
-% legend('aZ','aZF');
+%%
+figure('Name','acc_filted and frame transform')
+subplot(311)
+plot(vehicle_t,vehicle_acc(:,2),vehicle_t,acc_filted(:,1))
+grid on
+legend('aX','aXF');
+subplot(312)
+plot(vehicle_t,vehicle_acc(:,1),vehicle_t,acc_filted(:,2))
+grid on
+legend('aY','aYF');
+subplot(313)
+plot(vehicle_t,-vehicle_acc(:,3),vehicle_t,acc_filted(:,3))
+grid on
+legend('aZ','aZF');
 % 
 %%
-% figure('Name','gyro_filted and frame transform')
-% subplot(311)
-% plot(vehicle_t,vehicle_gyro(:,2),vehicle_t,gyro_filted(:,1))
-% grid on
-% legend('gX','gXF');
-% subplot(312)
-% plot(vehicle_t,vehicle_gyro(:,1),vehicle_t,gyro_filted(:,2))
-% grid on
-% legend('gY','gYF');
-% subplot(313)
-% plot(vehicle_t,-vehicle_gyro(:,3),vehicle_t,gyro_filted(:,3))
-% grid on
-% legend('gZ','gZF');
+figure('Name','gyro_filted and frame transform')
+subplot(311)
+plot(vehicle_t,vehicle_gyro(:,2),vehicle_t,gyro_filted(:,1))
+grid on
+legend('gX','gXF');
+subplot(312)
+plot(vehicle_t,vehicle_gyro(:,1),vehicle_t,gyro_filted(:,2))
+grid on
+legend('gY','gYF');
+subplot(313)
+plot(vehicle_t,-vehicle_gyro(:,3),vehicle_t,gyro_filted(:,3))
+grid on
+legend('gZ','gZF');

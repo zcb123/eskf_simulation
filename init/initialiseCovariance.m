@@ -6,7 +6,7 @@ global P P_M dt_ekf_avg;
 global params;
 global gps_sample_delayed;
 global delta_angle_var_accum delta_vel_var_accum delta_angle_bias_var_accum delta_vel_bias_var_accum;
-
+global prev_dvel_bias_var;
 P = zeros(23,23);
 delta_angle_var_accum = zeros(3,1);
 delta_vel_var_accum = zeros(3,1);
@@ -30,6 +30,11 @@ P(12,12) = P(10,10);
 P(13,13) = params.switch_on_accel_bias*dt_ekf_avg;
 P(14,14) = P(13,13);
 P(15,15) = P(13,13);
+
+
+prev_dvel_bias_var(1) = P(13,13);
+prev_dvel_bias_var(2) = P(14,14);
+prev_dvel_bias_var(3) = P(15,15);
 
 %resetMagCov(); 下面做了
 P(16,16) = params.mag_noise^2;

@@ -88,7 +88,18 @@ classdef MapProjection < handle
 		        lon = degrees(obj.ref_lon);
             end
             
-        end   
+        end
+
+        function res = getProjectionReferenceLat(obj)
+            res = obj.ref_lat;
+        end
+
+        function res = getProjectionReferenceLon(obj)
+            res = obj.ref_lon;
+        end
+        function res = getProjectionReferenceTimestamp(obj)
+            res = obj.ref_timestamp;
+        end
     end
 end
 

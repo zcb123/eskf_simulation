@@ -238,11 +238,10 @@ time_last_move_detect_us = 0;
 global imu_sample_delayed_prev;
 
 %% GPS 相关
-global gps_buffer time_last_gps pos_ref gps_pos_prev
+global gps_buffer time_last_gps pos_ref
 time_last_gps = 0;
 gps_buffer = ring_buffer(obs_buffer_length);
 pos_ref = MapProjection();
-gps_pos_prev = MapProjection();
 
 global last_gps_fail_us
 last_gps_fail_us = 0;
@@ -293,10 +292,6 @@ time_last_flow_terrain_fuse = uint64(0);
 time_last_of_fuse = uint64(0);
 time_last_ver_vel_fuse = uint64(0);
 time_last_gps_yaw_fuse = uint64(0);
-
-
-global gps_velD_diff_filt
-gps_velD_diff_filt = 0;
 clear controlGpsYawFusion        
 
 %% MAG 相关

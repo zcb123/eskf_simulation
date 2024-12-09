@@ -2,7 +2,7 @@ function ret = gps_is_good(gps)
 
     global control_status params gps_check_fail_status;
     global last_gps_fail_us last_gps_pass_us time_last_imu;
-    global gps_pos_prev gps_alt_prev gps_pos_deriv_filt gps_velNE_filt gps_velD_diff_filt;
+    global gps_pos_prev gps_alt_prev;
     % Check the fix type
 	gps_check_fail_status.flags.fix = (gps.fix_type < 3);
 
@@ -48,16 +48,15 @@ function ret = gps_is_good(gps)
 		end
 
 		% Calculate the horizontal and vertical drift velocity components and limit to 10x the threshold
-		vel_limit = [params.req_hdrift, params.req_hdrift, params.req_vdrift];
-
-		pos_derived = [delta_pos_n, delta_pos_e, (gps_alt_prev - 1e-3 * gps.alt)];
+		vel_limitparams.req_hdrift, params.req_hdrift, params.req_vdrift);
+		pos_derived(delta_pos_n, delta_pos_e, (gps_alt_prev - 1e-3 * gps.alt));
 		pos_derived = saturation(pos_derived / dt, -10*vel_limit, 10*vel_limit);
 
 		% Apply a low pass filter
 		gps_pos_deriv_filt = pos_derived * filter_coef + gps_pos_deriv_filt * (1 - filter_coef);
 
 		% Calculate the horizontal drift speed and fail if too high
-		gps_horizontal_position_drift_rate_m_s = norm(gps_pos_deriv_filt(1:2,1));  % Vector2f(gps_pos_deriv_filt.xy()).norm();
+		gps_horizontal_position_drift_rate_m_s = Vector2f(gps_pos_deriv_filt.xy()).norm();
 		gps_check_fail_status.flags.hdrift = (gps_horizontal_position_drift_rate_m_s > params.req_hdrift);
 
 		% Fail if the vertical drift speed is too high
@@ -65,21 +64,21 @@ function ret = gps_is_good(gps)
 		gps_check_fail_status.flags.vdrift = (gps_vertical_position_drift_rate_m_s > params.req_vdrift);
 
 		% Check the magnitude of the filtered horizontal GPS velocity
-		gps_velNE = saturation(gps.vel_ned(1:2,1),...
-					   -10* params.req_hdrift,...
+		gps_velNE = saturation(Vector2f(gps.vel_ned.xy()),
+					   -10* params.req_hdrift,
 					   10 * params.req_hdrift);
 		gps_velNE_filt = gps_velNE * filter_coef + gps_velNE_filt * (1.0 - filter_coef);
 		gps_filtered_horizontal_velocity_m_s = gps_velNE_filt.norm();
 		gps_check_fail_status.flags.hspeed = (gps_filtered_horizontal_velocity_m_s > params.req_hdrift);
 
-	elseif (control_status.flags.in_air) 
+    	elseif (control_status.flags.in_air) 
 		% These checks are always declared as passed when flying
 		% If on ground and moving, the last result before movement commenced is kept
-	    gps_check_fail_status.flags.hdrift = false;
-	    gps_check_fail_status.flags.vdrift = false;
-	    gps_check_fail_status.flags.hspeed = false;
+		gps_check_fail_status.flags.hdrift = false;
+		gps_check_fail_status.flags.vdrift = false;
+		gps_check_fail_status.flags.hspeed = false;
 
-	    resetGpsDriftCheckFilters();
+		resetGpsDriftCheckFilters();
 
 	else 
 		% This is the case where the vehicle is on ground and IMU movement is blocking the drift calculation
@@ -88,38 +87,56 @@ function ret = gps_is_good(gps)
 
 	% save GPS fix for next time
 	gps_pos_prev.initReference(lat, lon, time_last_imu);
-	gps_alt_prev = 1e-3*gps.alt;
+	gps_alt_prev = 1e-3f * (float)gps.alt;
 
 	% Check  the filtered difference between GPS and EKF vertical velocity
-	vz_diff_limit = 10.0* params.req_vdrift;
-	vertVel = [gps.vel_ned(3) - states.vel(3), -vz_diff_limit, vz_diff_limit];
-	gps_velD_diff_filt = vertVel * filter_coef + gps_velD_diff_filt * (1.0- filter_coef);
-	gps_check_fail_status.flags.vspeed = (fabsf(gps_velD_diff_filt) > params.req_vdrift);
+	vz_diff_limit = 10.0f * params.req_vdrift;
+	vertVel = math::constrain(gps.vel_ned(2) - _state.vel(2), -vz_diff_limit, vz_diff_limit);
+	_gps_velD_diff_filt = vertVel * filter_coef + _gps_velD_diff_filt * (1.0f - filter_coef);
+	gps_check_fail_status.flags.vspeed = (fabsf(_gps_velD_diff_filt) > params.req_vdrift);
 
 	% assume failed first time through
-	if (last_gps_fail_us == 0) 
-		last_gps_fail_us = time_last_imu;
+	if (_last_gps_fail_us == 0) 
+		_last_gps_fail_us = time_last_imu;
 	end
 
 	% if any user selected checks have failed, record the fail time
-	
-	if 	 gps_check_fail_status.flags.fix ||...
-		(gps_check_fail_status.flags.nsats   && bitand(params.gps_check_mask , MASK_GPS_NSATS)) ||...
-		(gps_check_fail_status.flags.pdop    && bitand(params.gps_check_mask , MASK_GPS_PDOP)) ||...
-		(gps_check_fail_status.flags.hacc    && bitand(params.gps_check_mask , MASK_GPS_HACC)) ||...
-		(gps_check_fail_status.flags.vacc    && bitand(params.gps_check_mask , MASK_GPS_VACC)) ||...
-		(gps_check_fail_status.flags.sacc    && bitand(params.gps_check_mask , MASK_GPS_SACC)) ||...
-		(gps_check_fail_status.flags.hdrift  && bitand(params.gps_check_mask , MASK_GPS_HDRIFT)) ||...
-		(gps_check_fail_status.flags.vdrift  && bitand(params.gps_check_mask , MASK_GPS_VDRIFT)) ||...
-		(gps_check_fail_status.flags.hspeed  && bitand(params.gps_check_mask , MASK_GPS_HSPD)) ||...
-		(gps_check_fail_status.flags.vspeed  && bitand(params.gps_check_mask , MASK_GPS_VSPD))
-
-		last_gps_fail_us = time_last_imu;
+	if (
+		gps_check_fail_status.flags.fix ||
+		(gps_check_fail_status.flags.nsats   && (params.gps_check_mask & MASK_GPS_NSATS)) ||
+		(gps_check_fail_status.flags.pdop    && (params.gps_check_mask & MASK_GPS_PDOP)) ||
+		(gps_check_fail_status.flags.hacc    && (params.gps_check_mask & MASK_GPS_HACC)) ||
+		(gps_check_fail_status.flags.vacc    && (params.gps_check_mask & MASK_GPS_VACC)) ||
+		(gps_check_fail_status.flags.sacc    && (params.gps_check_mask & MASK_GPS_SACC)) ||
+		(gps_check_fail_status.flags.hdrift  && (params.gps_check_mask & MASK_GPS_HDRIFT)) ||
+		(gps_check_fail_status.flags.vdrift  && (params.gps_check_mask & MASK_GPS_VDRIFT)) ||
+		(gps_check_fail_status.flags.hspeed  && (params.gps_check_mask & MASK_GPS_HSPD)) ||
+		(gps_check_fail_status.flags.vspeed  && (params.gps_check_mask & MASK_GPS_VSPD))
+	) 
+		_last_gps_fail_us = time_last_imu;
 
 	else 
-		last_gps_pass_us = time_last_imu;
+		_last_gps_pass_us = time_last_imu;
 	end
 
+
+    
+    fix_failed = gps.fix_type < 3;
+    
+    
+
+
+    
+    if last_gps_fail_us == 0
+        last_gps_fail_us = time_last_imu;
+    end
+
+    if fix_failed
+        last_gps_fail_us = time_last_imu;
+    else
+        last_gps_pass_us = time_last_imu;
+    end
+    
 
     ret = isTimedOut(last_gps_fail_us,10000000);        %从第一进入后10s返回true
     

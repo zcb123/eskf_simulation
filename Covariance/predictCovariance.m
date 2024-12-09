@@ -56,10 +56,8 @@ function predictCovariance()
 					 || is_manoeuvre_level_high...                                      %manoeuvre:操纵
 					 || fault_status.flags.bad_acc_vertical);
     
-    persistent prev_dvel_bias_var
-    if isempty(prev_dvel_bias_var)
-        prev_dvel_bias_var = zeros(3,3);
-    end
+    global prev_dvel_bias_var;
+  
     assignin("base","do_inhibit_all_axes",do_inhibit_all_axes);
 	for stateIndex = 12 : 14 
 		index = stateIndex - 11;
