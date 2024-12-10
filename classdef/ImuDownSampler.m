@@ -65,8 +65,8 @@ classdef ImuDownSampler<handle
 		        obj.imu_down_sampled.delta_ang = Quaternion_to_AxisAngle(obj.delta_angle_accumulated,single(1e-7))';
 		        ret = logical(true);
             end       
-            assignin("base","ang_out",obj.imu_down_sampled.delta_ang);
-            assignin("base","vel_out",obj.imu_down_sampled.delta_vel);
+%             assignin("base","ang_out",obj.imu_down_sampled.delta_ang);
+%             assignin("base","vel_out",obj.imu_down_sampled.delta_vel);
 %             assignin("base","quat_angle_out",quat_angle_out);
         end
         function res = getDownSampledImuAndTriggerReset(obj)

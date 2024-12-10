@@ -4,7 +4,7 @@ function quat = Quaternion_from_AxisAngle_3arg(angle,ZERO,axis)
         if length(angle) == 3
             angle_len = norm(angle);
              
-            if angle_len < 1e-6
+            if angle_len < 1e-10
                     quat = single([1 0 0 0]');
                 return;
             end

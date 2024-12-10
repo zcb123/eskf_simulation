@@ -31,7 +31,7 @@ function controlMagFusion()
     if ~control_status.flags.in_air
         control_status.flags.mag_aligned_in_flight = false;  
     end
-
+    %倾斜对齐未完成，只进行航向角0更新。只改变协方差矩阵P，不改变状态变量
     if(params.mag_fusion_type >= NONE||control_status.flags.mag_fault||~control_status.flags.tilt_align) 
         
         if noOtherYawAidingThanMag()

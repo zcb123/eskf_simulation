@@ -1,0 +1,34 @@
+classdef IntegratorConing<Integrator
+
+    properties
+        beta;
+        last_delta_alpha;
+        last_alpha;
+    end
+
+    methods
+        function obj = IntegratorConing()
+            obj.beta = [0 0 0]';
+            obj.last_alpha = [0 0 0]';
+            obj.last_delta_alpha = [0 0 0]';
+        end
+         function obj = put(obj,val,dt)
+            if ((dt > obj.DT_MIN) && (obj.integral_dt + dt < DT_MAX)) 
+			
+			    delta_alpha = (integrate(val, dt));
+    
+			    
+			    obj.beta = obj.beta + cross((obj.last_alpha + obj.last_delta_alpha * (1/6)) , delta_alpha) * 0.5;
+			    obj.last_delta_alpha = delta_alpha;
+			    obj.last_alpha = obj.alpha;
+    
+			    
+			    obj.alpha = obj.alpha + delta_alpha;
+
+	        else 
+		        obj.reset();
+		        obj.last_val = val;
+	        end
+        end
+    end
+

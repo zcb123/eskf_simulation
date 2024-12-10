@@ -1,6 +1,6 @@
 function ret = collect_gps(gps)
 
-    global states filter_initialised 
+    global states filter_initialised  params;
     global gps_checks_passed NED_origin_initialised gps_alt_ref gps_acc_changed gps_prev;
     global mag_declination_gps mag_inclination_gps mag_strength_gps mag_yaw_reset_req;
     global pos_ref ;

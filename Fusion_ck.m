@@ -88,13 +88,13 @@ for i = 1:len_t
 
         controlHeightSensorTimeouts();
         
-%         controlMagFusion();
+        controlMagFusion();
 %                     
         controlGpsFusion();
 %                     
-%         controlHeightFusion();
-% 
-%         controlZeroVelocityUpdate();
+        controlHeightFusion();
+
+        controlZeroVelocityUpdate();
 
         
 %         set(h,'ZData',P)

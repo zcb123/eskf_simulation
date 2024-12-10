@@ -14,6 +14,7 @@ classdef MapProjection < handle
 
 %             initReference(obj,lat_0,lon_0,timestamp);
             obj.ref_init_done = false;
+            obj.ref_timestamp = 0;
         end
 
         function MapProjection_init(lat_0,lon_0,timestamp)

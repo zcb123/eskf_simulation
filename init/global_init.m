@@ -99,6 +99,7 @@ params.static_pressure_coef_yp = 0;
 params.static_pressure_coef_yn = 0;
 params.static_pressure_coef_z = 0;
 params.max_correction_airspeed = 20;
+params.quat_max_variance = 0.0001;
 
 params.mag_delay_ms = 0;		%/< magnetometer measurement delay relative to the IMU (mSec)
 params.baro_delay_ms = 0;		%/< barometer height measurement delay relative to the IMU (mSec)
@@ -116,6 +117,14 @@ params.vert_innov_test_lim = 3;
 params.vert_innov_test_min = 1;
 params.acc_bias_lim = 0.4;
 
+params.req_nsats = 6 ;
+params.req_pdop = 2;
+params.req_hacc = 5;
+params.req_vacc = 8;
+params.req_sacc = 1;
+params.req_vdrift = 0.5;
+params.req_hdrift = 0.3;
+params.gps_check_mask = 21;
 
 control_status.flags.tilt_align = false;
 control_status.flags.yaw_align = 1;
@@ -293,7 +302,17 @@ time_last_flow_terrain_fuse = uint64(0);
 time_last_of_fuse = uint64(0);
 time_last_ver_vel_fuse = uint64(0);
 time_last_gps_yaw_fuse = uint64(0);
-
+ 
+global MASK_GPS_NSATS MASK_GPS_PDOP MASK_GPS_HACC MASK_GPS_VACC MASK_GPS_SACC MASK_GPS_HDRIFT MASK_GPS_VDRIFT MASK_GPS_HSPD MASK_GPS_VSPD;
+MASK_GPS_NSATS = bitshift(1,0);
+MASK_GPS_PDOP  = bitshift(1,1);
+MASK_GPS_HACC  = bitshift(1,2);
+MASK_GPS_VACC   = bitshift(1,3);
+MASK_GPS_SACC   = bitshift(1,4);
+MASK_GPS_HDRIFT = bitshift(1,5);
+MASK_GPS_VDRIFT = bitshift(1,6);
+MASK_GPS_HSPD   = bitshift(1,7);
+MASK_GPS_VSPD   = bitshift(1,8);
 
 global gps_velD_diff_filt
 gps_velD_diff_filt = 0;

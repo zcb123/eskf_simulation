@@ -72,13 +72,13 @@ function controlGpsFusion()
                 disp("GPS bad")
             end
         else
-            if starting_conditions_passing
+            if starting_conditions_passing  %完成倾斜对齐和航向对齐且NED初始位置初始化成功之后才会开始GPS校正.NED_origin_initialised至少在10s后才可能为true
 
                   startGpsFusion(gps_sample_delayed);
 
             elseif gps_checks_passing&&~control_status.flags.yaw_align && (params.mag_fusion_type == 5) %NONE = 5
                 
-                if (resetYawToEKFGSF()) 
+                if resetYawToEKFGSF()
 
                     resetVelocityToGps(gps_sample_delayed);
 					resetHorizontalPositionToGps(gps_sample_delayed);

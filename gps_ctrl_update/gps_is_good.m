@@ -1,6 +1,6 @@
 function ret = gps_is_good(gps)
 
-    global control_status params gps_check_fail_status;
+    global control_status params gps_check_fail_status states;
     global last_gps_fail_us last_gps_pass_us time_last_imu;
     global gps_pos_prev gps_alt_prev gps_pos_deriv_filt gps_velNE_filt gps_velD_diff_filt;
     % Check the fix type
@@ -19,18 +19,18 @@ function ret = gps_is_good(gps)
 	% Check the reported speed accuracy
 	gps_check_fail_status.flags.sacc = (gps.sacc > params.req_sacc);
 
-	% check if GPS quality is degraded(退化)
-	gps_error_norm = fmaxf((gps.eph / params.req_hacc), (gps.epv / params.req_vacc));
-	gps_error_norm = fmaxf(gps_error_norm, (gps.sacc / params.req_sacc));
+	% check if GPS quality is degraded(退化) 在其他地方用
+% 	gps_error_norm = fmaxf((gps.eph / params.req_hacc), (gps.epv / params.req_vacc));
+% 	gps_error_norm = fmaxf(gps_error_norm, (gps.sacc / params.req_sacc));
 
 	% Calculate time lapsed since last update, limit to prevent numerical errors and calculate a lowpass filter coefficient
 	filt_time_const = 10.0;
-	dt = saturation(double(int64_t(time_last_imu) - int64_t(gps_pos_prev.getProjectionReferenceTimestamp())) * 1e-6, 0.001, filt_time_const);
+	dt = saturation(double(time_last_imu) - double(gps_pos_prev.getProjectionReferenceTimestamp()) * 1e-6, 0.001, filt_time_const);
 	filter_coef = dt / filt_time_const;
 
 	% The following checks are only valid when the vehicle is at rest
-	lat = gps.lat * 1.0e-7;
-	lon = gps.lon * 1.0e-7;
+	lat = double(gps.lat) * 1.0e-7;
+	lon = double(gps.lon) * 1.0e-7;
 
 	if (~control_status.flags.in_air && control_status.flags.vehicle_at_rest) 
 		% Calculate position movement since last measurement
@@ -92,7 +92,7 @@ function ret = gps_is_good(gps)
 
 	% Check  the filtered difference between GPS and EKF vertical velocity
 	vz_diff_limit = 10.0* params.req_vdrift;
-	vertVel = [gps.vel_ned(3) - states.vel(3), -vz_diff_limit, vz_diff_limit];
+	vertVel = saturation(gps.vel_ned(3) - states.vel(3), -vz_diff_limit, vz_diff_limit);
 	gps_velD_diff_filt = vertVel * filter_coef + gps_velD_diff_filt * (1.0- filter_coef);
 	gps_check_fail_status.flags.vspeed = (fabsf(gps_velD_diff_filt) > params.req_vdrift);
 
@@ -102,7 +102,7 @@ function ret = gps_is_good(gps)
 	end
 
 	% if any user selected checks have failed, record the fail time
-	
+	global MASK_GPS_NSATS MASK_GPS_PDOP MASK_GPS_HACC MASK_GPS_VACC MASK_GPS_SACC MASK_GPS_HDRIFT MASK_GPS_VDRIFT MASK_GPS_HSPD MASK_GPS_VSPD
 	if 	 gps_check_fail_status.flags.fix ||...
 		(gps_check_fail_status.flags.nsats   && bitand(params.gps_check_mask , MASK_GPS_NSATS)) ||...
 		(gps_check_fail_status.flags.pdop    && bitand(params.gps_check_mask , MASK_GPS_PDOP)) ||...
@@ -113,7 +113,7 @@ function ret = gps_is_good(gps)
 		(gps_check_fail_status.flags.vdrift  && bitand(params.gps_check_mask , MASK_GPS_VDRIFT)) ||...
 		(gps_check_fail_status.flags.hspeed  && bitand(params.gps_check_mask , MASK_GPS_HSPD)) ||...
 		(gps_check_fail_status.flags.vspeed  && bitand(params.gps_check_mask , MASK_GPS_VSPD))
-
+        %以上有一个没通过则gps检查未通过
 		last_gps_fail_us = time_last_imu;
 
 	else 

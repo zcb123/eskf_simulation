@@ -68,9 +68,9 @@ for i = 1:len_t
         controlHeightFusion();
    
         controlZeroVelocityUpdate();
-     
+%     
         controlFakePosFusion();
-    
+%    
         
     end
     dTheta_display(i,:) = dTheta;
@@ -96,16 +96,10 @@ figure('Name','ang_bias_display')
 plot(ang_bias_display,'*-');
 figure('Name','delta_ang_bias_dispaly')
 plot(delta_ang_bias_dispaly,'*-');
-%%
 eskf_t = double(data.ESKF.t)/1e6;
 figure
 plot(eskf_t,data.ESKF.roll,'*-');
 hold on
-plot(vehicle_t,euler(:,1),'*-')
-figure
-plot(eskf_t,data.ESKF.pitch,'*-');
-hold on
-plot(vehicle_t,euler(:,2),'*-')
 % figure
 % plot(vel_display)
 % figure

@@ -3,6 +3,7 @@ function fuse(K,innovation)
 global states;
 
 dTheta = -K(1:3,1)*innovation;
+% tmp = toAxisAngle(dTheta);
 tmp_q = Quaternion_from_AxisAngle_3arg(dTheta);
 states.quat_nominal = quatMult(tmp_q,states.quat_nominal);
 states.quat_nominal = quat_normalize(states.quat_nominal);
@@ -15,5 +16,6 @@ states.mag_B = states.mag_B - K(19:21,1)*innovation;
 states.wind_vel = states.wind_vel - K(22:23,1)*innovation;
 
 
-% assignin("base","states_delta_ang_bias",states.delta_ang_bias);
+assignin("base","dTheta",dTheta);
+assignin("base",'ang_bias',K(10:12,1)*innovation);
 end

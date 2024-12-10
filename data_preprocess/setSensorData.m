@@ -40,7 +40,7 @@ function updated = setSensorData(i,gyro_filted,acc_filted,vehicle_t,vehicle_dt,d
     updated = setIMUData(imu_sample_new);
 
     rtk_dt = data.RTK.t - vehicle_t(i,1)*1e6;
-    rtk_index = find(rtk_dt<1e3,1,'last');
+    rtk_index = find(rtk_dt<1e5,1,'last');
     if rtk_index_last ~= rtk_index
 
         rtk_index_last = rtk_index;
@@ -75,10 +75,10 @@ function updated = setSensorData(i,gyro_filted,acc_filted,vehicle_t,vehicle_dt,d
     if mag_index_last ~= mag_index
         mag_index_last = mag_index;
 		magSample.time_us = data.MAG.t(mag_index);
-        mag_bx = double(data.MAG.Y(mag_index,1));
+        mag_bx = double(data.MAG.Y(mag_index,1));    %包含坐标系旋转
         mag_by = double(data.MAG.X(mag_index,1));
         mag_bz = double(data.MAG.Z(mag_index,1));
-        magSample.mag = [mag_bx*0.003 mag_by*0.003 mag_bz*0.003]'; %包含坐标系旋转  
+        magSample.mag = [mag_bx*0.003 mag_by*0.003 mag_bz*0.003]';  
 
         setMagData(magSample);
 

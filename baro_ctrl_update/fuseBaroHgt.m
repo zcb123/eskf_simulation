@@ -3,8 +3,7 @@ function fuseBaroHgt()
     global baro_sample_delayed baro_hgt_offset;
     global baro_b_est;
 	% vertical position innovation - baro measurement has opposite sign to earth z axis
-	% to do : 加入气压计高度bias的估计
-
+	
     unbiased_baro = baro_sample_delayed.hgt - baro_b_est.getBias();
 
 	baro_hgt_innov = states.pos(3) + unbiased_baro - baro_hgt_offset;

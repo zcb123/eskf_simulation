@@ -1,5 +1,5 @@
 function [int_acc,int_dt,int_flag] = acc_integral(val,dt)
-    DT_MIN = 0.001;
+    DT_MIN = 1.17549435e-38;
     DT_MAX = 0.65535;
     reset_samples_min = 8;
     reset_interval_min = 0.00375;

@@ -5,7 +5,7 @@ function controlHeightFusion()
     global baro_data_ready gps_data_ready;
     global baro_hgt_intermittent gps_intermittent;
 
-    do_range_aid = false;
+    do_range_aid = false; %没有用到range_finder 这里恒为false; is_range_aid_suitable = false
     switch (params.vdist_sensor_type) 
 	
 	case 0

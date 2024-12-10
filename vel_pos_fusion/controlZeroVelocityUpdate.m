@@ -5,11 +5,12 @@ function controlZeroVelocityUpdate()
 	zero_velocity_update_data_ready = isTimedOut(time_last_zero_velocity_fuse, 2e5);
 
 	if (zero_velocity_update_data_ready) 
+        %vehicle_at_rest 只有在飞行器静止，加计和陀螺仪变化很小时才会置true
 	    continuing_conditions_passing = control_status.flags.vehicle_at_rest ...
 				&& control_status_prev.flags.vehicle_at_rest;
 				
 
-		if (continuing_conditions_passing) 
+		if (continuing_conditions_passing)  
 			vel_obs = [0 0 0]';
 			innovation = states.vel - vel_obs;
 

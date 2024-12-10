@@ -5,11 +5,11 @@ function controlHeightSensorTimeouts()
     global gps_checks_passed gps_hgt_accurate gps_intermittent gps_sample_delayed;
     global time_last_hgt_fuse baro_hgt_faulty baro_hgt_intermittent;
 
-    checkVerticalAccelerationHealth();
+    checkVerticalAccelerationHealth();      % 更新下面用的time_good_vert_accel变量
 
     continuous_bad_accel_hgt = isTimedOut(time_good_vert_accel, params.bad_acc_reset_delay_us);%bad_acc_reset_delay_us = 500000
 
-    hgt_fusion_timeout = isTimedOut(time_last_hgt_fuse, 5e6);
+    hgt_fusion_timeout = isTimedOut(time_last_hgt_fuse, 5e6);       %time_last_hgt_fuse 只在fuseVelPosHeight 里更新
 
     if (hgt_fusion_timeout || continuous_bad_accel_hgt) 
     
