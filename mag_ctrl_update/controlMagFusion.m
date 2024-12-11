@@ -33,13 +33,12 @@ function controlMagFusion()
     end
 
     if(params.mag_fusion_type >= NONE||control_status.flags.mag_fault||~control_status.flags.tilt_align) 
+
+        stopMagFusion();
         
         if noOtherYawAidingThanMag()
-
-            is_yaw_fusion_inhibited = true;
-                
+            is_yaw_fusion_inhibited = true;                
             fuseHeading(nan,nan)%航向角0更新
-
             is_yaw_fusion_inhibited = false;
         end
 

@@ -373,7 +373,7 @@ function predictCovariance()
 	
 	mR00 = R_to_earth(1,1); mR01 = R_to_earth(1,2); mR02 = R_to_earth(1,3);
 	mR10 = R_to_earth(2,1); mR11 = R_to_earth(2,2); mR12 = R_to_earth(2,3);
-	mR20 = R_to_earth(3,1); mR21 = R_to_earth(3,2); mR22 = R_to_earth(3,3);%这里有点问题
+	mR20 = R_to_earth(3,1); mR21 = R_to_earth(3,2); mR22 = R_to_earth(3,2);%这里有点问题
 
         r00_sx = mR00 * daxVar;
         r01_sy = mR01 * dayVar;

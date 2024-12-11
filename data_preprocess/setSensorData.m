@@ -42,14 +42,20 @@ function updated = setSensorData(i,gyro_filted,acc_filted,vehicle_t,vehicle_dt,d
     rtk_dt = data.RTK.t - vehicle_t(i,1)*1e6;
     rtk_index = find(rtk_dt<1e5,1,'last');
     if rtk_index_last ~= rtk_index
-
+        head_offset = double(params.gps_yaw_offset)/57.3;
         rtk_index_last = rtk_index;
 		gps_msg.time_us = data.RTK.t(rtk_index,1);
 		gps_msg.lat = data.RTK.lat(rtk_index,1) ;%日志里已经把系数乘了，这里不再乘
 		gps_msg.lon = data.RTK.lon(rtk_index,1) ;
 		gps_msg.alt = data.RTK.alt(rtk_index,1) ;
-		gps_msg.yaw = data.RTK.hding(rtk_index,1)/57.3;%data.RTK.heading;
-		gps_msg.yaw_offset = params.gps_yaw_offset/57.3;
+        heading = data.RTK.hding(rtk_index,1)/57.3 - head_offset;%data.RTK.heading;
+        if(heading > pi) 
+						heading = heading - 2 * pi;		
+        elseif(heading < -pi)
+						heading = heading + 2 * pi;
+        end
+		gps_msg.yaw = heading;
+		gps_msg.yaw_offset = head_offset;
 		gps_msg.fix_type = data.RTK.fix(rtk_index,1);
 		gps_msg.eph = 0.01;%data.RTK.hstd;
 		gps_msg.epv = 0.01;%data.RTK.vstd;

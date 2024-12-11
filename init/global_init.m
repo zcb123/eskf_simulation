@@ -126,6 +126,8 @@ params.req_vdrift = 0.5;
 params.req_hdrift = 0.3;
 params.gps_check_mask = 21;
 
+params.no_aid_timeout_max = 1000000;
+
 control_status.flags.tilt_align = false;
 control_status.flags.yaw_align = 1;
 control_status.flags.mag_3D = 1;
@@ -149,6 +151,8 @@ control_status.flags.ev_vel = false;
 control_status.flags.ev_yaw = false;
 control_status.flags.fuse_beta = false;
 control_status.flags.fuse_aspd = false;
+control_status.flags.inertial_dead_reckoning = false;
+
 
 global control_status_prev;
 % control_status.value = sum(control_status.flags.)

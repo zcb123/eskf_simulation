@@ -17,10 +17,13 @@ function fuseBaroHgt()
 
 		if (baro_hgt_innov < -deadzone_start) 
 			if (baro_hgt_innov <= -deadzone_end) 
+
 				baro_hgt_innov = baro_hgt_innov + deadzone_end;
 
-			else 
+            else 
+
 				baro_hgt_innov = -deadzone_start;
+                
 			end
 		end
 	end

@@ -22,7 +22,7 @@ function reset_eskf()
 % 	_range_sensor.setQualityHysteresis(_params.range_valid_quality_s);
     
     control_status.flags = zerosStruct(control_status.flags);
-    control_status_prev.flags = zerosStruct(control_status_prev.flags);
+    control_status_prev = control_status;
 
     control_status.flags.in_air = true;
     control_status_prev.flags.in_air = true;

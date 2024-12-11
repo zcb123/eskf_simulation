@@ -1,7 +1,8 @@
 function resetQuatStateYaw(yaw,yaw_variance,update_buffer)
     
     global output_new output_buffer;
-    global states P R_to_earth FLT_EPSILON;    	
+    global states P R_to_earth FLT_EPSILON;
+    
 	quat_before_reset = states.quat_nominal;
 
 	R_to_earth = updateYawInRotMat(yaw, Quat2Tbn(states.quat_nominal));

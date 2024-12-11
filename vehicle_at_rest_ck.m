@@ -50,28 +50,21 @@ for i = 1:len_t
     if updated
 
         predictCovariance();
- 
         predictState();
-        
         control_status_prev = control_status;
-
-        controlFusionModes();
-
+        controlFusionModes();  
         runYawEKFGSF();
 
         controlHeightSensorTimeouts();
         
         controlMagFusion();
-
-        controlGpsFusion();
-           
+        controlGpsFusion();        
         controlHeightFusion();
-   
-        controlZeroVelocityUpdate();
-     
+        controlZeroVelocityUpdate(); 
         controlFakePosFusion();
-    
-        
+
+        update_deadreckoning_status();
+     
     end
     dTheta_display(i,:) = dTheta;
     ang_bias_display(i,:) = ang_bias;
