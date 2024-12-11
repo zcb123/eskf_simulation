@@ -40,7 +40,7 @@ function updated = setSensorData(i,gyro_filted,acc_filted,vehicle_t,vehicle_dt,d
     updated = setIMUData(imu_sample_new);
 
     rtk_dt = data.RTK.t - vehicle_t(i,1)*1e6;
-    rtk_index = find(rtk_dt<1e5,1,'last');
+    rtk_index = find(rtk_dt<1e3,1,'last');
     if rtk_index_last ~= rtk_index
         head_offset = double(params.gps_yaw_offset)/57.3;
         rtk_index_last = rtk_index;

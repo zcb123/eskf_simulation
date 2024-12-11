@@ -62,7 +62,7 @@ classdef ImuDownSampler<handle
 	        if ((obj.accumulated_samples >= obj.required_samples && obj.imu_down_sampled.delta_ang_dt > obj.min_dt_s)...
 	            || (obj.imu_down_sampled.delta_ang_dt > obj.target_dt_s)) 
         
-		        obj.imu_down_sampled.delta_ang = Quaternion_to_AxisAngle(obj.delta_angle_accumulated,single(1e-7))';
+		        obj.imu_down_sampled.delta_ang = Quaternion_to_AxisAngle(obj.delta_angle_accumulated)';
 		        ret = logical(true);
             end       
 %             assignin("base","ang_out",obj.imu_down_sampled.delta_ang);

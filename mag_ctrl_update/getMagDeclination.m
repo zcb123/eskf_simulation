@@ -1,12 +1,12 @@
 function res = getMagDeclination()
     global states control_status params;
     global NED_origin_initialised mag_declination_gps;
-    USE_GEO_DECL = 1;
+    USE_GEO_DECL = bitshift(1,0);
     if (control_status.flags.mag_aligned_in_flight) 
 		% Use value consistent with earth field state
 		res = atan2(states.mag_I(2), states.mag_I(1));
         return
-    elseif (params.mag_declination_source && USE_GEO_DECL) 
+    elseif bitand(params.mag_declination_source , USE_GEO_DECL) 
 		% use parameter value until GPS is available, then use value res =ed by geo library
 		if (NED_origin_initialised || ~isnan(mag_declination_gps)) 
 			res = mag_declination_gps;

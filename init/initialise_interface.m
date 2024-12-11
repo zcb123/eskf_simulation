@@ -69,7 +69,20 @@ function ret = initialise_interface(timestamp)
 		ret = false;
         return
     end
+
     %将所有元素置零
+    imu_data_struct = struct('time_us',uint64(0),...
+                            'delta_ang',single([0 0 0]'),...
+                            'delta_vel',single([0 0 0]'),...)
+                            'delta_ang_dt',single(0),...
+                            'delta_vel_dt',single(0),...
+                            'delta_ang_clipping',logical([0 0 0]'),...
+                            'delta_vel_clipping',logical([0 0 0]'));
+    
+    for i = 1:imu_buffer.len
+        imu_buffer.elements{i,1} = imu_data_struct;           %初始化为零,以防后面调用出错
+    end
+    
     output = struct('time_us',uint64(0),'quat_nominal',single([1 0 0 0]'),'vel',single([0 0 0]'),'pos',single([0 0 0]'));
     for i = 1:output_buffer.len
         output_buffer.elements{i,1} = output;

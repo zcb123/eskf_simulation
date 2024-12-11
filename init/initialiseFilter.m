@@ -30,7 +30,7 @@ function ret = initialiseFilter()
         gyro_lpf.update(gyro_tmp);
     end
     
-    if mag_buffer.len >=1    %磁力计数据初始化成功
+    if mag_buffer.len >=1    %磁力计数据buffer初始化成功
 %         mag_sample = imu_sample_delayed;
         [mag_sample,mag_updated] = mag_buffer.pop_first_older_than(imu_sample_delayed.time_us);
         if mag_updated
@@ -43,7 +43,7 @@ function ret = initialiseFilter()
         end
     end
 
-    if baro_buffer.len >=1    %气压计数据初始化成功
+    if baro_buffer.len >=1    %气压计数据buffer初始化成功
         [baro_sample_delayed,bar_updated] = baro_buffer.pop_first_older_than(imu_sample_delayed.time_us);
 
         if bar_updated && baro_sample_delayed.time_us ~=0

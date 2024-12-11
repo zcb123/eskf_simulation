@@ -5,9 +5,7 @@ function ret = resetMagHeading(increase_yaw_var,update_buffer)
     global mag_lpf
     global MAG_3D INDOOR;
  % prevent a reset being performed more than once on the same frame
-	if (imu_sample_delayed.time_us == flt_mag_align_start_time) 
-
-
+	if (imu_sample_delayed.time_us == flt_mag_align_start_time) %flt_mag_align_start_timeflt_mag_align_start_time这个值在航向校正后更新
 		ret = true;
         return;
 	end
@@ -21,7 +19,6 @@ function ret = resetMagHeading(increase_yaw_var,update_buffer)
 	mag_init = mag_lpf.getState();
 
 	% calculate the observed yaw angle and yaw variance
-	yaw_new = 0;
 	yaw_new_variance = 0;
 
 	heading_required_for_navigation = control_status.flags.gps || control_status.flags.ev_pos;

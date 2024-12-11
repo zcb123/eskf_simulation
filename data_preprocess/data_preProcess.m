@@ -4,7 +4,7 @@ close all
 load("data/N41_2024-11-19_11-19-29.mat");
 
 run("global_init.m");
-
+run("geo_magnetic_tables.m")
 len = length(data.IMU1.t);
 imu_t = double(data.IMU1.t)/1e6;
 imu_dt = 0.002*ones(len,1);
@@ -119,9 +119,11 @@ acc_filted = zeros(len_t,3);
 gyro_filted = zeros(len_t,3);
 
 for i=1:len_t
-    [acc_lpf_2o,acc_filted(i,:)] = acc_lpf_2o.apply([vehicle_acc(i,2) vehicle_acc(i,1) -vehicle_acc(i,3)]); %旋转坐标系
-    [gyro_lpf_2o,gyro_filted(i,:)] = gyro_lpf_2o.apply([vehicle_gyro(i,2) vehicle_gyro(i,1) -vehicle_gyro(i,3)]);
-
+    %[acc_lpf_2o,acc_filted(i,:)] = acc_lpf_2o.apply([vehicle_acc(i,2) vehicle_acc(i,1) -vehicle_acc(i,3)]); %旋转坐标系
+    %[gyro_lpf_2o,gyro_filted(i,:)] = gyro_lpf_2o.apply([vehicle_gyro(i,2) vehicle_gyro(i,1) -vehicle_gyro(i,3)]);
+    %暂时取消二阶低通滤波
+    acc_filted(i,:) = [vehicle_acc(i,2) vehicle_acc(i,1) -vehicle_acc(i,3)];
+    gyro_filted(i,:) = [vehicle_gyro(i,2) vehicle_gyro(i,1) -vehicle_gyro(i,3)];
 end
 %%
 figure('Name','acc_filted and frame transform')

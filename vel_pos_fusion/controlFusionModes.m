@@ -1,8 +1,11 @@
 function controlFusionModes()
-    global control_status params imu_sample_delayed R_to_earth ang_rate_delayed_raw;
+    global control_status control_status_prev params imu_sample_delayed R_to_earth ang_rate_delayed_raw;
     global baro_buffer gps_buffer baro_sample_delayed gps_sample_delayed;
     global baro_hgt_intermittent delta_time_baro_us time_last_baro baro_data_ready;
     global gps_intermittent time_prev_gps_us gps_hgt_accurate time_last_gps gps_data_ready;
+
+    control_status_prev = control_status;
+
     BARO_MAX_INTERVAL = 2e5;
     GPS_MAX_INTERVAL = 5e5;
     if~control_status.flags.tilt_align
