@@ -7,6 +7,8 @@ function  calculateOutputStates(imu,correct_updated)
     global output_buffer output_new ;
  
     global delta_angle_corr;
+    global yaw_rate_lpf_ef;
+
     persistent vel_err_integ;
     persistent pos_err_integ;
    
@@ -26,6 +28,8 @@ function  calculateOutputStates(imu,correct_updated)
     spin_del_ang_D = sum(delta_angle.*R_to_earth_now(3,:)');
     yaw_delta_ef = yaw_delta_ef + spin_del_ang_D;
 
+    yaw_rate_lpf_ef = 0.95*yaw_rate_lpf_ef + 0.05*spin_del_ang_D / imu.delta_ang_dt;
+
 	output_new.time_us = imu.time_us;
 
 	dq = Quaternion_from_AxisAngle_3arg(delta_angle);
@@ -38,7 +42,7 @@ function  calculateOutputStates(imu,correct_updated)
 	delta_vel_body = imu.delta_vel - states.delta_vel_bias * dt_scale_correction;
 
 	delta_vel_earth = R_to_earth_now * delta_vel_body;
-	delta_vel_earth(2) = delta_vel_earth(2) + CONSTANTS_ONE_G * imu.delta_vel_dt;
+	delta_vel_earth(3) = delta_vel_earth(3) + CONSTANTS_ONE_G * imu.delta_vel_dt;
 
 % 	if imu.delta_vel_dt > 1e-4 
 % 		vel_deriv = delta_vel_earth * (1.0 / imu.delta_vel_dt);
@@ -56,7 +60,6 @@ function  calculateOutputStates(imu,correct_updated)
 		ang_rate = imu.delta_ang  / imu.delta_ang_dt;		
 		vel_imu_rel_body = cross(ang_rate, params.imu_pos_body);	
 		vel_imu_rel_body_ned = R_to_earth_now * vel_imu_rel_body;	
-
     end
 
 	if (correct_updated)

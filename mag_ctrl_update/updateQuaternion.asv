@@ -39,9 +39,9 @@ function ret = updateQuaternion(innovation,variance,gate_sigma,yaw_jacobian)
 	% only calculate gains for states we are using
 	Kfusion = zeros(23,1);
     %K = P*H_yaw'/heading_innov_var
-	for row = 1:15 
+	for row = 1:15  %这里只改变前十五个状态
 		for col = 1:3 
-			Kfusion(row) = Kfusion(row) + P(row, col) * yaw_jacobian(col);
+			Kfusion(row) = Kfusion(row) + P(row, col) * yaw_jacobian(col);  %等号右边的Kfufion=0,可以不写
 		end
 
 		Kfusion(row) =Kfusion(row)*heading_innov_var_inv;
@@ -100,11 +100,7 @@ function ret = updateQuaternion(innovation,variance,gate_sigma,yaw_jacobian)
 	%float KH[3];
 
 	for row = 1:23
-
-	
-
-		for column = 1:23
-			
+		for column = 1:23			
 			KHP(row, column) = Kfusion(row) * Kfusion(column) * variance;
 		end
 	end

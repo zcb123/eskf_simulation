@@ -9,7 +9,7 @@ function controlZeroVelocityUpdate()
 	    continuing_conditions_passing = control_status.flags.vehicle_at_rest ...
 				&& control_status_prev.flags.vehicle_at_rest;
 				
-
+%         continuing_conditions_passing = true;
 		if (continuing_conditions_passing)  
 			vel_obs = [0 0 0]';
 			innovation = states.vel - vel_obs;

@@ -4,7 +4,7 @@ function controlFakePosFusion()
     
     fake_pos_data_ready = isTimedOut(time_last_fake_pos_fuse, 2e5); % Fuse fake position at a limited rate 200ms
 
-	if (fake_pos_data_ready)        %每隔200ms都会进入
+	if (fake_pos_data_ready)        %每隔200ms都会进入        第一次必进
 		continuing_conditions_passing = ~isHorizontalAidingActive();    %没有其他的水平校正源则会运行下面的更新
 		starting_conditions_passing = continuing_conditions_passing;
 
