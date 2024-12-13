@@ -1,5 +1,5 @@
 function reset_eskf()
-    global states output_new delta_angle_corr control_status control_status_prev ang_rate_delayed_raw prev_dvel_bias_var;
+    global states output_new delta_angle_corr control_status control_status_prev fault_status ang_rate_delayed_raw prev_dvel_bias_var;
 
     states.quat_nominal = [1 0 0 0]';
     states.vel = zeros(3,1);
@@ -26,9 +26,10 @@ function reset_eskf()
 
     control_status.flags.in_air = true;
     control_status_prev.flags.in_air = true;
-
+    
     ang_rate_delayed_raw = zeros(3,1);
     
+    fault_status.flags = zerosStruct(fault_status.flags);
     prev_dvel_bias_var = zeros(3,1);
 
     resetGpsDriftCheckFilters();

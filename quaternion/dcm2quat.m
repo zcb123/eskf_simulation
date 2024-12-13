@@ -2,7 +2,7 @@ function q = dcm2quat(R)
 
         t = trace(R);
         q = [1 0 0 0]';
-        if (t > 1) 
+        if (t > 0) 
 			t = sqrt(1 + t);
 			q(1) = 0.5 * t;
 			t = 0.5 / t;

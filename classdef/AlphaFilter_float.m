@@ -16,12 +16,12 @@ classdef AlphaFilter_float < handle
         function obj = reset_filter(obj,sample)
             obj.filter_state = sample;
         end
-        function obj = setParameters(sample_interval,time_constant)
+        function obj = setParameters(obj,sample_interval,time_constant)
             global FLT_EPSILON;
             denominator = time_constant + sample_interval;
-
+            
 		    if denominator > FLT_EPSILON
-			    setAlpha(sample_interval / denominator);
+			    obj.setAlpha(sample_interval / denominator);
             end
 
         end

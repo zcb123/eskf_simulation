@@ -19,7 +19,8 @@ function ret = shouldResetGpsFusion()
 					     && (time_last_hor_vel_fuse > time_last_on_ground_us)...
 					     && (time_last_hor_pos_fuse > time_last_on_ground_us);
 
-	ret = is_reset_required | is_recent_takeoff_nav_failure | is_inflight_nav_failure;
+        
+	ret = is_reset_required || is_recent_takeoff_nav_failure || is_inflight_nav_failure;    %is_recent_takeoff_nav_failure恒为false;is_inflight_nav_failure恒为false
 
 
 

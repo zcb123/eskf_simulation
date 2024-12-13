@@ -39,20 +39,20 @@ function ret = initialise_interface(timestamp)
 	end
     tmp1 = bitor(EVPOS ,EVYAW);
     tmp2 = bitor(tmp1,EVVEL);
-	if bitand(params.fusion_mode,uint8(tmp2))
+	if bitand(params.fusion_mode,uint16(tmp2))
 		max_time_delay_ms = max(params.ev_delay_ms, max_time_delay_ms);
 	end
 
 	filter_update_period_ms = params.filter_update_interval_us / 1000;
 
 	% 计算适应最大延迟所需的IMU缓冲区长度，并留出一些抖动余量
-	imu_buffer_length = ceil(max_time_delay_ms / filter_update_period_ms);
-
+	imu_buffer_length = ceil(max_time_delay_ms / filter_update_period_ms);  %向数轴右边取整
+    
 	% set the observation buffer length to handle the minimum time of arrival between observations in combination
 	% with the worst case delay from current time to ekf fusion time
 	% allow for worst case 50% extension of the ekf fusion time horizon delay due to timing jitter
 	ekf_delay_ms = max_time_delay_ms * 1.5;
-	obs_buffer_length = round(ekf_delay_ms / filter_update_period_ms);
+	obs_buffer_length = round(ekf_delay_ms / filter_update_period_ms);      %默认对小数点后一位四舍五入 
 
 	% limit to be no longer than the IMU buffer (we can't process data faster than the EKF prediction rate)
 	obs_buffer_length = min(obs_buffer_length, imu_buffer_length);

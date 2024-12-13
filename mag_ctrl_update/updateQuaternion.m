@@ -41,22 +41,12 @@ function ret = updateQuaternion(innovation,variance,gate_sigma,yaw_jacobian)
     %K = P*H_yaw'/heading_innov_var
 	for row = 1:15  %这里只改变前十五个状态
 		for col = 1:3 
-			Kfusion(row) = Kfusion(row) + P(row, col) * yaw_jacobian(col);  %等号右边的Kfufion=0,可以不写
+			Kfusion(row) = Kfusion(row) + P(row, col) * yaw_jacobian(col);  %
 		end
 
 		Kfusion(row) =Kfusion(row)*heading_innov_var_inv;
 	end
-
-% 	if (control_status.flags.wind) 固定翼的不用 注释掉
-% 		for row = 21; row <= 22; row++) 
-% 			for col = 0; col <= 2; col++) 
-% 				Kfusion(row) += P(row, col) * yaw_jacobian(col);
-% 			end
-% 
-% 			Kfusion(row) *= heading_innov_var_inv;
-% 		end
-% 	end
-
+%     disp(Kfusion(10:12,1))
 	% innovation test ratio
 	yaw_test_ratio = sq(innovation) / (sq(gate_sigma) * heading_innov_var);
 
@@ -65,21 +55,14 @@ function ret = updateQuaternion(innovation,variance,gate_sigma,yaw_jacobian)
 
 	% set the magnetometer unhealthy if the test fails
 	if (yaw_test_ratio > 1.0) 
-		%_innov_check_fail_status.flags.reject_yaw = true;
+		
         disp('reject yaw updateQuaternion');
-		% if we are in air we don't want to fuse the measurement
-		% we allow to use it when on the ground because the large innovation could be caused
-		% by interference or a large initial gyro bias
+		
 		if (~control_status.flags.in_air && isTimedOut(time_last_in_air, 5e6)) 
-			% constrain the innovation to the maximum set by the gate
-			% we need to delay this forced fusion to avoid starting it
-			% immediately after touchdown, when the drone is still armed
+			
 			gate_limit = sqrt((sq(gate_sigma) * heading_innov_var));
 			heading_innov = saturation(innovation, -gate_limit, gate_limit);
-
-			% also reset the yaw gyro variance to converge faster and avoid
-			% being stuck on a previous bad estimate
-			%resetZDeltaAngBiasCov();
+		
             disp('resetZDeltaAngBiasCov()');
 		else 
 			ret = false;
@@ -101,17 +84,17 @@ function ret = updateQuaternion(innovation,variance,gate_sigma,yaw_jacobian)
 
 	for row = 1:23
 		for column = 1:23			
-			KHP(row, column) = Kfusion(row) * Kfusion(column) * variance;
+			KHP(row, column) = Kfusion(row) * Kfusion(column) * variance;       %目前variance是个常值
 		end
 	end
-
+    
 	healthy = checkAndFixCovarianceUpdate(KHP);
 
 	fault_status.flags.bad_hdg = ~healthy;
 
 	if (healthy) 
 		% apply the covariance corrections
-		P = P- KHP;
+		P = P- KHP;         %KHP(10:12,10:12)很小，这里对协方差矩阵的补偿很小
 
 		fixCovarianceErrors(true);
 

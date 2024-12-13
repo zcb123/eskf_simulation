@@ -1,10 +1,10 @@
+%输出offset_rate_correction
 function updateBaroHgtOffset()
     
 
     global stattes control_status  baro_b_est baro_sample_delayed
     global baro_data_ready delta_time_baro_us baro_hgt_offset
-    % calculate a filtered offset between the baro origin and local NED origin if we are not
-	% using the baro as a height reference
+   
 	if (~control_status.flags.baro_hgt && baro_data_ready && (delta_time_baro_us ~= 0)) 
 		local_time_step = saturation(1e-6*delta_time_baro_us, 0, 1);
 

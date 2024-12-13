@@ -1,9 +1,9 @@
 function ret = canResetMagHeading()
 
 
-    global control_status params;
+    global control_status params NONE;
     
-    ret = ~control_status.flags.mag_field_disturbed && params.mag_fusion_type ~= 5;%NONE = 5
+    ret = ~control_status.flags.mag_field_disturbed && params.mag_fusion_type ~= NONE;%NONE = 5
 
 end
 

@@ -40,7 +40,7 @@ FUSE_DECL = bitshift(1,2);
 %%
 global params control_status fault_status innov_check_fail_status;
 
-params.fusion_mode = 128;
+params.fusion_mode = bitor(GPS,GPSYAW);
 params.vdist_sensor_type = 1; %0:BARO 1:GNSS 2:RANGE 3:EV
 params.gyro_noise = single(1.5e-2);
 params.accel_noise = single(3.5e-1);
@@ -59,7 +59,9 @@ params.gps_pos_body = single([0 0 0]');
 params.vel_Tau = single(0.25);
 params.pos_Tau = single(0.25);
 params.filter_update_interval_us = single(8000);
-
+params.mag_delay_ms = 0;		%/< magnetometer measurement delay relative to the IMU (mSec)
+params.baro_delay_ms = 0;		%/< barometer height measurement delay relative to the IMU (mSec)
+params.gps_delay_ms = 110;		%/< GPS measurement delay relative to the IMU (mSec)
 
 params.wind_vel_p_noise = single(1e-1);
 params.wind_vel_p_noise_scaler = single(0.5);
@@ -100,10 +102,8 @@ params.static_pressure_coef_yn = 0;
 params.static_pressure_coef_z = 0;
 params.max_correction_airspeed = 20;
 params.quat_max_variance = 0.0001;
+params.baro_drift_rate = 0.005;
 
-params.mag_delay_ms = 0;		%/< magnetometer measurement delay relative to the IMU (mSec)
-params.baro_delay_ms = 0;		%/< barometer height measurement delay relative to the IMU (mSec)
-params.gps_delay_ms = 110;		%/< GPS measurement delay relative to the IMU (mSec)
 params.airspeed_delay_ms = 100;	%/< airspeed measurement delay relative to the IMU (mSec)
 params.flow_delay_ms = 5;		%/< optical flow measurement delay relative to the IMU (mSec) - this is to the middle of the optical flow integration interval
 params.range_delay_ms = 5;		%/< range finder measurement delay relative to the IMU (mSec)
@@ -157,7 +157,7 @@ control_status.flags.inertial_dead_reckoning = false;
 global control_status_prev;
 % control_status.value = sum(control_status.flags.)
 
-fault_status.flags.bad_vel_N = logical(true);
+fault_status.flags.bad_vel_N = logical(false);
 fault_status.flags.bad_hdg = false;
 fault_status.flags.bad_acc_vertical = false;
 fault_status.flags.bad_pos_D = false;
@@ -174,7 +174,7 @@ states = struct('quat_nominal',single([1 0 0 0]'),...
                         'mag_B',single([0 0 0]'),...
                         'wind_vel',single([0 0]'));
 dt_imu_avg = 0.004;
-dt_ekf_avg = 0.008;
+dt_ekf_avg = 0.005;
 R_to_earth = zeros(3,3);
 global k_vel_id k_vel_bias_id
 k_vel_id = 4;

@@ -1,7 +1,7 @@
 function  calculateOutputStates(imu,correct_updated)
  
     global params CONSTANTS_ONE_G
-    global states imu_sample_delayed dt_imu_avg  dt_ekf_avg;
+    global states imu_sample_delayed dt_imu_avg  dt_ekf_avg;        %这里只是使用了states,没有赋值
     global yaw_delta_ef R_to_earth_now;
     
     global output_buffer output_new ;
@@ -43,7 +43,7 @@ function  calculateOutputStates(imu,correct_updated)
 
 	delta_vel_earth = R_to_earth_now * delta_vel_body;
 	delta_vel_earth(3) = delta_vel_earth(3) + CONSTANTS_ONE_G * imu.delta_vel_dt;
-
+    assignin("base","delta_vel_earth",delta_vel_earth);
 % 	if imu.delta_vel_dt > 1e-4 
 % 		vel_deriv = delta_vel_earth * (1.0 / imu.delta_vel_dt);
 %     end     
@@ -67,7 +67,7 @@ function  calculateOutputStates(imu,correct_updated)
         output_buffer.push(output_new);
 		output_delayed = output_buffer.get_oldest();
                
-        quat_nominal_inverse = quat_inverse(states.quat_nominal);
+        quat_nominal_inverse = Quaternion_Inverse(states.quat_nominal);
         assignin('base',"quat_nominal_inverse",quat_nominal_inverse);
         %新旧数据的补偿
         quat_delta_delay = quatMult(quat_nominal_inverse,output_delayed.quat_nominal);

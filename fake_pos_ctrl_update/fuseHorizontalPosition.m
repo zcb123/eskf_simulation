@@ -3,7 +3,7 @@ function [innov_var,test_ratio,ret] = fuseHorizontalPosition(innov,innov_gate,ob
     global P;
     global innov_check_fail_status;
     k_pos_id = 7;
-    innov_var(1) = P(k_pos_id, k_pos_id) + obs_var(1);
+    innov_var(1) = P(k_pos_id, k_pos_id) + obs_var(1);                          %obs_var=0.5*0.5，是常量
 	innov_var(2) = P(k_pos_id+1, k_pos_id+1) + obs_var(2);
 	test_ratio(1) = fmaxf(sq(innov(1)) / (sq(innov_gate) * innov_var(1)),...    %innov_gate == 3
 			      sq(innov(2)) / (sq(innov_gate) * innov_var(2)));              %更新的值不能超过可能落在的范围(gate更新的最大值，var偏离中心位置的最大值)

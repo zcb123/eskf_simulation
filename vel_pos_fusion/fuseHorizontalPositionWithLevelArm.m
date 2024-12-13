@@ -1,6 +1,7 @@
 function [innov_var,test_ratio,ret] = fuseHorizontalPositionWithLevelArm(params,pos_offset, innov, innov_gate, obs_var,inhibit_gate)
     % assign intermediate variables
-    global states P;
+    global states P fault_status;
+    global time_last_hor_pos_fuse  time_last_imu;
 	q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
 	q3 = states.quat_nominal(3);
@@ -192,7 +193,20 @@ function [innov_var,test_ratio,ret] = fuseHorizontalPositionWithLevelArm(params,
 		end
 
 	
-		ret = measurementUpdate(Kfusion, innov_var(index), innov(index));
+		is_fused = measurementUpdate(Kfusion, innov_var(index), innov(index));
 
+        switch (index) 
+            case 1
+                fault_status.flags.bad_pos_N = ~is_fused;
+            case 2
+                fault_status.flags.bad_pos_E = ~is_fused;
+        end
+        
+        if is_fused
+            time_last_hor_pos_fuse = time_last_imu;
+        end
 
+        ret = ret&&is_fused;
+
+    end
 end

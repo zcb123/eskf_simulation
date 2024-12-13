@@ -37,7 +37,7 @@ function controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_de
 		if (control_status.flags.gps_yaw) 
 			if (continuing_conditions_passing) 
                 %%%%
-                fuseGpsYaw(gps_sample_delayed,params,control_status);                           %出货机天线航向偏置180，碳管机偏置90 
+                fuseGpsYaw(gps_sample_delayed);                           %出货机天线航向偏置180，碳管机偏置90 
 				%%%%
                 is_fusion_failing = isTimedOut(time_last_gps_yaw_fuse, params.reset_timeout_max);   %7s之后超时 第一遍总是会超时
 				if (is_fusion_failing) 

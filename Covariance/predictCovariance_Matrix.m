@@ -1,6 +1,6 @@
-function predictCovariance_Matrix(imu_sampled)
+function predictCovariance_Matrix()
 
-    global states P_M dt_ekf_avg;
+    global states P_M dt_ekf_avg imu_sample_delayed;
     global params control_status;
     q1 = states.quat_nominal(1);
     q2 = states.quat_nominal(2);
@@ -9,7 +9,7 @@ function predictCovariance_Matrix(imu_sampled)
 
     %delta_v = imu_sample_delayed.delta_vel;
 
-    delta_v = imu_sampled.delta_vel - states.delta_vel_bias;
+    delta_v = imu_sample_delayed.delta_vel - states.delta_vel_bias;
 
     Rot = Quat2Tbn([q1 q2 q3 q4]);
     m_R_vb = -Vec2AntiSymMatrix(Rot*delta_v);

@@ -1,12 +1,14 @@
+%输入值:states control_status params imu_sample_delayed dt_ekf_avg  R_to_earth
+
 function predictCovariance()
 
     INHIBIT_ACC_BIAS = bitshift(1,2);
     BADACC_BIASPNOISE = single(4.9);
     BADGYROPNOISE = single(0.2);
     
-    global states dt_ekf_avg P accel_bias_inhibit R_to_earth;
-    global params control_status fault_status imu_sample_delayed;
-    global ang_rate_magnitude_filt accel_magnitude_filt accel_vec_filt;
+    global states control_status params imu_sample_delayed dt_ekf_avg  R_to_earth;
+    global fault_status P;
+    global accel_bias_inhibit ang_rate_magnitude_filt accel_magnitude_filt accel_vec_filt;
     
     % assign intermediate state variables
 	q1 = states.quat_nominal(1);

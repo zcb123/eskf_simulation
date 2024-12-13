@@ -22,7 +22,7 @@ classdef BaroBiasEstimator<handle
 
     methods
         function obj = BaroBiasEstimator()
-            obj.signed_innov_test_ratio_lpf = AlphaFilter_float(0,0);
+            obj.signed_innov_test_ratio_lpf = AlphaFilter(0,0);
             obj.status = struct('bias',0,'bias_var',0,'innov',0,'innov_var',0,'innov_test_ratio',0);
             obj.state = 0.;
             obj.state_max = 100.;

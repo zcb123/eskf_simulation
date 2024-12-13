@@ -24,7 +24,7 @@ function fuseFakePosition()
 	gps_pos_innov = states.pos(1:2,1) - last_known_posNE;
 
 	fake_pos_innov_gate = 3;
-
+    disp('fuse PosFake position');
     [gps_pos_innov_var, gps_pos_test_ratio, ret] = fuseHorizontalPosition(gps_pos_innov, fake_pos_innov_gate, fake_pos_obs_var,true);
 	                           
 	if (ret) 

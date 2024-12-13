@@ -28,7 +28,7 @@ function updated = ImuDownSampler(imu_sample_new,required_samples,target_dt_s,mi
 
 	% rotate the accumulated delta velocity data forward each time so it is always in the updated rotation frame
 	% 将速度增量向前旋转，使其能始终处于更新的机体坐标系中
-	delta_R = Quat2Tbn(quat_inverse(delta_q));
+	delta_R = Quat2Tbn(Quaternion_Inverse(delta_q));
 	imu_down_sampled.delta_vel = delta_R * imu_down_sampled.delta_vel;
 
 	% accumulate the most recent delta velocity data at the updated rotation frame

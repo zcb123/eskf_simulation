@@ -35,7 +35,7 @@ function fuseBaroHgt()
 	obs_var = sq(fmaxf(params.baro_noise, 0.01));
 
    
-
+    disp('fuse baro height');
 	[baro_hgt_innov_var,baro_hgt_test_ratio,flag] = fuseVerticalPosition(baro_hgt_innov, innov_gate, obs_var);
 			     
     

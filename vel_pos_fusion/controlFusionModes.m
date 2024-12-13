@@ -21,11 +21,12 @@ function controlFusionModes()
         baro_hgt_intermittent = ~isRecent(time_last_baro, 2 * BARO_MAX_INTERVAL);
 
 		baro_time_prev = baro_sample_delayed.time_us;
-		[baro_sample_delayed,baro_data_ready] = baro_buffer.pop_first_older_than(imu_sample_delayed.time_us);
-
+		[baro_sample_tmp,baro_data_ready] = baro_buffer.pop_first_older_than(imu_sample_delayed.time_us);
+        
 		% if we have a new baro sample save the delta time between this sample and the last sample which is
 		% used below for baro offset calculations
 		if (baro_data_ready && baro_time_prev ~= 0) 
+            baro_sample_delayed = baro_sample_tmp;
 			delta_time_baro_us = baro_sample_delayed.time_us - baro_time_prev;
 		end
         
@@ -37,10 +38,10 @@ function controlFusionModes()
 
 		% check for arrival of new sensor data at the fusion time horizon
 		time_prev_gps_us = gps_sample_delayed.time_us;
-		[gps_sample_delayed,gps_data_ready] = gps_buffer.pop_first_older_than(imu_sample_delayed.time_us);
-		gps_hgt_accurate = (gps_sample_delayed.vacc < params.req_vacc) && (gps_sample_delayed.fix_type == 6);
+		[gps_sample_tmp,gps_data_ready] = gps_buffer.pop_first_older_than(imu_sample_delayed.time_us);
+		gps_hgt_accurate = (gps_sample_delayed.vacc < params.req_vacc) && (gps_sample_delayed.fix_type == 6);   %这里用上一个时刻的值
 		if (gps_data_ready) 
-            
+            gps_sample_delayed = gps_sample_tmp;
 			% correct velocity for offset relative to IMU
 			pos_offset_body = params.gps_pos_body - params.imu_pos_body;
 			vel_offset_body = cross(ang_rate_delayed_raw ,pos_offset_body);

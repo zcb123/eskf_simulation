@@ -15,6 +15,7 @@ function controlGpsFusion()
         gps_checks_passing = isTimedOut(last_gps_fail_us, 5e6);	%上一次last_imu_t - gpsfail时间 > 0.5s
 		gps_checks_failing = isTimedOut(last_gps_pass_us, 5e6); %上一次last_imu_t - gpspass时间 > 0.5s
         %%%%
+        
         controlGpsYawFusion(gps_checks_passing,gps_checks_failing,gps_sample_delayed);
         %%%%
         mandatory_conditions_passing = control_status.flags.tilt_align && control_status.flags.yaw_align && NED_origin_initialised;
@@ -27,6 +28,7 @@ function controlGpsFusion()
             if (mandatory_conditions_passing)
                 if continuing_conditions_passing || isOtherSourceOfHorizontalAidingThan(control_status.flags.gps)
                     %%%%
+                    disp('fuse gps vel pos')
                     fuseGpsVelPos();
                     %%%%
                     if shouldResetGpsFusion() || gps_acc_changed
@@ -36,7 +38,7 @@ function controlGpsFusion()
                                 && ekfgsf_yaw_reset_count < params.EKFGSF_reset_count_limit...
                                 && isTimedOut(ekfgsf_yaw_reset_time,5000000)
                             
-                            if resetYawToEKFGSF()
+                            if resetYawToEKFGSF()               %这里没运行
                                 disp("GPS emergency yaw reset");
                             end
 
@@ -78,7 +80,7 @@ function controlGpsFusion()
 
             elseif gps_checks_passing&&~control_status.flags.yaw_align && (params.mag_fusion_type == 5) %NONE = 5
                 
-                if resetYawToEKFGSF()
+                if resetYawToEKFGSF()           %这里没运行
 
                     resetVelocityToGps(gps_sample_delayed);
 					resetHorizontalPositionToGps(gps_sample_delayed);

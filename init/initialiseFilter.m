@@ -63,7 +63,7 @@ function ret = initialiseFilter()
         end
     end
     
-    if (baro_counter < obs_buffer_length) 
+    if (baro_counter < obs_buffer_length)       %气压计数据这里差了一个
 		% not enough baro samples accumulated
 		%printf("Initial baro %d req %d\n",_baro_counter, _obs_buffer_length);
 		ret =  false;

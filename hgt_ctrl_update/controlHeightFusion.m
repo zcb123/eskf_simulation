@@ -42,7 +42,7 @@ function controlHeightFusion()
 
     updateBaroHgtBias();
 	updateBaroHgtOffset();
-	updateGroundEffect();
+	updateGroundEffect();           %这里返回false
 
 
     

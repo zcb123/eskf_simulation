@@ -69,39 +69,41 @@ function predictState()
 	accel_lpf_NE = accel_lpf_NE * alpha + corrected_delta_vel_ef(1:2,1);
 
 	% RK4
-% 	dR_dt_t = Quat2Tbn(dq_dt);
-% 	dR_dt2_t = Quat2Tbn(dq_dt2);
-% 
-% 	k1_v_dot = corrected_delta_vel_ef;
-% 	k1_p_dot = states.vel;
-% 
-% 	k1_v = states.vel + k1_v_dot * 0.5;
-% 	k2_v_dot = dR_dt2_t * corrected_delta_vel;
-% 	k2_p_dot = k1_v;
-% 
-% 	k2_v = states.vel + k2_v_dot * 0.5;
-% 	k3_v_dot  = k2_v_dot;
-% 	k3_p_dot = k2_v;
-% 
-% 	k3_v = states.vel + k3_v_dot;
-% 	k4_v_dot = dR_dt_t * corrected_delta_vel;
-% 	k4_p_dot = k3_v;
-% 
-% 	states.vel = states.vel + (k1_v_dot + 2 * k2_v_dot + 2 * k3_v_dot + k4_v_dot) / 6;
-% 	states.vel(2) = states.vel(2) + CONSTANTS_ONE_G * imu_sample_delayed.delta_vel_dt;
-% 
-% 	states.pos = states.pos + (k1_p_dot + 2 * k2_p_dot + 2 * k3_p_dot + k4_p_dot) * imu_sample_delayed.delta_vel_dt / 6;
-% 	states.pos(2) = states.pos(2) + 0.5 * CONSTANTS_ONE_G * imu_sample_delayed.delta_vel_dt * imu_sample_delayed.delta_vel_dt;
+	dR_dt_t = Quat2Tbn(dq_dt);
+	dR_dt2_t = Quat2Tbn(dq_dt2);
 
-    last_val = states.vel;
-    states.vel = states.vel + corrected_delta_vel_ef;
-    states.vel(3) =states.vel(3) + CONSTANTS_ONE_G * imu_sample_delayed.delta_vel_dt;
+	k1_v_dot = corrected_delta_vel_ef;
+	k1_p_dot = states.vel;
 
-    states.pos = states.pos + (states.vel + last_val) * imu_sample_delayed.delta_vel_dt * 0.5;
+	k1_v = states.vel + k1_v_dot * 0.5;
+	k2_v_dot = dR_dt2_t * corrected_delta_vel;
+	k2_p_dot = k1_v;
+
+	k2_v = states.vel + k2_v_dot * 0.5;
+	k3_v_dot  = k2_v_dot;
+	k3_p_dot = k2_v;
+
+	k3_v = states.vel + k3_v_dot;
+	k4_v_dot = dR_dt_t * corrected_delta_vel;
+	k4_p_dot = k3_v;
+
+	states.vel = states.vel + (k1_v_dot + 2 * k2_v_dot + 2 * k3_v_dot + k4_v_dot) / 6;
+	states.vel(3) = states.vel(3) + CONSTANTS_ONE_G * imu_sample_delayed.delta_vel_dt;
+
+	states.pos = states.pos + (k1_p_dot + 2 * k2_p_dot + 2 * k3_p_dot + k4_p_dot) * imu_sample_delayed.delta_vel_dt / 6;
+	states.pos(3) = states.pos(3) + 0.5 * CONSTANTS_ONE_G * imu_sample_delayed.delta_vel_dt * imu_sample_delayed.delta_vel_dt;
+
+%     last_val = states.vel;
+%     states.vel = states.vel + corrected_delta_vel_ef;
+%     states.vel(3) =states.vel(3) + CONSTANTS_ONE_G * imu_sample_delayed.delta_vel_dt;
+% 
+%     states.pos = states.pos + (states.vel + last_val) * imu_sample_delayed.delta_vel_dt * 0.5;
 
     constrainStates();
    
     input = 0.5*(imu_sample_delayed.delta_ang_dt + imu_sample_delayed.delta_vel_dt);
+%     disp('input')
+%     disp(input)
     filter_update_s = params.filter_update_interval_us*1e-6;
     input = saturation(input,0.5*filter_update_s,2*filter_update_s);
     dt_ekf_avg = 0.99*dt_ekf_avg+0.01*double(input);

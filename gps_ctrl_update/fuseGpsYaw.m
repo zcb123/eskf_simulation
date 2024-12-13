@@ -1,15 +1,15 @@
-function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
-    global states P dt_ekf_avg R_to_earth fault_status;
+function is_fused = fuseGpsYaw(gps_sample_delayed)
+    global states P R_to_earth fault_status;
     global gps_yaw_offset;
-
+    global params control_status;
     q1 = states.quat_nominal(1);
 	q2 = states.quat_nominal(2);
 	q3 = states.quat_nominal(3);
 	q4 = states.quat_nominal(4);
 
 	% calculate the observed yaw angle of antenna array, converting a from body to antenna yaw measurement
-	measured_hdg = wrap_pn_pi(gps_sample_delayed.yaw + gps_yaw_offset);
-
+	measured_hdg = wrap_pn_pi(gps_sample_delayed.yaw + gps_yaw_offset);     %这里是RTK航向
+%     disp(measured_hdg);
 	% define the predicted antenna array vector and rotate into earth frame
 	ant_vec_bf = [cos(gps_yaw_offset) sin(gps_yaw_offset) 0]';
 	ant_vec_ef = R_to_earth * ant_vec_bf;
@@ -24,11 +24,11 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 	end
 
 	% calculate predicted antenna yaw angle
-	predicted_hdg = atan2(ant_vec_ef(2), ant_vec_ef(1));
-
+	predicted_hdg = atan2(ant_vec_ef(2), ant_vec_ef(1));            %这里也是地理系航向
+%     disp(predicted_hdg)
 	% using magnetic heading process noise
 	% TODO extend interface to use yaw uncertainty provided by GPS if available
-	R_YAW = sq(max(params.gps_heading_noise, 1.0e-2));
+	R_YAW = sq(max(params.gps_heading_noise, 1.0e-2));  %gps_heading_noise = 0.1
 
 	% calculate intermediate variables
 	SA0 = ant_vec_bf(2);%sinf(ant_yaw);
@@ -59,8 +59,8 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 
 	% check if the innovation variance calculation is badly conditioned
 	% calculate the innovation variance
-	heading_innov_var = R_YAW;
-    %P*HYaw
+	heading_innov_var = R_YAW;      %R_YAW = 0.01
+    %heading_innov_var = HYaw*P*HYaw' + heading_innov_var
 	tmp1 = P(1, 1) * HYaw(1) + P(1, 2) * HYaw(2) + P(1, 3) * HYaw(3);
 	tmp2 = P(2, 1) * HYaw(1) + P(2, 2) * HYaw(2) + P(2, 3) * HYaw(3);
 	tmp3 = P(3, 1) * HYaw(1) + P(3, 2) * HYaw(2) + P(3, 3) * HYaw(3);
@@ -88,13 +88,15 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
     
     global yaw_test_ratio;
 	% innovation test ratio
-	yaw_test_ratio = sq(heading_innov) / (sq(innov_gate) * heading_innov_var);
+	yaw_test_ratio = sq(heading_innov) / (sq(innov_gate) * heading_innov_var);          %sq(innov_gate) = 6.76
 
 	% we are no longer using 4-axis fusion so set the reported test levels to zero
 	%_mag_test_ratio.setZero();
 
 	if (yaw_test_ratio > 1.0) 
 		%innov_check_fail_status.flags.reject_yaw = true;
+%         disp(sq(heading_innov));            %预测值和观测值差的太离谱，这里就会报错
+%         disp(heading_innov_var);
         disp('reject gps yaw fuse yaw_test_ratio>1');
 		return;
 
@@ -131,6 +133,7 @@ function is_fused = fuseGpsYaw(gps_sample_delayed,params,control_status)
 
 	end
     assignin("base","Kfusion_gps_yaw",Kfusion);
+    disp('gps yaw fuse');
 	is_fused = measurementUpdate(Kfusion, heading_innov_var, heading_innov);
 
 	fault_status.flags.bad_hdg = ~is_fused;
