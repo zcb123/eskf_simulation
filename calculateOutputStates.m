@@ -40,7 +40,8 @@ function  calculateOutputStates(imu,correct_updated)
 	R_to_earth_now = Quat2Tbn(output_new.quat_nominal);
  
 	delta_vel_body = imu.delta_vel - states.delta_vel_bias * dt_scale_correction;
-
+    assignin("base","dt_scale_correction",dt_scale_correction);
+    assignin("base","delta_vel_body",delta_vel_body);
 	delta_vel_earth = R_to_earth_now * delta_vel_body;
 	delta_vel_earth(3) = delta_vel_earth(3) + CONSTANTS_ONE_G * imu.delta_vel_dt;
     assignin("base","delta_vel_earth",delta_vel_earth);

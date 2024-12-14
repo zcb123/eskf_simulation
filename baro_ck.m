@@ -33,6 +33,10 @@ baro_bias_display = nan(len_t,1);
 delta_ang_bias_dispaly = nan(len_t,3);
 corrected_delta_vel_display = nan(len_t,3);
 delta_vel_earth_display = nan(len_t,3);
+delta_vel_body_display = nan(len_t,3);
+dt_scale_display = nan(len_t,1);
+imu_delta_vel_display = nan(len_t,3);
+states_delta_vel_display = nan(len_t,3);
 clear setSensorData controlGpsYawFusion calculateOutputStates
 update_index = 1;
 for i = 1:len_t
@@ -67,8 +71,9 @@ for i = 1:len_t
         controlHeightFusion();
 
         
-        controlZeroVelocityUpdate();        %这里面没运行 at_rest = false
-        controlFakePosFusion();
+        controlZeroVelocityUpdate();            %这里面没运行 at_rest = false
+
+        controlFakePosFusion();                 %以
 
         update_deadreckoning_status();
 
@@ -77,10 +82,16 @@ for i = 1:len_t
         baro_bias_display(update_index,1) = baro_b_est.getBias();
         baro_hgt_offset_display(update_index,1) = baro_hgt_offset;
         update_index = update_index + 1;
+
     end
     
     calculateOutputStates(newest_high_rate_imu_sample,updated);
+    imu_delta_vel_display(i,:) = newest_high_rate_imu_sample.delta_vel';
+    states_delta_vel_display(i,:) = states.delta_vel_bias';
+    dt_scale_display(i,:) = dt_scale_correction;
+    delta_vel_body_display(i,:) = delta_vel_body';
     delta_vel_earth_display(i,:) = delta_vel_earth';
+
     if updated
 
         delta_ang_bias_dispaly(i,:) = states.delta_ang_bias';
@@ -89,13 +100,24 @@ for i = 1:len_t
         vel_nan_display(i,:) = output_new.vel';
         pos_nan_display(i,:) = output_new.pos';
         update_t_nan(i,1) = vehicle_t(i,1);
+
     end
+
 
 end
 euler = getNonNaN(euler_nan,3);
 vel_display = getNonNaN(vel_nan_display,3);
 pos_display = getNonNaN(pos_nan_display,3);
 update_t = getNonNaN(update_t_nan,1);
+%%
+figure
+plot(imu_delta_vel_display);
+figure
+plot(states_delta_vel_display);
+figure
+plot(dt_scale_display);
+figure
+plot(delta_vel_body_display)
 %%
 figure
 plot(delta_vel_earth_display);

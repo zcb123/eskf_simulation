@@ -5,7 +5,7 @@ function ret = updateQuaternion(innovation,variance,gate_sigma,yaw_jacobian)
     global control_status fault_status P;
     global mag_test_ratio time_last_in_air;
 	heading_innov_var = variance;
-    %H_Yaw'*P(1:3,1:3)*H_Yaw + R
+    %H_Yaw*P(1:3,1:3)*H_Yaw' + R
 	for row = 1:3 
 
 		tmp = 0;
